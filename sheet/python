@@ -1,0 +1,310 @@
+# 複素数
+a = 1 + 3j
+a = complex(1,3)
+a.real	# 実数部
+a.imag	# 虚数部
+
+# 文字列 string
+'this is a pen.'
+"and that is a pen, too.\nWe think so."
+"""
+long long long
+sentenses
+are here.
+"""
+r"this \n is not CR."
+"connect" + " " + "words."
+"connect" " " "words."		# same as above.
+"abc" * 5		# "abcabcabcabcabc"
+a = "Hello"
+a[3]			# "l", 0-origin
+a[1:4]			# "ell"
+a[:2]			# "He", 最初の2文字 (LEFT)
+a[2:]			# "llo", 最初の2文字以外
+a[-1]			# "o", 最後の一文字
+a[-2:]			# "lo", 最後の2文字 (RIGHT)
+len(a)			# 5
+"あ"			# (defaultまたは設定で) utf-8文字列
+u"あ"			# unicode string
+文字列.replace('too', 'two')
+.capitalize() / .upper() / .lower()	# を返す
+.center(width) / .ljust(width) / .rjust(width)
+.count(sub[, start[, end]])
+.startswith(prefix[, start[, end]]) / .endswith(suffix[, start[, end]])
+.find(sub[, start[, end]]) / .rfind(...)	# みつからなかったら -1
+.index(sub[, start[, end]])	/ .rindex(...)	# findと同じだが見つからなかったら例外
+.isalnum() / is.alpha() / .isdigit() / .islower() / .isspace() / .isupper()
+.lstrip([chars]) / .strip([chars]) 
+.partition(sep)				# "ABC,CDE".partition(",")  -> ("ABC", ",", "CDE")
+							# "ABCDEF".partition(",")   -> ("ABCDEF", "", "")
+.rpartition(sep)
+.split([sep[, maxsplit]] / .rsplit(...)
+.splitlines()
+.join(words)				# ":".join(("a", "b", "c")) -> a:b:c
+							# array.join(sep) ではないので要注意！
+# unicode - python 2
+y = s.decode('utf-8'[, errors])
+s = u.encode('utf-8'[, errors])
+# errors = strict, ignore, replace, xmlcharrefreplace
+
+# list
+l = ['abc', 'def', 123, 456]
+l[0]			# 'abc'
+l[-2]			# 123
+l[0:2] = []		# 最初の2項目を削除 ['123', '456']
+l[1:1] = ['a', 'b']	# 挿入
+l.append("item")	# 末尾に追加
+l.extend(_list_)	# 同(リスト); appendだとunpackせずに追加してしまう
+l.pop()				# 末尾を取得して削除 
+l.insert(i, item)	# 任意の箇所に追加。0は先頭。
+l.remove(item)		# 最初のitemを探して削除
+l.index(item)		# 最初のitemの場所を返す
+l.count(item)		# itemの数を返す
+l.sort(), l.reverse()	# ソートもしくは逆順へ
+sorted(l), reversed(l)	# コピーバージョン
+len(l)
+del l[2]			# 要素2を削除
+max(list), min(list)
+if 'abc' in l:
+	pass		# inで複数比較
+if 'xyz' not in l:
+	pass		# inで複数比較
+
+# print (python 2)
+print i
+print "the value of i is", i
+print i,			# 改行せずに出力
+# print (python 3)
+print(i)			# printは関数
+print(i, end='')	#改行しない
+
+# if
+if x < 0:
+	print 'Negative'
+elif x == 0:
+	print 'Zero'
+elif x == 1:
+	print 'One'
+else:
+	print 'More'
+
+"yahoo!" if a > b else "google!"
+
+a < b == c			# a<b and b == c
+
+
+# for
+for x in l:
+	print(x)
+# forの中で元のリストをいじるのは危険
+# その際はスライスコピーを使う
+
+for x in l:
+	print(x)
+else:
+	print("end")	# breakで出なかったら実行される
+
+for x in l[:]:
+	print x
+
+インデックスが必要な場合
+for i, x in enumerate(l):
+	print i + ": " + x
+
+# range
+#
+#インデックスが必要な場合
+#for i, x in enumerate(l):
+#print i + ": " + x
+range(10)	# = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+range(from, to, diff)
+
+# while
+while x < 10:
+	print x
+	x = x - 1
+
+# with
+with open("...") as f:
+	f.readline()
+# ここで自動的にf.close()される
+
+
+# pass
+pass			# 何もしない
+while True:
+	pass		# このpassは文法上必要
+
+# def 関数定義
+def add(a, b = 1):
+	"この関数はa と bを加算する。省略時b=0とする。"		# 最初の行は関数の説明の文字列に出来る
+	return a + b
+
+add(2,1)
+add(2)
+add(b=1, a=2)	# すべて3
+a=[2,1]
+add(*a)			# リストをunpackして呼び出し
+
+def f(a, *b):
+	print b		# 2番目以降の引数をまとめてタプルで受ける
+# lambda
+add_func = lambda x, y: x + y
+def make_incrementor(n):
+     return lambda x: x + n
+
+# filter, map, reduce
+filter(func, list)		# 関数がTrueの項目だけ返す
+map(func, list)			# 関数の返り値を返す
+reduce(func, list)		# func: 2つのアイテム→1つのアイテムを返す関数を、次々にアイテム数1になるまで適応
+x2 = map((lambda i:i*2),x1);
+zip(['a', 'b', 'c'], [1,2,3])
+	# [('a', 1), ('b', 2), ...]
+python3ではiteratorを返すので、listにしたかったら、list()で囲む
+
+# list comprehension
+[ 式 for アイテム in リスト if 条件 ]
+[ x * 2 for x in range(1,10) if x % 2 == 0 ]
+[ (x, x * 2) for x in range(1,10) if x % 2 == 0 ]
+[ x*y for x in range(1,10) for y in range(1,10) ]
+
+# generator 
+squares = (x * x for x in range(1000))
+print squares.next()
+def square_gen(n):
+	for i in range(n):
+		yield i * i
+
+# tuple
+x = a, b, c
+a, b, x = x
+emptytuple = ()
+singletuple = 1,
+
+# set
+basket = ['apple', 'orange', 'apple', 'pear', 'orange', 'banana']
+fruit = set(basket)               # 重複のない集合を作成
+fruit.add('mango')
+fruit.remove('orange')			# ないとエラー
+fruit.discard('orange')			# なくてもOK
+fruit.pop()
+fruit in 'orange'				# True
+fruit - fruit2, fruit | fruit2, fruit & fruit2, fruit ^ fruit2
+
+# dictionary (dict)
+tel = {'jack': 4098, 'sape': 4139}
+tel['kcrt'] = 8421
+del tel['jack']
+tel['nokey']	# KeyError
+tel.get('nokey')	# returns None
+tel.setdefault('kcrt', 7131)	# 値があれば変更しない
+tel.keys()
+tel.values()
+sorted(tel.keys())
+dict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
+for key,value in tel.iteritems():
+	pass
+python 3系でもitems()でも同じ効率
+for key in tel.keys():
+	pass
+tel = collections.defaultdict(int)
+my_ordered_dict = json.loads(json_str, object_pairs_hook=collections.OrderedDict)
+
+
+# format
+print '{} and {}'.format('spam', 'eggs')
+print '{0} and {1}'.format('spam', 'eggs')
+print '{s} and {e}'.format(s='spam', e='eggs')
+# {0:10}		文字列最低10桁
+# {0:.3f}		小数点3桁
+# {0:10d}		10桁(整数)
+# 古い: "%s and %s" % ("spam", "eggs")
+
+# file
+f = open('/tmp/workfile', 'w')	# w r a r+
+f.read([size])		# sizeを省略すると全部読み込む
+f.readline()
+f.readlines()
+for linene in f:
+	print line
+f.write(string)
+print(string, file=f)		# python 3
+f.tell()
+f.seek(offset, [from_what])	# from_what:0(default) 先頭, 1 現在位置, 2 終端
+f.close()
+
+# pickle
+# f はファイルハンドル
+pickle.dump(x, f)
+x = pickle.load(f)
+
+# try
+try:
+	x = int(raw_input("Please enter a number: "))
+except ValueError:
+	print "Oops!  That was no valid number.  Try again"
+except Exception as inst:
+	print inst
+	raise Exception('spam', 'eggs')
+except:
+	print "Unknown error"
+
+# 各種モジュール
+import osなど
+shutil.copyfile('data.db', 'archive.db')
+shutil.move('/build/executables', 'installdir')
+glob.glob('*.py')
+sys.stderr.write('Warning, log file not found starting a new one\n')
+re.findall(r'\bf[a-z]*', 'which foot or hand fell fastest')
+re.sub(r'(\b[a-z]+) \1', r'\1', 'cat in the the hat')
+math.cos(math.pi / 4.0)
+math.log(1024, 2)
+
+
+# collections.deque
+from collections import deque
+queue = deque(["Eric", "John", "Michael"])
+queue.append(item)
+queue.popleft()
+
+# system
+sys.setrecursionlimit(limit)
+
+# subprocess
+md5process = Popen(["md5", "-q", filename], stdout=PIPE)
+md5 = md5process.stdout.read().rstrip("\n")
+
+
+# future
+* from __future__ import division
+3 / 2 が 1だったのが 1.5になる
+3 // 2 で整数の割り算が出来る
+* from __future__ import print_function
+printが関数になる
+* from __future__ import unicode_literals
+文字列がunicode型になる
+
+# class
+class MyClass(基底クラス)	# 基底クラスにobjectを指定すると新形式クラスとなる
+							# ただし、Python 3では省略しても新形式クラス
+	"information of this class"
+	i = 123
+	__privateitem = 12		# privateはアンダースコア2つで始める
+	def f(self):
+		return self.i
+	def __init__(self):
+		self.i = 100
+
+type(MyClass)				# <type 'classobj'>
+
+
+PEP8 命名規則
+名称					規約						例
+package					lower_with_under			
+module名				lowercase					hamegg.py
+class名					CapWords					class HamEgg(object):…
+exception名				CapWords					class HamEggException(Exception):…
+関数名					lower_with_under			def ham_egg():…
+メソッド名				lower_with_under			def ham_egg(self):…
+インスタンス変数名		lower_with_under			self.ham_egg = None
+定数					UPPER_CASE_WITH_UNDERSCORES	HAM_EGG = "ham_egg"

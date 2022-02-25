@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/format.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+numFruits = <span class="Constant">30</span>
+fruits = <span class="String">&quot;</span><span class="String">apple</span><span class="String">&quot;</span>
+
+<span class="Comment"># クラシカルな方法 %演算子を使用する (Python 2系でも使用できる)</span>
+<span class="String">&quot;</span><span class="String">I have %d %ss.</span><span class="String">&quot;</span> % <span class="pythonRainbow_p0">(</span>numFruits<span class="pythonRainbow_o0">,</span> fruits<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; I have 30 apples.</span>
+<span class="String">&quot;</span><span class="String">I have %(a)d %(b)ss</span><span class="String">&quot;</span> % <span class="pythonRainbow_p0">{</span><span class="String">&quot;</span><span class="String">a</span><span class="String">&quot;</span>: numFruits<span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">b</span><span class="String">&quot;</span>: fruits<span class="pythonRainbow_p0">}</span>
+
+<span class="Comment"># format関数を使用する</span>
+<span class="Identifier">format</span><span class="pythonRainbow_p0">(</span>numFruits<span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">05d</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; 00030</span>
+
+<span class="Comment"># 文字列のformatメソッドを使用する</span>
+<span class="String">&quot;</span><span class="String">I have {} {}s</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p0">(</span>numFruits<span class="pythonRainbow_o0">,</span> fruits<span class="pythonRainbow_p0">)</span>
+<span class="String">&quot;</span><span class="String">I have {0} {1}s</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p0">(</span>numFruits<span class="pythonRainbow_o0">,</span> fruits<span class="pythonRainbow_p0">)</span>
+<span class="String">&quot;</span><span class="String">I have {a} {b}s</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p0">(</span>a=numFruits<span class="pythonRainbow_o0">,</span> b=fruits<span class="pythonRainbow_p0">)</span>
+<span class="String">&quot;</span><span class="String">{num:05d}</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p0">(</span>num=numFruits<span class="pythonRainbow_p0">)</span>   <span class="Comment"># :以降で書式指定も指定できる</span>
+
+<span class="Comment"># f文字列 (3.6以降) - 今後主流になります(たぶん)</span>
+f<span class="String">&quot;</span><span class="String">I have {numFruits} and {fruits}</span><span class="String">&quot;</span>  <span class="Comment"># 変数を使用できる！</span>
+f<span class="String">&quot;</span><span class="String">{numFruits:05d}</span><span class="String">&quot;</span>   <span class="Comment"># 書式指定も出来る</span>
+f<span class="String">&quot;</span><span class="String">{numFruits * 10}</span><span class="String">&quot;</span>  <span class="Comment"># =&gt; 300, 式まで使用できる！！</span>
+
+<span class="Comment"># 書式指定ミニ言語仕様</span>
+<span class="Comment"># <a href="https://docs.python.org/ja/3.7/library/string.html#formatspec">https://docs.python.org/ja/3.7/library/string.html#formatspec</a></span>
+
+<span class="Comment"># align sign # 0 width grouping .precision type</span>
+
+price = <span class="Constant">12312.3</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>f<span class="String">&quot;</span><span class="String">{price:#^+19,.3f}</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; ####+12,312.300####</span>
+
+<span class="Comment"># align:</span>
+<span class="Comment"># &lt;: 左詰, &gt;: 右詰, =: 符号があるときのみ, ^: 中央詰め</span>
+<span class="Comment"># オプションで何で埋めるかを指定できる(上記の#^)</span>
+<span class="Comment"># sign:</span>
+<span class="Comment"># +: 正でも負でも符号, -: 負のみ符号, スペース: 正の場合はスペース・負は符号</span>
+<span class="Comment"># width:</span>
+<span class="Comment"># 最小のフィールド幅</span>
+<span class="Comment"># grouping_option:</span>
+<span class="Comment"># _と,: _区切り または カンマ区切り</span>
+<span class="Comment"># .precision:</span>
+<span class="Comment"># 浮動小数点の小数点下の桁数</span>
+<span class="Comment"># type:</span>
+<span class="Comment"># --- 文字列型 ---</span>
+<span class="Comment"># s - 文字列 (省略時)</span>
+<span class="Comment"># --- 整数 ---</span>
+<span class="Comment"># b - 2進数</span>
+<span class="Comment"># c - 数値に対応するUnicode文字</span>
+<span class="Comment"># d - 10進数 (省略時)</span>
+<span class="Comment"># o - 8進数</span>
+<span class="Comment"># x/X - 16進数(小文字/大文字)</span>
+<span class="Comment"># n - 数値(ロケールに従う)</span>
+<span class="Comment"># --- 浮動小数点 ---</span>
+<span class="Comment"># e/E - 指数表記</span>
+<span class="Comment"># f/F - 固定小数点表記</span>
+<span class="Comment"># g/G - e/f/E/Fなどを自動で選ぶ (省略時)</span>
+<span class="Comment"># n - 数値(ロケールに従う)</span>
+<span class="Comment"># % - 100倍してパーセントをつける</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

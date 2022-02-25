@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/enum.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> enum <span class="PreProc">import</span> Enum, IntFlag, auto, unique
+
+
+<span class="Statement">class</span> <span class="Identifier">Fruits</span><span class="pythonRainbow_p0">(</span>Enum<span class="pythonRainbow_p0">)</span>:
+    Apple = <span class="Constant">1</span>
+    Banana = <span class="Constant">2</span>
+    Orange = <span class="Constant">3</span>
+    Kiwi = <span class="Constant">3</span>    <span class="Comment"># デフォルトでは値の重複を許す</span>
+
+
+myfruit = Fruits.Banana
+myfruit          <span class="Comment"># =&gt; Fruites.Banana</span>
+myfruit.name     <span class="Comment"># =&gt; Banana</span>
+myfruit.value    <span class="Comment"># =&gt; 2</span>
+Fruits<span class="pythonRainbow_p0">(</span><span class="Constant">3</span><span class="pythonRainbow_p0">)</span>        <span class="Comment"># =&gt; Fruites.Orange</span>
+Fruits<span class="pythonRainbow_p0">[</span><span class="String">&quot;</span><span class="String">Orange</span><span class="String">&quot;</span><span class="pythonRainbow_p0">]</span>  <span class="Comment"># =&gt; Fruites.Orange</span>
+myfruit <span class="Statement">is</span> Fruits.Banana
+myfruit == Fruits.Banana  <span class="Comment"># is か == を使用して比較</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>Fruits.Banana == <span class="Constant">2</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># False[[注意]] Enumの代わりにIntEnumを使用すると比較できる</span>
+
+
+<span class="PreProc">@</span><span class="Identifier">unique</span>
+<span class="Statement">class</span> <span class="Identifier">Colors</span><span class="pythonRainbow_p0">(</span>Enum<span class="pythonRainbow_p0">)</span>:
+    Red = <span class="Constant">1</span>
+    <span class="Comment"># Blue = 1      [[ERROR]] @uniqueでは同じ値は許されない</span>
+
+
+<span class="Statement">class</span> <span class="Identifier">Pref</span><span class="pythonRainbow_p0">(</span>Enum<span class="pythonRainbow_p0">)</span>:
+    Hokkaido = auto<span class="pythonRainbow_p0">()</span>
+    Aomori = auto<span class="pythonRainbow_p0">()</span>         <span class="Comment"># auto()は順番に大きいintを返してくれる</span>
+
+
+<span class="Comment"># ビット演算を出来るEnum(Flag, IntFlag)</span>
+<span class="Statement">class</span> <span class="Identifier">Perm</span><span class="pythonRainbow_p0">(</span>IntFlag<span class="pythonRainbow_p0">)</span>:
+    R = <span class="Constant">4</span>
+    W = <span class="Constant">2</span>
+    X = <span class="Constant">1</span>
+    RWX = <span class="Constant">7</span>
+
+
+file_perm = Perm.R | Perm.W
+<span class="Statement">if</span> Perm.R <span class="Statement">in</span> file_perm:
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">File is readable!</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># 他にOrderedEnum, DuplicateFreeEnum</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

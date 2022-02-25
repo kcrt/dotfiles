@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.PreProc { color: #a020f0; }
+.pythonRainbow_lv0_o0 { color: #3a5fcd; }
+.pythonRainbow_lv0_p0 { color: #3a5fcd; }
+.pythonRainbow_lv1_o0 { color: #cd6600; }
+.pythonRainbow_lv1_p0 { color: #cd6600; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">import</span> sys
+<span class="PreProc">import</span> math
+<span class="PreProc">from</span> decimal <span class="PreProc">import</span> Decimal
+<span class="PreProc">from</span> fractions <span class="PreProc">import</span> Fraction
+
+<span class="Comment"># 変数の宣言は不要</span>
+<span class="Comment"># 基本は型なし</span>
+v = <span class="Constant">1</span>
+v = <span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span>
+
+<span class="Comment"># [[Python 3.5]] 型ヒントもサポートされている (see: typing)</span>
+<span class="Comment"># str, int, float, List[A], Dict[A, B], Tuple[A, B], Union[A, B], Optional[A], Callable[[ARG_A, ARG_B, ...], RETTYPE], Any</span>
+helloMessage: <span class="Identifier">str</span> = <span class="Constant">&quot;</span><span class="Constant">Hello, world</span><span class="Constant">&quot;</span>
+numApple: <span class="Identifier">int</span> = <span class="Constant">32</span>
+tempToday: <span class="Identifier">float</span> = <span class="Constant">37.2</span>
+
+strangeValue: <span class="Identifier">int</span> = <span class="Constant">&quot;</span><span class="Constant">Strange!</span><span class="Constant">&quot;</span>  <span class="Comment"># ...が、今のところ何をしている訳でもない…</span>
+
+<span class="Comment"># 整数</span>
+<span class="Comment"># Python 2ではintとlongがあったが、Python 3 ではint(上限なし)のみ</span>
+v = <span class="Constant">1000000000000000000000000000000000000</span>
+
+<span class="Comment"># 浮動小数点: float(倍精度)のみ</span>
+f = <span class="Constant">1.234</span>
+<span class="Identifier">float</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">nan</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>          <span class="Comment"># または、math.nan</span>
+inf = <span class="Identifier">float</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">inf</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>    <span class="Comment"># または、math.inf</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>math.isinf<span class="pythonRainbow_lv1_p0">(</span>inf<span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># 他に、math.isfinite, math.isinf, math.isnan</span>
+a = <span class="Constant">0.24</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>f<span class="Constant">&quot;</span><span class="Constant">{a:f} {a:e} {a:g} {a:%}</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">{0:e}</span><span class="Constant">&quot;</span>.format<span class="pythonRainbow_lv1_p0">(</span>a<span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>
+
+
+
+
+<span class="Comment"># 論理型(bool)</span>
+<span class="Identifier">False</span> <span class="Statement">and</span> <span class="Identifier">True</span>
+
+<span class="Comment"># 定数</span>
+PI = <span class="Constant">3.14</span>               <span class="Comment"># 定数はない。慣習的に大文字を使う。</span>
+
+<span class="Comment"># intは上限・下限がないので、CのようなINT_MAX的な物はない。</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>sys.float_info.epsilon<span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># DBL_EPSILON</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>sys.float_info.max<span class="pythonRainbow_lv0_o0">,</span> sys.float_info.min<span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># DBL_MAX, DBL_MIN</span>
+
+<span class="Comment"># 言語固有</span>
+<span class="Comment"># 10進数を正確に表せるDecimal型</span>
+Decimal<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">1.1</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>          <span class="Comment"># ちょうど1.1</span>
+Decimal<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">1</span>.<span class="Constant">1</span><span class="pythonRainbow_lv0_p0">)</span>            <span class="Comment"># floatの1.1は2進数で表せる近い数値( != &quot;1.1&quot;)</span>
+
+<span class="Comment"># 分数型</span>
+Fraction<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">2</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># =&gt; 2/3</span>
+Fraction<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">5</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">10</span><span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; 1/2 (約分される)</span>
+Fraction<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">1</span>.<span class="Constant">1</span><span class="pythonRainbow_lv0_p0">)</span>    <span class="Comment"># =&gt; [注意] 11/10ではない！</span>
+Fraction<span class="pythonRainbow_lv0_p0">(</span>Decimal<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">1.1</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>    <span class="Comment"># =&gt; 11/10</span>
+<span class="Identifier">float</span><span class="pythonRainbow_lv0_p0">(</span>Fraction<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">1</span><span class="pythonRainbow_lv1_o0">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; 0.33333...</span>
+
+<span class="Comment"># 型を調べる</span>
+<span class="Identifier">type</span><span class="pythonRainbow_lv0_p0">(</span>v<span class="pythonRainbow_lv0_p0">)</span>      <span class="Comment"># =&gt; &lt;class 'int'&gt;</span>
+<span class="Identifier">isinstance</span><span class="pythonRainbow_lv0_p0">(</span>v<span class="pythonRainbow_lv0_o0">,</span> <span class="Identifier">int</span><span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; True</span>
+
+
+<span class="PreProc">from</span> decimal <span class="PreProc">import</span> Decimal
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>Decimal<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">1.20</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p0">)</span> * Decimal<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">2.30</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>Decimal<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">1</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p0">)</span> / Decimal<span class="pythonRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">7</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

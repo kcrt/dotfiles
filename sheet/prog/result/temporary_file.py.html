@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/temporary_file.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># 一時ファイル</span>
+<span class="PreProc">import</span> tempfile
+<span class="PreProc">import</span> os
+
+tempfile.gettempdir<span class="pythonRainbow_p0">()</span>   <span class="Comment"># 使用される一時ディレクトリ</span>
+
+fp = tempfile.TemporaryFile<span class="pythonRainbow_p0">()</span>
+fp.write<span class="pythonRainbow_p0">(</span>b<span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+fp.close<span class="pythonRainbow_p0">()</span>  <span class="Comment"># closeと同時に消去 [[注意]]</span>
+
+fp = tempfile.NamedTemporaryFile<span class="pythonRainbow_p0">(</span>delete=<span class="Identifier">False</span><span class="pythonRainbow_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>fp.name<span class="pythonRainbow_p0">)</span>  <span class="Comment"># ファイル名</span>
+fp.write<span class="pythonRainbow_p0">(</span>b<span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+fp.close<span class="pythonRainbow_p0">()</span>
+os.remove<span class="pythonRainbow_p0">(</span>fp.name<span class="pythonRainbow_p0">)</span>  <span class="Comment"># delete=Falseでは自分で消すこと</span>
+
+<span class="Comment"># seealso: SpooledTemporaryFile (メモリ上)</span>
+
+<span class="Statement">with</span> tempfile.TemporaryDirectory<span class="pythonRainbow_p0">()</span> <span class="Statement">as</span> tmpdir:
+    <span class="Statement">pass</span>  <span class="Comment"># tmpdirを利用して作業</span>
+<span class="Comment"># withを抜けるとディレクトリは削除される</span>
+
+<span class="pythonRainbow_p0">(</span>fno<span class="pythonRainbow_o0">,</span> filename<span class="pythonRainbow_p0">)</span> = tempfile.mkstemp<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">suffix</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">prefix</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+filename   <span class="Comment"># 例: =&gt; /tmp/prefixuzavw57rsuffix</span>
+os.remove<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>  <span class="Comment"># きちんと消すこと！</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

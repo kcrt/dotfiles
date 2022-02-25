@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/date_and_time.cpp.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="cpp">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.String { color: #4a708b; }
+.cppRainbow_o1 { color: #cd6600; }
+.Special { color: #8a2be2; }
+.cppRainbow_p0 { color: #3a5fcd; }
+.cppRainbow_p1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Type { color: #008b00; font-weight: bold; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="String">&lt;chrono&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;ctime&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;iostream&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;sstream&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;iomanip&gt;</span>
+<span class="Statement">using</span> <span class="Type">namespace</span> std::chrono;
+<span class="Statement">using</span> <span class="Type">namespace</span> std;
+
+<span class="Type">int</span> main <span class="cppRainbow_p0">(){</span>
+
+<span class="Comment">// == 型 ==</span>
+<span class="Comment">// 時間の長さを示すdurationと、時刻を示すtime_pointを使用する。</span>
+<span class="Comment">// durationの別名として、hours, minutes, secondsなどを使用できる。</span>
+
+<span class="Comment">// == 現在の日付と時刻 ==</span>
+system_clock::time_point nowvar = system_clock::now<span class="cppRainbow_p1">()</span>;
+
+<span class="Comment">// == オブジェクトの生成 ==</span>
+<span class="Comment">// 直接生成することは難しい。</span>
+<span class="Comment">// (C++11) get_timeとC言語のstruct tmを経由するのが簡単。</span>
+<span class="Comment">// (C++20) std::chrono_literalsで構築ができるようになる予定</span>
+<span class="Type">struct</span> tm t;
+istringstream ss<span class="cppRainbow_p1">(</span><span class="String">&quot;1984-09-24 12:03:24&quot;</span><span class="cppRainbow_p1">)</span>;
+ss &gt;&gt; get_time<span class="cppRainbow_p1">(</span>&amp;t<span class="cppRainbow_o1">,</span> <span class="String">&quot;%Y-%m-</span><span class="Special">%d</span><span class="String"> %H:%M:</span><span class="Special">%S</span><span class="String">&quot;</span><span class="cppRainbow_p1">)</span>;
+<span class="Type">auto</span> mybirthtime_timet = mktime<span class="cppRainbow_p1">(</span>&amp;t<span class="cppRainbow_p1">)</span>;
+<span class="Type">auto</span> mybirthtime = system_clock::from_time_t<span class="cppRainbow_p1">(</span>mybirthtime_timet<span class="cppRainbow_p1">)</span>;
+
+<span class="Comment">// == オブジェクトからのアイテムの取得 ==</span>
+<span class="Comment">// C++20が使用できるようになるまではあまり良い方法がない。</span>
+<span class="Comment">// to_time_t()で変換し、古き良き構文を使用するのが簡単。</span>
+
+<span class="Comment">// == 曜日 ==</span>
+<span class="Comment">// C++20からweekdayが追加される予定。</span>
+
+<span class="Comment">// == Unix time ==</span>
+<span class="Comment">// C++20からepochは1970/1/1 00:00:00だが、それ以前は未規定。ただし、殆どの処理系はUnix timeです。</span>
+<span class="Type">auto</span> birth_epoch = system_clock::to_time_t<span class="cppRainbow_p1">(</span>mybirthtime<span class="cppRainbow_p1">)</span>;
+    <span class="Comment">// time_tにする</span>
+<span class="Type">auto</span> birth_epoch2 = mybirthtime.time_since_epoch<span class="cppRainbow_p1">()</span>;
+    <span class="Comment">// epochからのdurationに変換する</span>
+
+<span class="Comment">// == プロセッサー時間・高分解能時間 ==</span>
+steady_clock::now<span class="cppRainbow_p1">()</span>;    <span class="Comment">// モノトニック</span>
+high_resolution_clock::now<span class="cppRainbow_p1">()</span>;  <span class="Comment">// 高分解能</span>
+<span class="Comment">// C++20からはgps_clockやfile_clockなどが追加される予定</span>
+
+<span class="Comment">// == 時間の計算 ==</span>
+<span class="Type">auto</span> delta = nowvar - mybirthtime; <span class="Comment">// 差でdurationを取得</span>
+<span class="Type">auto</span> hrs = duration_cast&lt;hours&gt;<span class="cppRainbow_p1">(</span>delta<span class="cppRainbow_p1">)</span>; <span class="Comment">// それは何時間？</span>
+std::cout &lt;&lt; hrs.count<span class="cppRainbow_p1">()</span>;
+
+<span class="Statement">using</span> <span class="Type">namespace</span> std::literals::chrono_literals;
+<span class="Type">auto</span> after_onehalf_hour = nowvar + <span class="Constant">1.5</span>h; <span class="Comment">// C++14</span>
+
+<span class="Comment">// == 時差情報 ==</span>
+<span class="Comment">// C++20よりタイムゾーンサポートが追加される予定</span>
+
+<span class="Comment">// == 文字列へ ==</span>
+<span class="Comment">// C++20よりcout&lt;&lt;とフォーマットが追加される予定</span>
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+<span class="cppRainbow_p0">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

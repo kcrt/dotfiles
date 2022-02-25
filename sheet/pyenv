@@ -1,0 +1,10 @@
+pyenv install [-l|2.7.6]
+pyenv uninstall 2.7.6
+pyenv versions				# インストール済みを表示
+pyenv global 2.7.6			# 標準で使うpythonを設定
+pyenv local 2.7.6			# このディレクトリで使用するpythonを設定
+
+pyenv virtualenv 2.7.6 パッケージ構成名	# 新しいパッケージ構成を作成
+pyenv local パッケージ構成名			# パッケージ構成を切り替え
+pyenv uninstall パッケージ構成名
+

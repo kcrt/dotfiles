@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/file_and_directory.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.pythonRainbow_p1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># テスト</span>
+<span class="Comment"># /data (Current Directory)</span>
+<span class="Comment"># ├── animals/</span>
+<span class="Comment"># │     ├── dog.txt</span>
+<span class="Comment"># │     └── elephant.txt</span>
+<span class="Comment"># ├── .secret</span>
+<span class="Comment"># ├── apple.jpg</span>
+<span class="Comment"># └── hello.txt</span>
+
+<span class="PreProc">import</span> os
+<span class="PreProc">import</span> glob
+<span class="PreProc">import</span> stat
+<span class="PreProc">import</span> shutil
+<span class="PreProc">from</span> pathlib <span class="PreProc">import</span> Path, PureWindowsPath
+
+os.chdir<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+os.getcwd<span class="pythonRainbow_p0">()</span>  <span class="Comment"># =&gt; /data</span>
+
+<span class="Comment"># ファイルとディレクトリの列挙</span>
+<span class="Comment"># --- os.pathを用いた古式ゆかしき方法</span>
+os.listdir<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># =&gt; ['apple.jpg', 'animals', 'hello.txt', '.secret']</span>
+glob.glob<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/*</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 絶対パス =&gt; ['/data/apple.jpg', '/data/animals', '/data/hello.txt']</span>
+glob.glob<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./*</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># 相対パス =&gt; ['./apple.jpg', './animals', './hello.txt']</span>
+glob.glob<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/**</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> recursive=<span class="Identifier">True</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># サブディレクトリも含む、/data/も含むのに注意 =&gt; ['/data/', '/data/apple.jpg', '/data/animals', '/data/animals/dog.txt', '/data/animals/elephant.txt', '/data/hello.txt']</span>
+glob.glob<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">.*</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>         <span class="Comment"># ドット(.)で始まるファイル =&gt; ['.secret']</span>
+<span class="Comment"># *, ?, [] (例:[A-Z], [0-9]など), **(recursive) が使用できる</span>
+<span class="Comment"># /bin/[にマッチさせたい場合は =&gt; glob.glob(&quot;/bin/[[]&quot;)</span>
+<span class="Comment"># より低レベルな処理はos.scandirとfnmatchで行うことが出来る。</span>
+
+<span class="Statement">for</span> <span class="Identifier">file</span> <span class="Statement">in</span> glob.iglob<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/*</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>:
+    <span class="Comment"># forなどではイテレーターを返すiglobが便利</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="Identifier">file</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># パスの解釈</span>
+os.path.abspath<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>          <span class="Comment"># 例: =&gt; &quot;/data/apple.jpg&quot;</span>
+os.path.relpath<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; ./apple.jpg</span>
+os.path.isabs<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./appke.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>            <span class="Comment"># 絶対パスかどうか</span>
+
+os.path.expanduser<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">~/.vimrc</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># 例: =&gt; /Users/kcrt/.vimrc など</span>
+os.path.expandvars<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">$GOPATH/bin</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># 例: =&gt; /Users/kcrt/go/bin など</span>
+os.path.normpath<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/usr/local/../../bin/bash</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># =&gt; /bin/bash</span>
+
+os.path.join<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">usr</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">bin</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">open</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; /usr/bin/open</span>
+
+filename = <span class="String">&quot;</span><span class="String">/data/animals/dog.txt</span><span class="String">&quot;</span>
+os.path.basename<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; dog.txt</span>
+os.path.dirname<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>       <span class="Comment"># =&gt; /data/animals</span>
+os.path.split<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; ['/data/animals', 'dog.txt']</span>
+os.path.splitext<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>   <span class="Comment"># =&gt; ['/data/animals/dog', '.txt']</span>
+
+<span class="Comment"># 存在確認</span>
+os.path.exists<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>
+os.path.isfile<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>         <span class="Comment"># 通常ファイルかどうか(シンボリックリンク含む)</span>
+os.path.isdir<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>
+<span class="Comment"># lexists: シンボリックリンクでの挙動に違い</span>
+<span class="Comment"># islink: ディレクトリをさすシンボリックリンクか</span>
+<span class="Comment"># ismount: マウントポイントか</span>
+
+<span class="Comment"># 属性確認</span>
+os.path.getsize<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>        <span class="Comment"># ファイルサイズ</span>
+os.path.getatime<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>       <span class="Comment"># アクセス時間 (epoch秒)</span>
+<span class="Comment"># getmtime (更新時間), getctime (変更時間)</span>
+
+<span class="Comment"># パーミション</span>
+st = os.stat<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_p0">)</span>
+st.st_mode   <span class="Comment"># パーミッション</span>
+st.st_uid    <span class="Comment"># ユーザーID</span>
+st.st_gid    <span class="Comment"># グループID</span>
+st.st_ino    <span class="Comment"># ino </span>
+<span class="Comment"># 今の権限でアクセスできるかの確認には</span>
+<span class="Statement">if</span> os.access<span class="pythonRainbow_p0">(</span>filename<span class="pythonRainbow_o0">,</span> os.R_OK<span class="pythonRainbow_p0">)</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">You can read!</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+    <span class="Comment"># 他にW_OK, X_OK</span>
+<span class="Comment"># パーミッションの変更</span>
+os.chmod<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/hello.txt</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> stat.S_IRUSR | stat.S_IWUSR<span class="pythonRainbow_p0">)</span>
+<span class="Comment"># chown</span>
+
+<span class="Comment"># --- pathlib (新しい方法)</span>
+<span class="Comment"># ファイルシステムにアクセスしないPurePathと、具体的なシステムのデータをハンドルするPathがある。</span>
+<span class="Comment"># たとえば、non-Windows上でも、PureWindowsPathならWindowsのパスを扱える</span>
+<span class="Comment"># ほとんどの場合はPathを使用する</span>
+
+p = Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">.</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>p.iterdir<span class="pythonRainbow_p1">()</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># =&gt; ディレクトリ内のアイテムを刺すPathオブジェクト</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>p.glob<span class="pythonRainbow_p1">(</span><span class="String">&quot;</span><span class="String">*</span><span class="String">&quot;</span><span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># 同上 (glob.globと違い、ドット(.)で始まるファイルも含む [[注意]] )</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>p.glob<span class="pythonRainbow_p1">(</span><span class="String">&quot;</span><span class="String">**/*</span><span class="String">&quot;</span><span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># サブディレクトリも</span>
+
+<span class="Comment"># パスの解釈</span>
+Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>.resolve<span class="pythonRainbow_p0">()</span>       <span class="Comment"># 絶対パスを取得</span>
+cwd = Path.cwd<span class="pythonRainbow_p0">()</span>                    <span class="Comment"># os.getcwd()のPath版</span>
+Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>.relative_to<span class="pythonRainbow_p0">(</span>cwd<span class="pythonRainbow_p0">)</span>  <span class="Comment"># 相対パスへ</span>
+<span class="Comment"># os.path.relpathでは&quot;./apple.jpg&quot;</span>
+<span class="Comment"># Path.relative_toでは&quot;apple.jpg&quot; [[注意]]</span>
+p.is_absolute<span class="pythonRainbow_p0">()</span>     <span class="Comment"># 絶対パスかどうか</span>
+
+Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">~/.vimrc</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>.expanduser<span class="pythonRainbow_p0">()</span>
+Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/usr/local/../../bin/bash</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>.resolve<span class="pythonRainbow_p0">()</span>  <span class="Comment"># =&gt; /bin/bash</span>
+
+Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/usr</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> / <span class="String">&quot;</span><span class="String">bin</span><span class="String">&quot;</span> / <span class="String">&quot;</span><span class="String">open</span><span class="String">&quot;</span>   <span class="Comment"># '/'でパスの結合</span>
+
+p = Path<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/animals/dog.txt</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+p.name      <span class="Comment"># =&gt; dog.txt</span>
+p.parent    <span class="Comment"># =&gt; /data/animals</span>
+p.stem      <span class="Comment"># =&gt; dog</span>
+p.suffix    <span class="Comment"># =&gt; .txt</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>p.drive<span class="pythonRainbow_p0">)</span>  <span class="Comment"># 空文字列</span>
+
+pwin = PureWindowsPath<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">C:</span><span class="Special">\\</span><span class="String">Windows</span><span class="Special">\\</span><span class="String">notepad.exe</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>pwin.name<span class="pythonRainbow_p0">)</span>    <span class="Comment"># =&gt; notepad.exe</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>pwin.parent<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; C:\Windows</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>pwin.suffix<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; .exe</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>pwin.drive<span class="pythonRainbow_p0">)</span>   <span class="Comment"># =&gt; C:</span>
+
+<span class="Comment"># 存在確認</span>
+p.exists<span class="pythonRainbow_p0">()</span>
+p.is_file<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 通常ファイルか (シンボリックリンク含む)</span>
+p.is_dir<span class="pythonRainbow_p0">()</span>   <span class="Comment"># ディレクトリか</span>
+<span class="Comment"># is_symlink, is_mount</span>
+
+<span class="Comment"># 属性確認</span>
+p.stat<span class="pythonRainbow_p0">()</span>.st_size    <span class="Comment"># ファイルサイズ</span>
+p.stat<span class="pythonRainbow_p0">()</span>.st_atime   <span class="Comment"># アクセス時間</span>
+<span class="Comment"># st_mtime, st_ctime</span>
+
+<span class="Comment"># パーミッション</span>
+p.stat<span class="pythonRainbow_p0">()</span>.st_mode    <span class="Comment"># パーミッション</span>
+p.owner<span class="pythonRainbow_p0">()</span>
+p.group<span class="pythonRainbow_p0">()</span>
+p.chmod<span class="pythonRainbow_p0">(</span><span class="Constant">0o777</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># p.chownはない、os.chownを使用する</span>
+
+<span class="Comment"># os.pathと違い、ファイルの中身のアクセスも出来る</span>
+<span class="Statement">with</span> p.open<span class="pythonRainbow_p0">()</span> <span class="Statement">as</span> f:
+    f.readline<span class="pythonRainbow_p0">()</span>
+<span class="Comment"># p.read_bytes(), p.read_text(encoding=...)</span>
+<span class="Comment"># p.write_bytes(ddata), p.write_text(data, encoding=...)</span>
+
+
+<span class="Comment"># ファイルのコピーや移動</span>
+os.chdir<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+os.mkdir<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">yes</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>     <span class="Comment"># すでにディレクトリがあると例外</span>
+<span class="Comment"># または Path(&quot;/data/yes&quot;).mkdir(exist_ok=True)</span>
+os.makedirs<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">one/two/three</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># 再帰的に作成</span>
+<span class="Comment"># または Path(&quot;one/two/three&quot;).mkdir(parents=True)</span>
+shutil.copyfile<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">orange.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># (src, dest) - destがあると上書き [[注意]]</span>
+shutil.copy<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">orange.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">animals</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># copyfileと違い、destはディレクトリでも可, copymode: パーミションをコピー, copystat: パーミション・属性をコピー, copy2: ファイルをメタデータごとコピー, copytree(src, dest): ディレクトリごと</span>
+os.rename<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">orange.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">kiwi.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># または Path(&quot;orange.jpg&quot;).rename(&quot;kiwi.jpg&quot;)</span>
+shutil.move<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">kiwi.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">animals</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>          <span class="Comment"># renameと違い、destはディレクトリでも可</span>
+os.remove<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/animals/kiwi.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># os.unlinkも同じ動作</span>
+<span class="Comment"># または Path(&quot;......&quot;).unlink()</span>
+os.rmdir<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/yes</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># または Path(&quot;/data/yes&quot;).rmdir()</span>
+os.removedirs<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">one/two/three</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># shutil.rmtree(path): 中身が入っていても削除</span>
+
+
+<span class="Comment"># その他</span>
+<span class="Comment"># ファイルやディレクトリの比較を行う filecmp, dircmp</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

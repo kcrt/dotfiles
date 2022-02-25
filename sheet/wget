@@ -1,0 +1,7 @@
+wget http://www.kcrt.net/
+
+wget -r http://www.kcrt.net/		サイト全体
+wget -r -l 3 http://www.kcrt.net/	3階層
+wget -c http://www.kcrt.net/		リジューム
+wget -i URL一覧
+

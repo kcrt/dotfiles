@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/date_and_time.js.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="javascript.jsx">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.Boolean { color: #cd0000; }
+.Comment { color: #0000ee; font-style: italic; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+.Type { color: #008b00; font-weight: bold; }
+.Constant { color: #ff8c00; }
+.Normal { color: #000000; background-color: #ffffff; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+
+<span class="Comment">// == 型 ==</span>
+<span class="Comment">// 標準オブジェクトとしてDateが利用可能である</span>
+
+
+<span class="Comment">// == 現在の日付と時刻 ==</span>
+nowvar = <span class="Identifier">new</span> <span class="Type">Date</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 現在の日付</span>
+
+<span class="Comment">// == オブジェクトの生成 ==</span>
+mybirthday = <span class="Identifier">new</span> <span class="Type">Date</span><span class="Normal">(</span><span class="Constant">1984</span><span class="Normal">,</span> <span class="Constant">8</span><span class="Normal">,</span> <span class="Constant">24</span><span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// 注：9月です。月は0-11</span>
+mybirthtime = <span class="Identifier">new</span> <span class="Type">Date</span><span class="Normal">(</span><span class="Constant">1984</span><span class="Normal">,</span> <span class="Constant">8</span><span class="Normal">,</span> <span class="Constant">24</span><span class="Normal">,</span> <span class="Constant">12</span><span class="Normal">,</span> <span class="Constant">3</span><span class="Normal">,</span> <span class="Constant">24</span><span class="Normal">)</span><span class="Statement">;</span>
+mybirthtime = <span class="Identifier">new</span> <span class="Type">Date</span><span class="Normal">(</span><span class="String">'September 24, 1984 12:03:24'</span><span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// 非推奨: ブラウザごとに挙動が異なる</span>
+<span class="Comment">// new なしで呼び出した`Date(1984, 9, 24)`場合は文字列を返すので注意</span>
+
+<span class="Comment">// == オブジェクトからのアイテムの取得</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>mybirthtime.<span class="Statement">getFullYear</span><span class="Normal">()</span><span class="Normal">,</span> mybirthtime.<span class="Statement">getMonth</span><span class="Normal">()</span><span class="Normal">,</span> mybirthtime.<span class="Statement">getDate</span><span class="Normal">()</span><span class="Normal">,</span>
+            mybirthtime.<span class="Statement">getHours</span><span class="Normal">()</span><span class="Normal">,</span> mybirthtime.<span class="Statement">getMinutes</span><span class="Normal">()</span><span class="Normal">,</span> mybirthtime.<span class="Statement">getSeconds</span><span class="Normal">()</span><span class="Normal">,</span>
+            mybirthtime.<span class="Statement">getMilliseconds</span><span class="Normal">())</span><span class="Statement">;</span>
+<span class="Comment">// mybirthtime.getMonth()は8 (=9月)</span>
+<span class="Comment">// mybirthtime.getYear()は非推奨</span>
+
+<span class="Comment">// == 曜日 ==</span>
+mybirthtime.<span class="Statement">getDay</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// Sun = 0, Mon = 1, ...</span>
+
+<span class="Comment">// == Unix time ==</span>
+<span class="Type">Date</span>.<span class="Statement">now</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 現在の時刻 (Unix time)</span>
+birth_epoch = mybirthtime.<span class="Statement">getTime</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// Unix timeに変換</span>
+<span class="Identifier">new</span> <span class="Type">Date</span><span class="Normal">(</span>birth_epoch<span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// Unix timeから</span>
+
+<span class="Comment">// == プロセッサー時間・高分解能時間 ==</span>
+<span class="Comment">// performance.now()が高分解能・モノトニックであるがサポートされていない環境も多い</span>
+<span class="Comment">// Node.jsではprocess.hrtime()が[秒, ナノ秒]を返す</span>
+
+<span class="Comment">// == 時間の計算 ==</span>
+delta = mybirthtime - nowvar<span class="Statement">;</span> <span class="Comment">// Dateの差はミリ秒で取得できる</span>
+mybirthtime.<span class="Statement">setMonth</span><span class="Normal">(</span>mybirthtime.<span class="Statement">getMonth</span><span class="Normal">()</span> + <span class="Constant">10</span><span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// 10ヶ月後</span>
+<span class="Comment">// setMonthは負の数や12以上の数もうまく処理してくれるので、</span>
+<span class="Comment">// それを利用して日付や時刻の計算を行える</span>
+
+
+<span class="Comment">// == 時差関連 == </span>
+<span class="Comment">// mybirthtime.getUTCHours()などで協定世界時に基づく値を取得できる</span>
+mybirthtime.<span class="Statement">getTimezoneOffset</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 時差(分): 日本だと -540(+9hだがマイナス)</span>
+
+<span class="Comment">// == 文字列へ ==</span>
+mybirthtime.<span class="Statement">toDateString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 日付部のみ 'Mon Sep 24 1984'</span>
+mybirthtime.<span class="Statement">toTimeString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 時刻部のみ '12:03:24 GMT+0900 (JST)'</span>
+mybirthtime.<span class="Statement">toString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 'Mon Sep 24 1984 12:03:24 GMT+0900 (JST)'</span>
+mybirthtime.<span class="Statement">toLocaleString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 設定に沿った表記 '1984/9/24 12:03:24'</span>
+    <span class="Comment">// toLocaleDateString(), toLocalTimeString()もあり</span>
+mybirthtime.<span class="Statement">toISOString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// ISO形式(UTC時間) '1984-09-24T03:03:24.000Z'</span>
+mybirthtime.<span class="Statement">toUTCString</span><span class="Normal">()</span><span class="Statement">;</span> <span class="Comment">// 'Mon, 24 Sep 1984 03:03:24 GMT'</span>
+<span class="Identifier">new</span> <span class="Type">Intl</span>.<span class="Statement">DateTimeFormat</span><span class="Normal">()</span>.format<span class="Normal">(</span>nowvar<span class="Normal">)</span><span class="Statement">;</span>       <span class="Comment">// デフォルト</span>
+<span class="Identifier">new</span> <span class="Type">Intl</span>.<span class="Statement">DateTimeFormat</span><span class="Normal">(</span><span class="String">&quot;ar-EG&quot;</span><span class="Normal">)</span>.format<span class="Normal">(</span>nowvar<span class="Normal">)</span><span class="Statement">;</span>    <span class="Comment">// アラビア語</span>
+<span class="Identifier">new</span> <span class="Type">Intl</span>.<span class="Statement">DateTimeFormat</span><span class="Normal">(</span><span class="String">&quot;en-US&quot;</span><span class="Normal">,</span> <span class="Identifier">{</span><span class="Statement">hour12</span>: <span class="Boolean">false</span><span class="Normal">,</span> <span class="Statement">weekday</span>: <span class="String">&quot;long&quot;</span><span class="Identifier">}</span><span class="Normal">)</span>.format<span class="Normal">(</span>nowvar<span class="Normal">)</span><span class="Statement">;</span>
+<span class="Comment">// toLocaleFormatは非推奨</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

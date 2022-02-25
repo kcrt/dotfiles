@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.js.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="javascript.jsx">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Todo { color: #0000ff; background-color: #ffff00; padding-bottom: 1px; }
+.javascriptRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.javascriptRainbow_lv0_p0 { color: #3a5fcd; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Constant">&quot;use strict&quot;</span><span class="Statement">;</span>
+
+<span class="Comment">/* var, letの違いはスコープ */</span>
+<span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Identifier">var</span> a = <span class="Constant">1</span><span class="Statement">;</span>
+    <span class="Identifier">let</span> b = <span class="Constant">2</span><span class="Statement">;</span>
+    <span class="Comment">// c = 3;// グローバル変数、strictモードではエラー！</span>
+<span class="javascriptRainbow_lv0_p2">}</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>a<span class="Normal">)</span><span class="Statement">;</span>         <span class="Comment">// 1</span>
+<span class="Comment">// [[ERROR]] console.log(b);        // スコープ外なのでエラー!</span>
+
+<span class="Comment">/* 数値 (Number) */</span>
+<span class="Comment">/* ECMAScriptには&quot;整数型&quot;はないが、丸めが行われているかは確認できる。 */</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Number</span>.<span class="Statement">isSafeInteger</span><span class="Normal">(</span><span class="Constant">1000000000000000</span><span class="Normal">))</span><span class="Statement">;</span>    <span class="Comment">// true: 丸められていない。</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Number</span>.<span class="Statement">isSafeInteger</span><span class="Normal">(</span><span class="Constant">10000000000000013</span><span class="Normal">))</span><span class="Statement">;</span>   <span class="Comment">// false: 2^53 - 1(Number.MAX_SAFE_INTEGER)以上はnot safe</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Number</span>.<span class="Statement">isInteger</span><span class="Normal">(</span><span class="Constant">10000000000000013</span><span class="Normal">))</span><span class="Statement">;</span>       <span class="Comment">// 整数ではある</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">10000000000000013</span><span class="Normal">)</span><span class="Statement">;</span>                         <span class="Comment">// 10000000000000012となる [[注意]]</span>
+<span class="Comment">/* 配列では、Int8Arrayなどで整数を扱うことが出来る array [[参照]] */</span>
+
+<span class="Identifier">let</span> d = <span class="Constant">3.2e-2</span><span class="Statement">;</span>
+<span class="Identifier">let</span> d2 = Infinity<span class="Statement">;</span>      <span class="Comment">// Infinity, -Infinity, NaN(またはNumber.NaNを使用可能</span>
+<span class="Identifier">let</span> d3 = <span class="Constant">-0</span><span class="Statement">;</span>            <span class="Comment">// 0と-0は一応区別される (が、0 === -0)</span>
+<span class="Type">Number</span>.<span class="Statement">isFinite</span><span class="Normal">(</span>d2<span class="Normal">)</span><span class="Statement">;</span>
+<span class="Type">Number</span>.<span class="Statement">isNaN</span><span class="Normal">(</span>d2<span class="Normal">)</span>
+<span class="Type">isNaN</span><span class="Normal">(</span>d2<span class="Normal">)</span>               <span class="Comment">// 厳密には少し挙動が違う</span>
+NaN<span class="Statement">;</span>
+<span class="Type">Number</span>.<span class="Statement">NaN</span><span class="Statement">;</span>
+NaN === NaN             <span class="Comment">// false</span>
+
+a = <span class="Constant">0.024</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>a.<span class="Statement">toFixed</span><span class="Normal">(</span><span class="Constant">5</span><span class="Normal">))</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>a.<span class="Statement">toPrecision</span><span class="Normal">(</span><span class="Constant">5</span><span class="Normal">))</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>a.<span class="Statement">toExponential</span><span class="Normal">())</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>a.<span class="Statement">toExponential</span><span class="Normal">(</span><span class="Constant">5</span><span class="Normal">))</span><span class="Statement">;</span>
+
+<span class="Comment">/* 論理型(Boolean) */</span>
+<span class="Constant">true</span>
+<span class="Constant">false</span>
+
+<span class="Comment">/* 定数 */</span>
+<span class="Identifier">const</span> x = <span class="Constant">32</span><span class="Statement">;</span>
+<span class="Comment">// [[ERROR]] x = 4;                 // エラー！再代入出来ない</span>
+<span class="Identifier">const</span> arr = <span class="Identifier">[</span><span class="Constant">1</span><span class="Normal">,</span> <span class="Constant">2</span><span class="Normal">,</span> <span class="Constant">3</span><span class="Identifier">]</span>
+arr[<span class="Constant">2</span>] = <span class="Constant">4</span><span class="Statement">;</span>                 <span class="Comment">// 他の言語と違い、要素は変更できる [[注意]]</span>
+
+<span class="Comment">/* 変数の上限・下限 */</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Number</span>.<span class="Statement">MAX_VALUE</span><span class="Normal">)</span><span class="Statement">;</span>  <span class="Comment">// これ以上はInfinityになる。</span>
+<span class="Comment">// 他に、MIN_VALUE, EPSILON, MAX_SAFE_INTEGER, MIN_SAFE_INTEGER</span>
+
+
+<span class="Comment">/* 型の確認 */</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Identifier">typeof</span> x<span class="Normal">)</span><span class="Statement">;</span>      <span class="Comment">// number</span>
+
+<span class="Comment">/* ECMAScript 固有の型 */</span>
+<span class="Comment">// Null型 と Undefined型</span>
+<span class="Comment">// nullはオブジェクトが存在しないことを示す。該当するオブジェクトがない場合などに使う。</span>
+<span class="Comment">// 例えば、document.getElementById(&quot;存在しないID&quot;)は、null。</span>
+<span class="Comment">// undefinedは値がまだ代入されていない変数などに使われる。</span>
+<span class="Comment">// nullはリテラルだが、undefinedはグローバル変数。</span>
+<span class="Identifier">var</span> xx<span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>xx<span class="Normal">)</span><span class="Statement">;</span>                <span class="Comment">// 何も代入されていないのでundefined</span>
+<span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>xx === <span class="Constant">undefined</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Comment">// undefinedであるかは、===で確認。</span>
+<span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>xx == <span class="Constant">undefined</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Comment">// ==だと、xxがnullでもtrueになる。</span>
+<span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>xx === <span class="Identifier">void</span> <span class="Constant">0</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Comment">// void演算子は、何を渡されてもundefinedを返す。</span>
+    <span class="Comment">// undefinedが再代入可能であった時代はvoid 0をundefinedの代わりに使用していた。</span>
+<span class="javascriptRainbow_lv0_p2">}</span>
+<span class="Identifier">typeof</span> <span class="Constant">null</span>                 <span class="Comment">// 本来ならnullとなるべきだがobject</span>
+
+<span class="Comment">// Symbol 型</span>
+<span class="Identifier">var</span> sym1 = <span class="Type">Symbol</span><span class="Normal">(</span><span class="Constant">&quot;Hello&quot;</span><span class="Normal">)</span><span class="Statement">;</span>     <span class="Comment">// 引数は単なるデバッグ用の情報。</span>
+<span class="Identifier">var</span> sym2 = <span class="Type">Symbol</span><span class="Normal">(</span><span class="Constant">&quot;Hello&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>sym1 === sym2<span class="Normal">)</span><span class="Statement">;</span>     <span class="Comment">// false。Symbolは作るたびに別物になる。</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Symbol</span>.<span class="Statement">iterator</span><span class="Normal">)</span><span class="Statement">;</span>   <span class="Comment">// array [[参照]]</span>
+
+
+<span class="Comment">// </span><span class="Todo">TODO</span><span class="Comment">: empty, BigInt (将来のES)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

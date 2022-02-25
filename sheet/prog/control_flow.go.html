@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/control_flow.go.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="go">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.goRainbow_lv0_p0 { color: #3a5fcd; }
+.goRainbow_lv1_p0 { color: #cd6600; }
+.goRainbow_lv2_o0 { color: #43cd80; }
+.goRainbow_lv0_o2 { color: #3a5fcd; }
+.goRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.goRainbow_lv2_p0 { color: #43cd80; }
+.goRainbow_lv1_p1 { color: #cd6600; }
+.goRainbow_lv1_o2 { color: #cd6600; }
+.goRainbow_lv1_p2 { color: #cd6600; }
+.goRainbow_lv2_p2 { color: #43cd80; }
+.goRainbow_lv3_p2 { color: #b22222; }
+.Error { color: #ffffff; background-color: #ff0000; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Statement">package</span> main
+
+<span class="Statement">import</span> <span class="Constant">&quot;fmt&quot;</span>
+<span class="Statement">import</span> <span class="Constant">&quot;strconv&quot;</span>
+
+<span class="Statement">func</span> main<span class="goRainbow_lv0_p0">()</span> <span class="goRainbow_lv0_p2">{</span>
+    a := <span class="Constant">10</span>
+    fruits := <span class="goRainbow_lv1_p1">[]</span><span class="Type">string</span><span class="goRainbow_lv1_p2">{</span><span class="Constant">&quot;apple&quot;</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">&quot;banana&quot;</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">&quot;fig&quot;</span><span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// if</span>
+    <span class="Statement">if</span> a &lt; <span class="Constant">10</span> <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;less than 10.&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span> <span class="Statement">else</span> <span class="Statement">if</span> a == <span class="Constant">10</span> <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;equal to 10.&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span> <span class="Statement">else</span> <span class="goRainbow_lv1_p2">{</span>
+
+    <span class="goRainbow_lv1_p2">}</span>
+    <span class="Statement">if</span> i<span class="goRainbow_lv0_o2">,</span> _ := strconv.Atoi<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;2&quot;</span><span class="goRainbow_lv1_p0">)</span>; i == <span class="Constant">2</span> <span class="goRainbow_lv1_p2">{</span>
+        <span class="Comment">// 初期化節; 条件 も使用できる。</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;2&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// for</span>
+    <span class="Statement">for</span> i := <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++ <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span>i<span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// for each (range clause)</span>
+    <span class="Statement">for</span> i<span class="goRainbow_lv0_o2">,</span> f := <span class="Statement">range</span> fruits <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span>i<span class="goRainbow_lv2_o0">,</span> f<span class="goRainbow_lv2_p0">)</span> <span class="Comment">// i -&gt; index, f -&gt; item</span>
+    <span class="goRainbow_lv1_p2">}</span>
+    <span class="Comment">// range構文は適応するもので手に入るモノが違う</span>
+    <span class="Comment">// array/slice -&gt; index, item</span>
+    <span class="Comment">// string -&gt; index, rune</span>
+    <span class="Comment">// map -&gt; key, value</span>
+    <span class="Comment">// channel -&gt; element</span>
+
+    <span class="Comment">// break, continue</span>
+OuterLoop:
+    <span class="Statement">for</span> i := <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++ <span class="goRainbow_lv1_p2">{</span>
+    InnerLoop:
+        <span class="Statement">for</span> j := <span class="Constant">0</span>; j &lt; <span class="Constant">5</span>; j++ <span class="goRainbow_lv2_p2">{</span>
+            <span class="Statement">if</span> j == <span class="Constant">3</span> <span class="goRainbow_lv3_p2">{</span>
+                <span class="Statement">continue</span>
+            <span class="goRainbow_lv3_p2">}</span> <span class="Statement">else</span> <span class="Statement">if</span> j == <span class="Constant">4</span> <span class="goRainbow_lv3_p2">{</span>
+                <span class="Statement">continue</span> OuterLoop <span class="Comment">// ラベルを指定できる</span>
+            <span class="goRainbow_lv3_p2">}</span> <span class="Statement">else</span> <span class="Statement">if</span> j == <span class="Constant">5</span> <span class="goRainbow_lv3_p2">{</span>
+                <span class="Statement">break</span> InnerLoop <span class="Comment">// breakも同様</span>
+            <span class="goRainbow_lv3_p2">}</span>
+        <span class="goRainbow_lv2_p2">}</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// loop</span>
+    <span class="Statement">for</span> a &gt; <span class="Constant">2</span> <span class="goRainbow_lv1_p2">{</span>
+        a--
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// infinite loop</span>
+    <span class="Statement">for</span> <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">break</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// Switch (初期化節も使用できる)</span>
+    <span class="Comment">// また、必ずしも整数でなくても良い (文字列でもOK)</span>
+    <span class="Statement">switch</span> l := <span class="Statement">len</span><span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;abc&quot;</span><span class="goRainbow_lv1_p0">)</span>; l <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">case</span> <span class="Constant">0</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">1</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">3</span>:
+            <span class="Comment">// カンマで区切って値を指定できる。</span>
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;0-3&quot;</span><span class="goRainbow_lv2_p0">)</span><span class="Comment">// 標準でbreak不要！</span>
+        <span class="Statement">case</span> <span class="Constant">4</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;4&quot;</span><span class="goRainbow_lv2_p0">)</span>
+            <span class="Statement">fallthrough</span><span class="Comment">// fallthroutも指定可能</span>
+        <span class="Statement">default</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;other&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+
+    <span class="Comment">// interfaceのtype switch</span>
+    <span class="Statement">var</span> iface <span class="Statement">interface</span> <span class="goRainbow_lv1_p2">{}</span>
+    iface = <span class="Constant">3</span>
+    <span class="Statement">switch</span> iface.<span class="goRainbow_lv1_p0">(</span><span class="Statement">type</span><span class="goRainbow_lv1_p0">)</span> <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">case</span> <span class="Statement">nil</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;nil&quot;</span><span class="goRainbow_lv2_p0">)</span>
+        <span class="Statement">case</span> <span class="Type">int</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;int&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+    <span class="Statement">switch</span> <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">case</span> a == <span class="Constant">0</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;zero&quot;</span><span class="goRainbow_lv2_p0">)</span>
+        <span class="Statement">case</span> a == <span class="Constant">1</span>:
+            <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;one&quot;</span><span class="goRainbow_lv2_p0">)</span>
+            <span class="Comment">// if else チェーンの代わりにも使用できる。</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+<span class="Error">    </span>
+
+
+    <span class="Statement">goto</span> MyLabel
+MyLabel:
+<span class="goRainbow_lv0_p2">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

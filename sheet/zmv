@@ -1,0 +1,9 @@
+-f 上書き   -i 確認   -n 実際に動かさない
+-v verbose	-w ()の省略 / -W ()の省略(先も)
+zmv -W *.jpeg *.jpg
+zmv -W */*.jpg *_*.jpg
+zmv -w */*.jpg '$2_$1.jpg'
+zmv (*).jpeg \$1.jpg    or    zmv '(*).jpeg' '$1.jpg'
+zmv (*) \${(L)1} # 小文字に  大文字: U, Capital: C  
+zmv '(*)' '${1// /_}'
+zcp, zln, zln -s

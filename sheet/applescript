@@ -1,0 +1,87 @@
+display dialog "Hello world"
+log "Hello world"
+-- comment
+# comment
+(*
+  comment
+  comment
+*)
+
+set a to 1
+set b to 1.234
+set c to b as integer
+set d to b as string
+"ABC" & "DEF"
+length of stringvar
+text 2 of stringvar	# 2文字目
+text 1 thru 3 of stringvar	# 1-3文字目
+text -3 thru -1 of stringvar	# 後ろ3文字
+set e to characters of stringvar	# 文字列→文字の配列へ
+id of "a"	# 文字コード
+set f to a as list
+local x, y 
+global z
+copy 1 to a
+
+# list 
+set a to {1, 2, 3, 4, 5}
+reverse of a
+first item of a
+last item of a
+item 2 of a
+
+
+# record
+set a to {age: 7, name:"kcrt"}
+log name of a
+
+# if
+if a = 1 then
+	#
+elif a = 2 or a = 3 then
+	#
+end if
+
+# for next
+repeat with i from 1 to 10 [by -1]
+	#
+end repeat
+
+set aList to {1,2,3}
+repeat with i in aList
+	log i
+	log contents of i
+	copy j to i
+end repeat
+
+repeat 3 times
+	log "Hello"
+	exit repeat
+end repeat
+
+repeat while a > 10
+	#
+end repeat
+
+
+on getData(param)
+	#
+end getData
+
+on getData(param as number)
+	#
+end getData
+
+# ラベル併用
+on getData(aParam:param as number)
+	#
+end getData
+set a to getData(1.2)
+set a to getData given aParam:3
+
+# 無意味句
+on getData for a at b
+	return a + b
+end getData
+log getData for 10 at 20
+# about, above, against, apart from, around, aside from, at, below, beneath, beside, between, by, for, from, instead of, into, on, onto, out of, over, since, thru (throughも可), under

@@ -1,0 +1,7 @@
+some-command > log 2>&1
+cat << EOF
+...
+...
+EOF
+
+vim <(ls -la)

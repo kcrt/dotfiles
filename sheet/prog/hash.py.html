@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/hash.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.pythonRainbow_lv0_o1 { color: #3a5fcd; }
+.pythonRainbow_lv0_p1 { color: #3a5fcd; }
+.pythonRainbow_lv1_p1 { color: #cd6600; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.pythonRainbow_lv0_o0 { color: #3a5fcd; }
+.pythonRainbow_lv0_p0 { color: #3a5fcd; }
+.pythonRainbow_lv1_o0 { color: #cd6600; }
+.pythonRainbow_lv1_p0 { color: #cd6600; }
+.pythonRainbow_lv0_o2 { color: #3a5fcd; }
+.pythonRainbow_lv0_p2 { color: #3a5fcd; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> collections <span class="PreProc">import</span> defaultdict, OrderedDict
+
+<span class="Comment"># python ではdictと呼ばれる</span>
+person = <span class="pythonRainbow_lv0_p2">{</span>
+    <span class="Constant">&quot;</span><span class="Constant">name</span><span class="Constant">&quot;</span>: <span class="Constant">&quot;</span><span class="Constant">Kyohei, Takahashi</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o2">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">nickname</span><span class="Constant">&quot;</span>: <span class="Constant">&quot;</span><span class="Constant">kcrt</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o2">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">addr</span><span class="Constant">&quot;</span>: <span class="Constant">&quot;</span><span class="Constant">kcrt@kcrt.net</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o2">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span>: <span class="Constant">34</span>
+<span class="pythonRainbow_lv0_p2">}</span>
+my_dict = <span class="Identifier">dict</span><span class="pythonRainbow_lv0_p0">(</span>one=<span class="Constant">1</span><span class="pythonRainbow_lv0_o0">,</span> two=<span class="Constant">2</span><span class="pythonRainbow_lv0_o0">,</span> three=<span class="Constant">3</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># これでも作れる</span>
+
+person<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">nickname</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span>  <span class="Comment"># =&gt; &quot;kcrt&quot;</span>
+<span class="Comment"># person[&quot;nokey&quot;]   # [[ERROR]] KeyError</span>
+person.get<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">nokey</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">default</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># なければ引数で指定したもの(省略時None)を返す (例外にならない)</span>
+
+person<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">birthday</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">&quot;</span><span class="Constant">1984-09-24</span><span class="Constant">&quot;</span>   <span class="Comment"># 辞書に追加・変更</span>
+<span class="Statement">del</span> person<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span>                   <span class="Comment"># 辞書から削除</span>
+my_item = person.pop<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">addr</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>        <span class="Comment"># 取得して削除</span>
+<span class="Identifier">len</span><span class="pythonRainbow_lv0_p0">(</span>person<span class="pythonRainbow_lv0_p0">)</span>         <span class="Comment"># =&gt; 4 : 項目の数</span>
+
+<span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span> <span class="Statement">in</span> person     <span class="Comment"># キーが含まれているかの確認</span>
+
+<span class="Comment"># 結合</span>
+dict1 = <span class="pythonRainbow_lv0_p2">{</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span>: <span class="Constant">1</span><span class="pythonRainbow_lv0_o2">,</span> <span class="Constant">&quot;</span><span class="Constant">b</span><span class="Constant">&quot;</span>: <span class="Constant">2</span><span class="pythonRainbow_lv0_p2">}</span>
+dict2 = <span class="pythonRainbow_lv0_p2">{</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span>: <span class="Constant">3</span><span class="pythonRainbow_lv0_o2">,</span> <span class="Constant">&quot;</span><span class="Constant">d</span><span class="Constant">&quot;</span>: <span class="Constant">4</span><span class="pythonRainbow_lv0_p2">}</span>
+dict1.update<span class="pythonRainbow_lv0_p0">(</span>dict2<span class="pythonRainbow_lv0_p0">)</span>     <span class="Comment"># dict1 += dict2的な</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>dict1<span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 走査</span>
+<span class="Statement">for</span> <span class="pythonRainbow_lv0_p0">(</span>key<span class="pythonRainbow_lv0_o0">,</span> value<span class="pythonRainbow_lv0_p0">)</span> <span class="Statement">in</span> person.items<span class="pythonRainbow_lv0_p0">()</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>f<span class="Constant">&quot;</span><span class="Constant">{key} is {value}</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># もしくは</span>
+<span class="Statement">for</span> key <span class="Statement">in</span> person.keys<span class="pythonRainbow_lv0_p0">()</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>f<span class="Constant">&quot;</span><span class="Constant">{key} is {person[key]}</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># もしくは</span>
+<span class="Statement">for</span> value <span class="Statement">in</span> person.values<span class="pythonRainbow_lv0_p0">()</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>f<span class="Constant">&quot;</span><span class="Constant">{value}</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 内包表記</span>
+<span class="Comment"># 配列と同じく内包表記が便利</span>
+<span class="Comment"># { キー: 値 for 仮引数 in 対象のリスト if 条件 } (if 条件は省略可能)</span>
+myperson = <span class="pythonRainbow_lv0_p2">{</span>name: value.upper<span class="pythonRainbow_lv1_p0">()</span> <span class="Statement">for</span> <span class="pythonRainbow_lv1_p0">(</span>name<span class="pythonRainbow_lv1_o0">,</span> value<span class="pythonRainbow_lv1_p0">)</span> <span class="Statement">in</span> person.items<span class="pythonRainbow_lv1_p0">()</span><span class="pythonRainbow_lv0_p2">}</span>
+
+<span class="Comment"># defaultdict</span>
+mydict = defaultdict<span class="pythonRainbow_lv0_p0">(</span><span class="Identifier">int</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>mydict<span class="pythonRainbow_lv1_p1">[</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; 0 : エラーにならない</span>
+<span class="Statement">for</span> c <span class="Statement">in</span> <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">aa</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">&quot;</span><span class="Constant">bb</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">&quot;</span><span class="Constant">cc</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span>:
+    mydict<span class="pythonRainbow_lv0_p1">[</span>c<span class="pythonRainbow_lv0_p1">]</span> += <span class="Constant">1</span>  <span class="Comment"># 初めてのアクセス時に要素が出来る</span>
+
+<span class="Comment"># defaultdict(int)のintは型名でなく関数</span>
+<span class="Comment"># アイテムがなければint() すなわち 0をセットする</span>
+<span class="Comment"># defaultdict(lambda: random.randint(1, 10))なんて事も出来る</span>
+
+<span class="Comment"># OrderedDict</span>
+<span class="Comment"># defaultdictと違い、ordereddictでないのはこちらの方が新しいから(see: naming_rule)</span>
+mydict = OrderedDict<span class="pythonRainbow_lv0_p0">()</span>
+mydict<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">1</span>
+mydict<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">b</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">1</span>
+mydict<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">c</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">1</span>
+mydict.keys<span class="pythonRainbow_lv0_p0">()</span>    <span class="Comment"># =&gt; 必ず追加した順になる</span>
+<span class="Comment"># 順番が意味を持つjsonファイルなどを扱う際に便利(see: json)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

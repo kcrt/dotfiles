@@ -1,0 +1,74 @@
+\documentclass[option][class]
+	* option	a4paper, a4j, ...
+				10pt, 11pt, ...
+				onecolumn, twocolumn
+				oneside(奇数・偶数ページを区別しない), twoside
+				draft(はみ出し時にマーク), final
+				tombo (断ちきりトンボ)
+	* class		article, report(やや長い文章), book(両面印刷前提), jsarticle, ..., tarticle(縦書), ...
+
+プリアンブル
+\title{表題}
+\author{著者}	\author{著者 \and 著者}	\author{著者\thanks{所属}}
+\date{\today}
+\baselineskip=1.5\baselineskip % 行間隔
+
+\begin{document}
+	\maketitle
+	\tableofcontents
+	\begin{abstract}
+		...
+	\end{abstract} 
+
+	見出し
+	\part{部} % 部(part) jbookで使用可
+	\chapter{章} % 章(chapter) jreport,jbookで使用可
+	\section{節} % 節(section)
+	\subsection{小節} % 小節(subsection)
+	\subsubsection{小々節} % 小々節(subsubsection)
+	\chapter[目次見出し]{本文用見出し}
+	\chapter*{} % 番号なし見出し
+
+	文字の位置
+	\begin{flushleft}	\begin{center}	\begin{flushright}
+
+	\footnote{脚注}
+	
+	箇条書き
+	(プリアンブル) \def\labelitemi{新しい見出し記号} itemi - itemiv
+	\begin{itemize}			\begin{enumerate} 番号付き
+		\item AAA
+		\item BBB
+		\item[●] CCC
+	\end{itemize}
+
+	数式
+	$ ～ $ % 数式モード-インライン数式 : 文中
+	\[ ～ \] % 数式モード-ディスプレイ数式 : 独立した行
+	\begin{equation} ～ \end{equation} % 数式(equation)環境, 数式番号付番
+	\begin{eqnarray} ～ \end{eqnarray} % 数式(eqnarray)環境:別行立て（複数行）数式, 数式番号付番
+
+	記号
+	http://www.tex.ac.uk/tex-archive/info/symbols/comprehensive/symbols-a4.pdf
+	\textcircled{1}
+
+
+\end{document}
+
+段組
+\usepackage{multiocol}
+\begin{multicols}{段組数}
+	...
+\end{multicols}
+
+改ページ
+\newpage
+\cleardoublepage % 奇数ページにする
+
+別ファイル
+\include{anotherfile} % anotherfile.texを読み込む
+\input{anotherfile.tex} % 改ページなしで読み込む
+
+ルビ
+\usepackage{okumacro}
+\ruby{患児}{かんじ}

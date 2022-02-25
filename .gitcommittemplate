@@ -1,0 +1,23 @@
+
+# ==== Emojis ====
+# 🎉	:tada: 盛大に祝うべき大きな機能追加, Initial commit
+# ✨	:sparkles: 部分的な機能追加
+# 🐛🐞	:bug: or :beetle: バグ修正
+# 👍	:+1: 機能改善
+# 🔨	:hammer: リファクタリング
+# 🚿	:shower: 不要な機能・使われなくなった機能の削除
+# 💚	:green_heart: テストやCIの修正・改善
+# 👕	:shirt: Lintエラーの修正やコードスタイルの修正
+# 🚀	:rocket: パフォーマンス改善
+# ⬆️		:arrow_up: 依存パッケージなどのアップデート
+# 🔒	:lock: セキュリティ関連
+# 📝	:memo: ドキュメントの編集
+# 💥	:boom: 衝突・動作しないバージョン
+# 🌐	:globe_with_meridians: 翻訳の変更
+# 🔖	:bookmark: タグ付けバージョン
+# 💮	:white_flower: テストの追加
+# 🗑️	:wastebasket: 削除
+# 🚧	:construction: Work In Progress
+# 💄	:lipstick: UIの変更
+# 🐧 / 🍎 / 🏁 / 📱		:penguin: :apple: :checkered_flag: :iphone:
+#   Linux, Mac, Windows, Mobile 固有の変更

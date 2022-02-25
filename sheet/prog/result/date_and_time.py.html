@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/date_and_time.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> datetime <span class="PreProc">import</span> <span class="pythonRainbow_p0">(</span>datetime<span class="pythonRainbow_o0">,</span> date<span class="pythonRainbow_o0">,</span> timedelta<span class="pythonRainbow_o0">,</span> timezone<span class="pythonRainbow_p0">)</span>
+<span class="PreProc">import</span> time
+<span class="PreProc">import</span> calendar
+<span class="PreProc">import</span> locale
+
+<span class="Comment"># == 型 ==</span>
+<span class="Comment"># datetime.date, datetime.time, datetime.datetime</span>
+<span class="Comment"># 時間の差分情報としてdatetime.timedelataが使用される</span>
+<span class="Comment"># C言語と同様の使用できるtime.struct_timeもある</span>
+
+<span class="Comment"># == 現在の日付と時刻 ==</span>
+date.today<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 日付のみ(date型)</span>
+datetime.today<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 日付と時刻(datetime型)</span>
+nowvar = datetime.now<span class="pythonRainbow_p0">()</span>  <span class="Comment"># todayと同じだが環境によっては高精度</span>
+
+<span class="Comment"># == オブジェクトの生成 ==</span>
+mybirthday = date<span class="pythonRainbow_p0">(</span><span class="Constant">1984</span><span class="pythonRainbow_o0">,</span> <span class="Constant">9</span><span class="pythonRainbow_o0">,</span> <span class="Constant">24</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 日付のみ、月は1-12で指定</span>
+mybirthtime = datetime<span class="pythonRainbow_p0">(</span><span class="Constant">1984</span><span class="pythonRainbow_o0">,</span> <span class="Constant">9</span><span class="pythonRainbow_o0">,</span> <span class="Constant">24</span><span class="pythonRainbow_o0">,</span> <span class="Constant">12</span><span class="pythonRainbow_o0">,</span> <span class="Constant">3</span><span class="pythonRainbow_o0">,</span> <span class="Constant">24</span><span class="pythonRainbow_p0">)</span>
+mybirthtime = datetime.strptime<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">1984/09/24 12:03:24</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">%Y/%m/%d %H:%M:%S</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># == オブジェクトからのアイテムの取得 ==</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>mybirthtime.year<span class="pythonRainbow_o0">,</span> mybirthtime.month<span class="pythonRainbow_o0">,</span> mybirthtime.day<span class="pythonRainbow_o0">,</span> mybirthtime.hour<span class="pythonRainbow_o0">,</span>
+      mybirthtime.minute<span class="pythonRainbow_o0">,</span> mybirthtime.second<span class="pythonRainbow_o0">,</span> mybirthtime.microsecond<span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># == 曜日 ==</span>
+mybirthtime.weekday<span class="pythonRainbow_p0">()</span>  <span class="Comment"># Mon = 0, ..., Sun = 6</span>
+mybirthtime.isoweekday<span class="pythonRainbow_p0">()</span>  <span class="Comment"># Mon = 1, ..., Sun = 7</span>
+
+<span class="Comment"># == Unix time ==</span>
+time.time<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 現在の時刻</span>
+birth_epoch = mybirthtime.timestamp<span class="pythonRainbow_p0">()</span>  <span class="Comment"># Unix timeへ</span>
+datetime.fromtimestamp<span class="pythonRainbow_p0">(</span>birth_epoch<span class="pythonRainbow_p0">)</span>  <span class="Comment"># Unix timeから</span>
+
+<span class="Comment"># == プロセッサー時間・高分解能時間 ==</span>
+<span class="Comment"># time.clock() は3.3で撤廃された</span>
+time.monotonic<span class="pythonRainbow_p0">()</span>  <span class="Comment"># モノトニッククロック(sec) - 必ず時間が増加する</span>
+time.perf_counter<span class="pythonRainbow_p0">()</span>  <span class="Comment"># (sec) 高分解能</span>
+time.process_time<span class="pythonRainbow_p0">()</span>  <span class="Comment"># (sec) プロセスごとのCPU時間</span>
+
+<span class="Comment"># == 時間の計算 ==</span>
+delta = mybirthtime - nowvar  <span class="Comment"># 差でtimedeltaを取得</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>nowvar + delta<span class="pythonRainbow_p0">)</span>  <span class="Comment"># timedeltaは演算に使える</span>
+delta.total_seconds<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 長さを秒で取得</span>
+mydelta = timedelta<span class="pythonRainbow_p0">(</span>seconds=<span class="Constant">30</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 30秒間を示すオブジェクト</span>
+
+<span class="Comment"># == 時差関連 ==</span>
+<span class="Comment"># 時差情報をもったawareともっていないnaiveがある</span>
+utc_naive = datetime.utcnow<span class="pythonRainbow_p0">()</span>  <span class="Comment"># naiveを返す</span>
+utc_aware = datetime.now<span class="pythonRainbow_p0">(</span>timezone.utc<span class="pythonRainbow_p0">)</span>  <span class="Comment"># awareを返す</span>
+my_utc_naive = utc_aware.replace<span class="pythonRainbow_p0">(</span>tzinfo=<span class="Identifier">None</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># tzinfoを外すとnaiveになる</span>
+mybirthtime.astimezone<span class="pythonRainbow_p0">(</span>tz=timezone.utc<span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># == 文字列へ ==</span>
+mybirthtime.isoformat<span class="pythonRainbow_p0">()</span>  <span class="Comment"># &quot;1984-09-24T12:03:24&quot;</span>
+mybirthtime.strftime<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">%Y/%m/%d %H:%M:%S</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># man strftime参照</span>
+
+<span class="Comment"># == その他 ==</span>
+calendar.isleap<span class="pythonRainbow_p0">(</span><span class="Constant">2018</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># 閏年か</span>
+calendar.prcal<span class="pythonRainbow_p0">(</span><span class="Constant">2018</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># カレンダー表示</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>calendar.day_name<span class="pythonRainbow_p0">)</span>  <span class="Comment"># ['Monday', 'Tuesday', 'Wednesday', ...]</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>calendar.day_abbr<span class="pythonRainbow_p0">)</span>  <span class="Comment"># ['Mon', 'Tue', 'Wed', ...]</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>calendar.month_name<span class="pythonRainbow_p0">)</span>     <span class="Comment"># =&gt; ['', 'January', 'February', 'March', ...]</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>calendar.month_abbr<span class="pythonRainbow_p0">)</span>     <span class="Comment"># =&gt; ['', 'Jan', 'Feb', 'Mar', ...]</span>
+
+locale.setlocale<span class="pythonRainbow_p0">(</span>locale.LC_ALL<span class="pythonRainbow_o0">,</span> <span class="String">'</span><span class="String">ja_JP</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+<span class="Identifier">list</span><span class="pythonRainbow_p0">(</span>calendar.day_name<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; ['月曜日', '火曜日', '水曜日' ...]</span>
+
+time.sleep<span class="pythonRainbow_p0">(</span><span class="Constant">5</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 5秒スリープ</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

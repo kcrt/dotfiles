@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/complex.c.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="c">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Statement { color: #b03060; font-weight: bold; }
+.PreProc { color: #1874cd; }
+.Type { color: #008b00; font-weight: bold; }
+.cRainbow_o0 { color: #3a5fcd; }
+.cRainbow_p0 { color: #3a5fcd; }
+.cRainbow_o1 { color: #cd6600; }
+.cRainbow_p1 { color: #cd6600; }
+.cRainbow_p2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="String">&lt;stdio.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;complex.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;tgmath.h&gt;</span>
+
+<span class="Type">int</span> main<span class="cRainbow_p0">(</span><span class="Type">int</span> argc<span class="cRainbow_o0">,</span> <span class="Type">char</span>** argv<span class="cRainbow_p0">){</span>
+
+    <span class="Comment">/*</span><span class="Comment"> [[C99]] 複素数: float _Complex, double _Complex, long double _Complex </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> bool同様、complex.hを読み込むとfloat complex といった名前を使用できる。</span><span class="Comment">*/</span>
+    <span class="Type">double</span> <span class="Type">complex</span> z = <span class="Constant">1</span> + <span class="Constant">2</span> * I;   <span class="Comment">/*</span><span class="Comment"> 1 + 2i </span><span class="Comment">*/</span>
+    <span class="Type">double</span> <span class="Type">complex</span> z2 = z * z;
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;z * z = </span><span class="Special">%f</span><span class="String"> + </span><span class="Special">%f</span><span class="String"> i</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> creal<span class="cRainbow_p2">(</span>z2<span class="cRainbow_p2">)</span><span class="cRainbow_o1">,</span> cimag<span class="cRainbow_p2">(</span>z2<span class="cRainbow_p2">)</span><span class="cRainbow_p1">)</span>;
+    <span class="Comment">/*</span><span class="Comment"> float, long double用にcrealf, creallがあるが、tgmain.hを読み込むとcrealはマクロになり適切なものが呼ばれる </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> carg (偏角), conj (複素共役), cproj(リーマン球面上の射影) </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 虚数型: float _Imaginaryなど </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> double imaginary y = 2 * I; optionalなのでサポートされていないことが多い。使用しない方が無難 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 三角関数：csin, ccos, ctanを使用する。float, long double用にはcsinf, csinlなどが用意されている。 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> tgmain.hを使用すると、単にsinで適切な物が選ばれます！ </span><span class="Comment">*/</span>
+    <span class="Type">double</span> <span class="Type">complex</span> y = sin<span class="cRainbow_p1">(</span>z<span class="cRainbow_p1">)</span>;
+    <span class="Comment">/*</span><span class="Comment"> cosh, acos, acosh, exp, log, sqrt, fabs も使用可能</span><span class="Comment">*/</span>
+
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cRainbow_p0">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

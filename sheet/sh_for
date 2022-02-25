@@ -1,0 +1,9 @@
+for f in *.txt; do
+	cat $f
+done
+
+zshでは
+for (( i = 0; i < 5; i++)); do;
+	...
+done
+も可

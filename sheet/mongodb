@@ -1,0 +1,20 @@
+
+  * 起動
+    * 手動起動(Mac): mongod --config /usr/local/etc/mongod.conf
+
+
+| MongoDB			| RDB				|
+-----------------------------------------
+| Database			| Database			|
+| Collection		| Table				|
+| Document			| Column (Record)	|
+| Index				| Index				|
+| Field				| Row				|
+
+
+mongo
+use <DATABASE>
+db.auth(<USER>, <PASS>)
+show collections
+db.<COLLECTION>.drop();
+

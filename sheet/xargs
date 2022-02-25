@@ -1,0 +1,11 @@
+find . | xargs rm
+ -> rm file1 file2 file3 .... file100
+    rm file101 file102 ...
+	rm file201 file 202 ...
+	...
+
+find . -print0 | xargs -0 rm
+find . | xargs -I {} mv {} ~/.Trash
+	-I {}	{}を引数に置き換え
+
+-t	実行するコマンドを表示

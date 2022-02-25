@@ -1,0 +1,25 @@
+cat -c 文字数
+cat -c 文字数-文字数
+cat -f フィールド番号 [-d デリミタ]
+
+$ paste file1 file2 [-d デリミタ]
+file1_line1	file2_line1
+file1_line2	file2_line2
+file1_line3	file2_line3
+
+
+$ join [-1 n] [-2 n] [-i] [-a n] [-v n] file1 file2
+joinの前は必ずsortしておくこと
+
+* file 1				* file 2
+AAA 10					AAA abc
+BBB 20					BBB bcd
+CCC 30					CCC cde
+->		AAA 10 abc
+		BBB 20 bcd
+		CCC 30 cde
+
+	-1 n, -2 n			ファイル1, ファイル2のマッチさせるフィールド
+	-i					マッチの時に大文字小文字の区別をしない
+	-a n				n=1 or 2; ファイルnはマッチしていなくても表示
+	-v n				n=1 or 2; ファイルnのマッチしていないものを表示

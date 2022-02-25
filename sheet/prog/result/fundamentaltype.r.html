@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.r.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="r">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.Boolean { color: #cd0000; }
+.rRainbow_p0 { color: #3a5fcd; }
+.Normal { color: #000000; background-color: #ffffff; padding-bottom: 1px; }
+.Special { color: #8a2be2; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.rRainbow_p1 { color: #cd6600; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+
+<span class="Comment"># 他の言語と違って、型の大きさ的な物がある、</span>
+<span class="Comment"># logical -&gt; numeric(integer, double) -&gt; complex -&gt; characterの順に&quot;大きい&quot; </span>
+
+<span class="Comment"># 整数</span>
+x <span class="Statement">=</span> <span class="Constant">32</span>              <span class="Comment"># これだとdouble</span>
+y <span class="Statement">=</span> <span class="Identifier">as.integer</span><span class="rRainbow_p0">(</span><span class="Constant">32</span><span class="rRainbow_p0">)</span>     <span class="Comment"># これで初めてinteger</span>
+
+<span class="Comment"># typeofとmodeで簡単に調べることが出来る</span>
+<span class="Identifier">print</span><span class="rRainbow_p0">(</span><span class="Identifier">typeof</span><span class="rRainbow_p1">(</span>x<span class="rRainbow_p1">)</span><span class="rRainbow_p0">)</span>    <span class="Comment"># double</span>
+<span class="Identifier">print</span><span class="rRainbow_p0">(</span><span class="Identifier">typeof</span><span class="rRainbow_p1">(</span>y<span class="rRainbow_p1">)</span><span class="rRainbow_p0">)</span>    <span class="Comment"># integer</span>
+<span class="Identifier">print</span><span class="rRainbow_p0">(</span><span class="Identifier">mode</span><span class="rRainbow_p1">(</span>x<span class="rRainbow_p1">)</span><span class="rRainbow_p0">)</span>      <span class="Comment"># numeric</span>
+
+<span class="Comment"># 浮動小数点</span>
+d <span class="Statement">=</span> <span class="Constant">3.14</span>
+<span class="Constant">Inf</span>
+<span class="Statement">-</span><span class="Constant">Inf</span>
+<span class="Constant">NaN</span>
+<span class="Identifier">is.nan</span><span class="rRainbow_p0">(</span><span class="Constant">NaN</span><span class="rRainbow_p0">)</span>
+<span class="Identifier">is.infinite</span><span class="rRainbow_p0">(</span><span class="Constant">Inf</span><span class="rRainbow_p0">)</span>    <span class="Comment"># 逆はis.finite</span>
+
+<span class="Comment"># 論理型 真 - TRUE, 偽 - FALSE</span>
+x <span class="Statement">=</span> <span class="Boolean">TRUE</span>
+<span class="Identifier">typeof</span><span class="rRainbow_p0">(</span>x<span class="rRainbow_p0">)</span>               <span class="Comment"># logical</span>
+x <span class="Statement">=</span> <span class="Constant">F</span>                   <span class="Comment"># T, Fという変数があらかじめあり、使用可能</span>
+
+<span class="Comment"># 定数</span>
+<span class="Comment"># LETTERS, letters, pi, month.name, month.abb のみが定数としてあるが、新規に定義は出来ない。</span>
+<span class="Identifier">print</span><span class="rRainbow_p0">(</span><span class="Constant">pi</span><span class="rRainbow_p0">)</span>
+
+<span class="Comment"># 変数の上限・下限</span>
+.Machine<span class="Special">$</span><span class="Normal">integer.max</span>
+<span class="Comment"># .Machine$integer.min はない (INT_MINはNA(integer)の内部表現として使用されているため)</span>
+.Machine<span class="Special">$</span><span class="Normal">double.eps</span>
+.Machine<span class="Special">$</span><span class="Normal">double.xmin</span>    <span class="Comment"># C++でいうlower (DBL_MINではない)</span>
+.Machine<span class="Special">$</span><span class="Normal">double.xmax</span>
+<span class="Identifier">format</span><span class="rRainbow_p0">(</span>.Machine<span class="rRainbow_p0">)</span>
+
+<span class="Comment"># Rに固有な物としてNA(欠損値)がある。</span>
+<span class="Comment"># doubleのNAや、characterのNAなど型ごとに内部では違う。</span>
+<span class="Constant">NA</span>                  <span class="Comment"># logicalのNAだが、状況に応じて適切な型に変換される。</span>
+<span class="Constant">NA_integer_</span>         <span class="Comment"># 明示的に型を指定する場合：NA_real_, NA_complex_, NA_character_</span>
+<span class="Identifier">is.na</span><span class="rRainbow_p0">(</span><span class="Constant">NA</span><span class="rRainbow_p0">)</span>           <span class="Comment"># true</span>
+<span class="Identifier">is.nan</span><span class="rRainbow_p0">(</span><span class="Constant">NA</span><span class="rRainbow_p0">)</span>          <span class="Comment"># false</span>
+<span class="Identifier">is.na</span><span class="rRainbow_p0">(</span><span class="Constant">NaN</span><span class="rRainbow_p0">)</span>          <span class="Comment"># true [[注意]]</span>
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

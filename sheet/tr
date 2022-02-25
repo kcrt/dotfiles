@@ -1,0 +1,16 @@
+tr 文字1 文字2
+	文字の置き換え
+	$ echo "abcde" | tr 'b' 'x'
+	axcde
+	$ echo "abcba" | tr 'bc' 'xy'
+	axyxa
+		b->x, c->yに置換される
+	$ echo "12345" | tr '0-9' 'a-z'
+	bcdef	
+	$ ls | tr ' ' '\n'
+		
+
+tr -d 文字
+	文字の削除
+	$ echo "abcde" | tr -d 'bc'
+	ade

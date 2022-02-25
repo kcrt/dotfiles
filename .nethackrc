@@ -1,0 +1,73 @@
+OPTION=pettype:dog,hilite_pet,catname:meowth,dogname:elizabeth,
+OPTION=color,fruit:fig,lit_corridor,autopickup,pickup_types:$,autodig,msghistory:20,msg_window:conbination,timed_delay,cmdassist,suppress_alert:3.4.3,time,boulder:0,checkpoint,!null,menu_headings:inverse,!number_pad,standout,windowtype:tty,menucolors
+
+#+   Colors: black, red, green, brown, blue, magenta, cyan, gray, orange,
+#+           lightgreen, yellow, lightblue, lightmagenta, lightcyan, white.
+#+   Attributes: none, bold, dim, underline, blink, inverse.
+
+# === MENUCOLOR ===
+MENUCOLOR="safe"=yellow
+MENUCOLOR="[0-9]:[0-9]"=yellow
+MENUCOLOR="\+[0-9]"=yellow
+MENUCOLOR="[Cc]ursed"=orange&inverse
+MENUCOLOR="[Uu]nholy"=orange&inverse
+MENUCOLOR="[Uu]ncursed"=yellow
+MENUCOLOR="[Bb]lessed"=lightgreen
+MENUCOLOR="[Hh]oly"=lightgreen
+MENUCOLOR="-[0-9]"=orange
+# underline objects "(wielded)", "(in quiver)", "(being worn)", ...
+MENUCOLOR="safe .* ([a-z].*)"=yellow&underline
+MENUCOLOR="\+[0-9] .* ([a-z].*)"=yellow&underline
+MENUCOLOR="[Cc]ursed .* ([a-z].*)"=orange&underline
+MENUCOLOR="[Uu]ncursed .* ([a-z].*)"=yellow&underline
+MENUCOLOR="[Bb]lessed .* ([a-z].*)"=lightgreen&underline
+MENUCOLOR="\-[0-9] .* ([a-z].*)"=orange&underline
+
+# important items
+MENUCOLOR=" bag .* holding"=magenta
+MENUCOLOR=" luckstone"=magenta
+MENUCOLOR=" wand .* wishing"=magenta
+MENUCOLOR=" magic marker"=magenta
+MENUCOLOR=" magic lamp"=magenta
+MENUCOLOR=" unicorn horn[^[]*$"=magenta
+MENUCOLOR=" tinning kit"=magenta
+MENUCOLOR=" lamp .* magic"=magenta
+MENUCOLOR=" ring .* regeneration"=magenta
+MENUCOLOR=" ring .* slow digestion"=magenta
+MENUCOLOR=" amulet .* life saving"=magenta
+
+# ARTIFACTS 
+# unaligned
+MENUCOLOR=" \(Dragonbane\|Fire Brand\|Frost Brand\|Ogresmasher\|Trollsbane\|Werebane\)"=lightgreen
+# lawful normal, quest
+MENUCOLOR=" \(Demonbane\|Excalibur\|Grayswandir\|Snickersnee\|Sunsword\)"=lightgreen
+MENUCOLOR=" \(Orb of Detection\|Sceptre of Might\|Magic Mirror of Merlin\|Mitre of Holiness\|Tsurugi of Muramasa\)"=lightgreen
+# neutral normal, quest
+MENUCOLOR=" \(Cleaver\|Giantslayer\|Magicbane\|Mjollnir\|Vorpal Blade\)"=lightgree
+MENUCOLOR=" \(Heart of Ahriman\|Staff of Aesculapius\|Eyes of the Overworld\|Platinum Yendorian Express Card\|Orb of Fate\|Eye of the Aethiopica\)"=lightgreen
+# chaotic normal, quest
+MENUCOLOR=" \(Grimtooth\|Orcrist\|Sting\|Stormbringer\)"=lightgreen
+MENUCOLOR=" \(Longbow of Diana\|Master Key of Thievery\)"=lightgreen
+#invocation items
+MENUCOLOR=" \(Bell of Opening\|silver bell\|Candelabrum of Invocation\|candelabrum\|Book of the Dead\|papyrus spellbook\)"=magenta&bold
+#raison d'etre
+MENUCOLOR=" Amulet of Yendor named"=magenta&bold&underline
+
+# bad items
+MENUCOLOR=" loadstone"=red&underline
+MENUCOLOR=" cursed .* luckstone"=orange&underline
+
+# gems
+MENUCOLOR=" gems? .* hard"=yellow
+#soft gems
+MENUCOLOR=" \([0-9]+\|an?\|gems? .*\) \(uncursed \|cursed \|blessed \)?\(dilithium\|opal\|garnet\|jasper\|agate\|jet\|obsidian\|jade\|citrine\|chrysoberyl\|amber\|amethyst\|fluorite\|turquoise\)\(e?s\)?\( stones?\| gems?\| crystals?\)?\( named .*\)?$"=brown
+#hard gems
+MENUCOLOR=" \([0-9]+\|an?\|gems?.*\) \(uncursed \|cursed \|blessed \)?\(diamond\|rub\(y\|ies\)\|jacinth\|sapphire\|black opal\|emerald\|topaz\|aquamarine\)\(e?s\)?\( stones?\| gems?\)?\( named .*\)?$"=yellow
+
+# do not put into the bag of holding!
+MENUCOLOR=" bag .* tricks"=blue&inverse
+MENUCOLOR=" wand .* cancellation"=blue&inverse
+MENUCOLOR=" wand .* vanish"=blue&inverse
+
+# unpaied
+MENUCOLOR=" (unpaid, [0-9]+ zorkmids?)"=inverse

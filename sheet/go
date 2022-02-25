@@ -1,0 +1,195 @@
+
+----- Hello world -----
+package main
+import "fmt"
+
+var S = ""
+func init() {
+	S = "Yes!"
+}
+
+func main() {
+	fmt.Println("Hello, 世界")
+}
+
+-----------------------
+
+* 型
+var a int
+int, float64, string
+[100]int	// 配列
+[]int		// スライス
+map[string]int
+struct { a int}
+interface { m() int }
+reflect.TypeOf(variable)で型名取得可能
+
+* 配列操作
+a := make([]int, 要素数[, キャパシティ])
+a := make([]int, 5, 10)
+len(a)	// 5
+cap(a)	// 10個分のメモリが確保される
+b := [...]int{1, 2, 3}	// bは配列
+c := []int{1, 2, 3}		// cはスライス
+d := b[1:3]
+b = append(b, 10)		// エラー！：bは配列
+c = append(d, 10)		// cはスライスなので拡張可能
+c = append(c, d...)		// dを展開して追加
+copy(dst, src)
+	// dstにsrcをコピー
+	// dstの方が大きい場合、srcの文だけ上書き
+	// srcの方が大きい場合、dstのサイズは大きくならない
+
+配列は値渡し、スライスは参照渡し
+
+* 連想配列
+a = make(map[string]int)
+a["c"] = 100
+n, ok = a["c"]			// n -> 値(なければゼロ), ok -> 値が存在するか
+b = map[string]int{"c": 2, "d": 4}
+delete(b, "c")
+
+* 構造体
+a := struct {
+	N int
+	s string
+}{ N: 100, s: "hoge"}
+fmt.Println(a.N)
+
+* type
+type Int int
+type Person struct {
+	Name string	
+	Age int		"年齢"		// タグ情報を後ろにつけることができる(一部のライブラリで使用)
+}
+k := Person{"kcrt", 31}
+k := Person{Name:"kcrt", Age: 31}
+type AAA struct {
+	int
+	string
+	Person
+}
+p = new(Person)	// pはポインタ
+AAA.int や AAA.Personでアクセスできる(変数名を省略すると型と同じものが選ばれる)
+ただし、一意に決まる場合は途中の変数名は省略できる。AAA.Person.Nameの代わりにAAA.NameでアクセスOK
+
+
+* ポインタ
+Cとほとんど同じだが、アロー演算子(->)はドット(.)で代用可能
+
+* 分岐
+if a == 0 {
+
+} else if a == 1 {
+
+}
+if a := f(); a > 0 {
+
+}
+
+switch a {
+	case 1:
+		...			// breakは不要
+	case 2:
+		...
+		fallthrough;	// こちらは指定が必要
+	default:
+		...
+}
+switch {
+	case a == 1:
+		...
+}
+switch v := interfacevar.(type){
+	case int:
+		printLn(v)
+}
+
+ * for
+for i := 0; i <= 100; i ++{
+}
+for i <= 100{
+}
+for {
+}
+for i, n := range arr {
+}
+for k, v := range mapvar {
+}
+
+
+ * 関数
+func add(x int, y int) int {
+	defer fmt.Println(x)		// 関数終了時に実行
+	return x + y
+}
+
+* メソッド
+type Hex int
+func (h Hex) String() string {
+	return fmt.Sprintf("%x", int(h))
+}
+
+var hex Hex = 100
+fmt.Println(hex.String())
+
+* cast キャスト
+var v interface{}
+v = 100
+n = v.(int)		// int以外ではエラー
+n, ok = v.(int)		//int以外ではok == false
+s, ok = v.(string)
+v.(type)
+
+ * import
+import ("time"; "fmt")
+import (
+	"time"
+	"fmt"
+	)
+
+ * 時間
+import "time"
+time.Now()
+
+
+* go と チャネル
+var ch chan int
+var ch1 <-chan int	// 受信専用チャネル
+var ch2 chan<- int	// 送信専用チャネル
+ch3 := make(chan int, 8)	// バッファサイズ
+
+ch3 <- 3
+a := <-ch3
+fmt.Println(<-ch3)
+
+// 同時に受信待つ
+select {
+	case: e1 := <- ch1
+		// ch1の処理
+	case: e2 := <- ch2
+		// ch2の処理
+	default: 
+		// どれにも値なし (ブロックされない)
+}
+
+// 同時に送信をする
+select {
+	case: ch1 <- 1 
+		// ch1の処理
+	case: ch2 <- 2
+		// ch2の処理
+	default: 
+		// どれにも空きなし (ブロックされない)
+}
+
+  * 文字列
+str := "abc"
+sRune := []rune(str)
+len(str)
+for _, c := range str{
+	// cは自動でrune
+}
+  * クロスコンパイル
+GOOS=[windows|linux] GOARCH=amd64 go build
+

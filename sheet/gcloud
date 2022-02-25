@@ -1,0 +1,11 @@
+
+* compute
+gcloud compute images list
+
+gcloud compute instances create INSTANCE_NAME
+gcloud compute instances list
+gcloud compute instances describe INSTANCE_NAME
+gcloud compute instances create MACHINE_NAME --image IMAGE_NAME --machine-type MACHINE_TYPE --zone ZONE
+gcloud compute ssh INSTANCE_NAME
+gcloud compute copy-files LOCAL_PATH INSTANCE_NAME:REMOTE_PATH
+

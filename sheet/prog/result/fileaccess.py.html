@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fileaccess.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.pythonRainbow_p1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> struct <span class="PreProc">import</span> unpack
+
+fp = <span class="Identifier">open</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/hello.txt</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">r</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> encoding=<span class="String">&quot;</span><span class="String">utf-8</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> errors=<span class="String">'</span><span class="String">ignore</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> newline=<span class="Identifier">None</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># ファイル名以外は省略可</span>
+<span class="Comment"># mode:</span>
+<span class="Comment">#   r - 読み込み専用 (省力可)</span>
+<span class="Comment">#   w - 書き込み (既存の内容は削除)</span>
+<span class="Comment">#   x - 書き込み、すでにあるとエラー</span>
+<span class="Comment">#   a - 追記</span>
+<span class="Comment">#   b - バイナリ</span>
+<span class="Comment">#   t - テキスト (省略可)</span>
+<span class="Comment">#   + - 更新 (読み書き)</span>
+<span class="Comment"># buffering=0 (テキスト読み込み時は使用不可)</span>
+<span class="Comment"># errors (en/decodeできないときにどうするか):</span>
+<span class="Comment">#   strict(省略時): ValueError例外</span>
+<span class="Comment">#   ignore: 無視する</span>
+<span class="Comment">#   replace: '?'などに置換</span>
+<span class="Comment">#   他に surrogateescape, xmlcharrefreplace, backslashreplace, namereplaceなど</span>
+<span class="Comment"># newline (改行コード):</span>
+<span class="Comment">#   None(省略時): '\n'を環境に合わせる</span>
+<span class="Comment">#   '\n', '\r', '\r\n'</span>
+
+fp.read<span class="pythonRainbow_p0">()</span>   <span class="Comment"># ファイル内容をすべて読み込む</span>
+fp.seek<span class="pythonRainbow_p0">(</span><span class="Constant">0</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 最初から</span>
+fp.readline<span class="pythonRainbow_p0">()</span>   <span class="Comment"># 1行読み込み</span>
+fp.read<span class="pythonRainbow_p0">(</span><span class="Constant">4</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 4**文字**読み込み (bではbyte)</span>
+fp.tell<span class="pythonRainbow_p0">()</span>   <span class="Comment"># =&gt; バイト位置</span>
+
+fp.seek<span class="pythonRainbow_p0">(</span><span class="Constant">0</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># 1行づつ処理</span>
+<span class="Statement">for</span> myline <span class="Statement">in</span> fp:
+    <span class="Comment"># mylineは改行コード付きなのに注意</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>myline.rstrip<span class="pythonRainbow_p1">()</span><span class="pythonRainbow_p0">)</span>
+
+fp.close<span class="pythonRainbow_p0">()</span>  <span class="Comment"># 閉じる</span>
+
+
+<span class="Comment"># ほとんどの場合はwithを使うことが良い</span>
+<span class="Statement">with</span> <span class="Identifier">open</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/hello.txt</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">w</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> <span class="Statement">as</span> fp:
+    <span class="Comment"># 改行コードは自分でつける</span>
+    fp.write<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">こんにちわ</span><span class="Special">\n</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+    fp.write<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Hello, world</span><span class="Special">\n</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># withが終われば自動的にclose</span>
+
+
+<span class="Statement">with</span> <span class="Identifier">open</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">/data/apple.jpg</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">r+b</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> <span class="Statement">as</span> fp:
+    <span class="Comment"># w+bだと、既存の内容はすべて消える</span>
+    data = fp.read<span class="pythonRainbow_p0">(</span><span class="Constant">2</span><span class="pythonRainbow_p0">)</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>data<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; b'\xff\xd8'</span>
+    <span class="Comment"># バイナリはpack, unpackと組み合わせると便利 (bytes参照)</span>
+    data = fp.read<span class="pythonRainbow_p0">(</span><span class="Constant">16</span><span class="pythonRainbow_p0">)</span>
+    info = unpack<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">&gt;bbH5sHbHH</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> data<span class="pythonRainbow_p0">)</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>f<span class="String">&quot;</span><span class="String">Image size: {info[6]} x {info[7]}</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+
+
+<span class="Comment"># 低レベル処理のos.open, os.readなどを使用することも出来るが通常はおすすめしない。</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

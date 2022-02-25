@@ -1,0 +1,55 @@
+
+# variable
+version=1.0
+echo data_$version
+echo data_${version}_jp
+
+export version
+export myversion=3.2
+myversion=3.2 command
+
+echo "version is $version"
+echo 'version is $version'		# 置換されない
+
+
+cat <<EOF
+This is a test
+Todat is a fine day.
+EOF
+
+# cat <<'EOF'とすると、中の変数は置換されない
+
+cat <<EOF | wc
+This is a test
+Todat is a fine day.
+EOF
+
+
+echo `echo hello`
+echo $(echo hello)		# not POSIX standard
+
+
+for f in *.jpg; do
+	echo "$f"
+done
+
+
+while read f; do
+	echo "Hello, $f"
+done
+
+(
+	cd build
+	./configure
+	make
+)	# ()の中はサブシェルで動く
+
+
+func_name() {
+	command1
+	comamnd2
+}
+
+
+echo $((1+1))
+

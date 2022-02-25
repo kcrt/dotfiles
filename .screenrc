@@ -1,0 +1,40 @@
+
+multiuser on
+startup_message off
+vbell off
+shell zsh
+
+#       id lifespan autorefresh command
+backtick 0 99999 99999 $HOME/etc/script/getdist.sh
+backtick 1 99999 99999 echo $USER
+backtick 2 5 20 $HOME/etc/script/cpuload.sh heavy
+backtick 3 5 20 $HOME/etc/script/cpuload.sh light
+backtick 4 5 60 $HOME/etc/script/appworking.sh yum yum "port u" port apt- apt aptitude apt wget wget ffmpeg ff recfriio (R) "brew upg" brew
+backtick 5 60 60 $HOME/etc/script/battery.sh
+backtick 6 600 600 $HOME/etc/script/hasupdate.sh
+# backtick 7 0 30 $HOME/etc/script/pingtime.sh
+
+caption always "%{Wb}%-w%{+bs .Wb}\\%{+u} %n %t %?(%u)%?%{-}/%{-}%+w"
+hardstatus alwayslastline "%{gW} [%1`@%H] %{wK} %0` %= %{wg}%6` %{wK}%4` %{-}%?%{rW}%2`%{-}%?%?%{gW}%3`%{-}%? %{Kw} %5` %m/%d %A %C"
+
+bell "^G You here some noises from the window %"
+sorendition "bW"
+defscrollback 3000
+altscreen on	# 画面復帰を有効に(vim終了時などに画面を戻す)
+
+nethack on
+
+# 256表示のために
+termcapinfo xterm-256color 'is=^[r^[mJ^[H^[?7h^[?1;4;6l'
+term screen-256color
+truecolor on
+cjkwidth off
+
+# キー設定
+escape ^zz
+bind j focus down
+bind k focus up
+bind + eval 'resize +1'
+bind ; eval 'resize +1'
+bind - eval 'resize -1'
+bind = eval 'resize ='

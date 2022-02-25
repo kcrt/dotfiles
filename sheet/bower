@@ -1,0 +1,16 @@
+npm install bower -g
+
+bower init
+bower install jquery --save
+bower install jquery --save-dev		# 開発中にのみ使用するモジュール
+bower install または bower install --production
+bower uninstall jquery
+bower search jquery
+bower list または bower ls
+bower update
+
+--- .bowerrc -----------------
+{
+	"directory": "lib"
+}
+

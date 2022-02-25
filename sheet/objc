@@ -1,0 +1,63 @@
+===== Enum =====
+// Specifying a typed enum with a name (recommended way)
+typedef NS_ENUM(NSInteger, UITableViewCellStyle) {
+	UITableViewCellStyleDefault,
+	UITableViewCellStyleValue1,
+	UITableViewCellStyleValue2,
+	UITableViewCellStyleSubtitle
+};
+
+// Specify a bitmask with a name (recommended way)
+typedef NS_OPTIONS(NSUInteger, RPBitMask) {
+	RPOptionNone      = 0,
+					  RPOptionRight     = 1 << 0,
+					  RPOptionBottom    = 1 << 1,
+					  RPOptionLeft      = 1 << 2,
+					  RPOptionTop       = 1 << 3
+};
+===== NSDictonary =====
+キーの存在
+[dictionary.allKeys containsObject:@"keyname"];
+
+
+
+===== クラス =====
+
+@interface MyClass : NSObject{
+	int myProp;	// プロパティインスタンス
+}
+- (void) myMethod;
+- (NSString *)myMethod2:(NSString *)a
+	myInt:(int) b;
+- (int) myProp;	// get
+- (void) setMyProp:(int)value; // set
+// -で始まるのはインスタンスメソッド
+// +で始まるのはクラスメソッド(インスタンスを生成せずに使える)
+@property int myIntProp;
+@property (assign) NSString *myStrProp;
+	// assign - 単純に代入、intなどオブジェクト型じゃなければ省略可能
+	// retain - インスタンス変数にセットされるときにメモリから破棄しないようにする
+	// copy - コピーを使ってインスタンスを設定する
+	// readwrite - (default)
+	// readonly - ゲッターメソッドのみ生成する
+@end
+
+@implementation MyClass
+- (void) myMethod {
+	printf("Hello\n");
+}
+- (int) myProp{		// プロパティゲット
+	return myProp;
+}
+- (void) setMyProp:(int)value{	// プロパティセット
+	myProp = value;
+}
+@synthesize myIntProp;	//getter, setterの自動生成
+@end
+
+int main(void){
+	MyClass *cls = [[MyClass alloc] init];
+	[cls myMethod];
+	cls.myProp = 4;
+	id s = [cls myMethod2:@"test" myInt:2];
+}

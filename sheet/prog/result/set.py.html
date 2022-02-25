@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/set.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o1 { color: #cd6600; }
+.pythonRainbow_p1 { color: #cd6600; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Constant { color: #ff8c00; }
+.Comment { color: #0000ee; font-style: italic; }
+.Statement { color: #b03060; font-weight: bold; }
+.Identifier { color: #458b74; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># <a href="https://devdocs.io/python~3.7/library/stdtypes#types-set">https://devdocs.io/python~3.7/library/stdtypes#types-set</a></span>
+
+<span class="Comment"># 集合</span>
+<span class="Comment"># setとfrozenset(変更不可)がある</span>
+mySet = <span class="Identifier">set</span><span class="pythonRainbow_p0">(</span><span class="pythonRainbow_p1">[</span><span class="String">'</span><span class="String">Apple</span><span class="String">'</span><span class="pythonRainbow_o1">,</span> <span class="String">'</span><span class="String">Banana</span><span class="String">'</span><span class="pythonRainbow_o1">,</span> <span class="String">'</span><span class="String">Kiwi</span><span class="String">'</span><span class="pythonRainbow_p1">]</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># または</span>
+mySet = <span class="pythonRainbow_p0">{</span><span class="String">'</span><span class="String">Apple</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="String">'</span><span class="String">Banana</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="String">'</span><span class="String">Kiwi</span><span class="String">'</span><span class="pythonRainbow_p0">}</span>
+<span class="Identifier">len</span><span class="pythonRainbow_p0">(</span>mySet<span class="pythonRainbow_p0">)</span>    <span class="Comment"># =&gt; 3</span>
+mySet.add<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Orange</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+mySet.add<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Orange</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 何回追加しても</span>
+mySet.add<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Orange</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 重複しては入らない</span>
+mySet           <span class="Comment"># =&gt; {'Apple', 'Banana', 'Kiwi', 'Orange'}</span>
+
+mySet.discard<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Apple</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+mySet.remove<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Banana</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># discard はなくてもエラーにならない</span>
+<span class="Comment"># remove はないとKeyError[[ERROR]]</span>
+<span class="Comment"># 一度に複数削除する .differece_update(_set_) または mySet -= _set_も使える</span>
+mySet   <span class="Comment"># =&gt; {'Kiwi', 'Orange'}</span>
+mySet.update<span class="pythonRainbow_p0">(</span><span class="pythonRainbow_p1">{</span><span class="String">'</span><span class="String">Kiwi</span><span class="String">'</span><span class="pythonRainbow_o1">,</span> <span class="String">'</span><span class="String">Peach</span><span class="String">'</span><span class="pythonRainbow_o1">,</span> <span class="String">'</span><span class="String">Mango</span><span class="String">'</span><span class="pythonRainbow_p1">}</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># または mySet |= {'Kiwi', 'Peach', 'Mango'}</span>
+mySet   <span class="Comment"># =&gt; {'Mango', 'Orange', 'Peach', 'Kiwi'}</span>
+
+<span class="Comment"># 内包表記も使用できる</span>
+<span class="pythonRainbow_p0">{</span>f<span class="String">&quot;</span><span class="String">**{x}**</span><span class="String">&quot;</span> <span class="Statement">for</span> x <span class="Statement">in</span> mySet<span class="pythonRainbow_p0">}</span>
+
+myItem = mySet.pop<span class="pythonRainbow_p0">()</span>    <span class="Comment"># なにが出てくるかは**運次第**</span>
+mySet.clear<span class="pythonRainbow_p0">()</span>   <span class="Comment"># すべて消去</span>
+
+emptySet = <span class="Identifier">set</span><span class="pythonRainbow_p0">()</span>    <span class="Comment"># &quot;{}&quot;だとdictになる</span>
+
+aSet = <span class="pythonRainbow_p0">{</span><span class="Constant">1</span><span class="pythonRainbow_o0">,</span> <span class="Constant">2</span><span class="pythonRainbow_o0">,</span> <span class="Constant">3</span><span class="pythonRainbow_o0">,</span> <span class="Constant">4</span><span class="pythonRainbow_o0">,</span> <span class="Constant">5</span><span class="pythonRainbow_p0">}</span>
+bSet = <span class="pythonRainbow_p0">{</span><span class="Constant">2</span><span class="pythonRainbow_o0">,</span> <span class="Constant">4</span><span class="pythonRainbow_o0">,</span> <span class="Constant">6</span><span class="pythonRainbow_o0">,</span> <span class="Constant">8</span><span class="pythonRainbow_o0">,</span> <span class="Constant">10</span><span class="pythonRainbow_p0">}</span>
+
+<span class="Constant">3</span> <span class="Statement">in</span> aSet       <span class="Comment"># =&gt; True</span>
+<span class="Constant">6</span> <span class="Statement">not</span> <span class="Statement">in</span> aSet   <span class="Comment"># =&gt; True</span>
+
+<span class="Comment"># 和集合：A∪B</span>
+aSet.union<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; {1, 2, 3, 4, 5, 6, 8, 10}</span>
+<span class="Comment"># または</span>
+aSet | bSet
+
+<span class="Comment"># 積集合・共通部分：A∩B</span>
+aSet.intersection<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; {2, 4}</span>
+<span class="Comment"># または</span>
+aSet &amp; bSet
+
+<span class="Comment"># 差集合: A ∖ B (Aのうち、Bに含まれていないもの)</span>
+aSet.difference<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>    <span class="Comment"># =&gt; {1, 3, 5}</span>
+<span class="Comment"># または</span>
+aSet - bSet
+
+<span class="Comment"># 対象差：A△B</span>
+aSet.symmetric_difference<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; {1, 3, 5, 6, 8, 10}</span>
+<span class="Comment"># または</span>
+aSet ^ bSet
+
+aSet.issubset<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>     <span class="Comment"># A⊆B</span>
+<span class="Comment"># または</span>
+aSet &lt;= bSet
+
+aSet.issuperset<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>   <span class="Comment"># A⊇B</span>
+<span class="Comment"># または</span>
+aSet &gt;= bSet
+
+aSet.isdisjoint<span class="pythonRainbow_p0">(</span>bSet<span class="pythonRainbow_p0">)</span>   <span class="Comment"># A∩B=∅</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

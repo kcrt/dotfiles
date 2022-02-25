@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.cpp.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="cpp">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.cppRainbow_lv3_p0 { color: #b22222; }
+.cppRainbow_lv0_o0 { color: #3a5fcd; }
+.cppRainbow_lv1_o1 { color: #cd6600; }
+.cppRainbow_lv1_p1 { color: #cd6600; }
+.cppRainbow_lv2_p1 { color: #43cd80; }
+.cppRainbow_lv2_p2 { color: #43cd80; }
+.cppRainbow_lv3_p2 { color: #b22222; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.Type { color: #2e8b57; font-weight: bold; }
+.cppRainbow_lv0_p0 { color: #3a5fcd; }
+.cppRainbow_lv1_o0 { color: #cd6600; }
+.cppRainbow_lv1_p0 { color: #cd6600; }
+.cppRainbow_lv2_o0 { color: #43cd80; }
+.cppRainbow_lv2_p0 { color: #43cd80; }
+.cppRainbow_lv3_p1 { color: #b22222; }
+.cppRainbow_lv0_o2 { color: #3a5fcd; }
+.cppRainbow_lv0_p2 { color: #3a5fcd; }
+.cppRainbow_lv1_o2 { color: #cd6600; }
+.cppRainbow_lv1_p2 { color: #cd6600; }
+.cppRainbow_lv2_o2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="Constant">&lt;iostream&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;vector&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;array&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;algorithm&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;functional&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;numeric&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;tuple&gt;</span>
+
+<span class="Statement">using</span> <span class="Type">namespace</span> std;
+
+<span class="Type">int</span> main<span class="cppRainbow_lv0_p0">(</span><span class="Type">int</span> argc<span class="cppRainbow_lv0_o0">,</span> <span class="Type">char</span>** argv<span class="cppRainbow_lv0_p0">)</span><span class="cppRainbow_lv0_p2">{</span>
+
+    <span class="Comment">// C言語と同じ通常の配列型も使用可能(説明省略)</span>
+    <span class="Type">int</span> carr<span class="cppRainbow_lv1_p1">[]</span> = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>; <span class="Comment">// 要素数は省略できる</span>
+    cout &lt;&lt; carr<span class="cppRainbow_lv1_p1">[</span><span class="Constant">0</span><span class="cppRainbow_lv1_p1">]</span> &lt;&lt; endl;<span class="Comment">// 要素へのアクセス</span>
+    cout &lt;&lt; <span class="Statement">sizeof</span><span class="cppRainbow_lv1_p0">(</span>carr<span class="cppRainbow_lv1_p0">)</span> &lt;&lt; endl; <span class="Comment">// 配列のサイズ(byte)</span>
+    cout &lt;&lt; <span class="Statement">sizeof</span><span class="cppRainbow_lv1_p0">(</span>carr<span class="cppRainbow_lv1_p0">)</span> / <span class="Statement">sizeof</span><span class="cppRainbow_lv1_p0">(</span>carr<span class="cppRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="cppRainbow_lv2_p1">]</span><span class="cppRainbow_lv1_p0">)</span> &lt;&lt; endl; <span class="Comment">// 配列要素数</span>
+
+    <span class="Comment">// 可変長配列 (最も一般的)</span>
+    vector&lt;<span class="Type">int</span>&gt; arr<span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>;<span class="Comment">// [[C++11]]</span>
+    vector&lt;<span class="Type">int</span>&gt; arr2a = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>;<span class="Comment">// [[C++11]]</span>
+    vector&lt;<span class="Type">int</span>&gt; arr2b<span class="cppRainbow_lv1_p0">(</span><span class="cppRainbow_lv2_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv2_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv2_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv2_p2">}</span><span class="cppRainbow_lv1_p0">)</span>;<span class="Comment">// [[C++11]]</span>
+    vector&lt;<span class="Type">int</span>&gt; arr2c<span class="cppRainbow_lv1_p0">(</span><span class="Constant">4</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span>;<span class="Comment">// 10, 10, 10, 10 [[C++03]]から使用できる</span>
+    <span class="Comment">// initializer list: {...}で、std::initializer_list&lt;T&gt;を生成して、通常の配列以外も初期化できるようになったのは[[C++11]]から</span>
+    <span class="Comment">// 固定長配列 [[C++11]]</span>
+    array&lt;<span class="Type">int</span><span class="cppRainbow_lv0_o2">,</span> <span class="Constant">3</span>&gt; arr3 <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>;
+    array&lt;<span class="Type">int</span><span class="cppRainbow_lv0_o2">,</span> <span class="Constant">3</span>&gt; arr3a = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>;
+
+    <span class="Comment">// その他にもlist, dequeなど様々なSTLコンテナを使用することが出来る。</span>
+
+    cout &lt;&lt; arr<span class="cppRainbow_lv1_p1">[</span><span class="Constant">0</span><span class="cppRainbow_lv1_p1">]</span> &lt;&lt; endl; <span class="Comment">// 要素へのアクセス</span>
+    cout &lt;&lt; arr.at<span class="cppRainbow_lv1_p0">(</span><span class="Constant">0</span><span class="cppRainbow_lv1_p0">)</span> &lt;&lt; endl;<span class="Comment">// atでもok</span>
+    cout &lt;&lt; arr.front<span class="cppRainbow_lv1_p0">()</span> &lt;&lt; arr.back<span class="cppRainbow_lv1_p0">()</span> &lt;&lt; endl;<span class="Comment">// 最初と最後</span>
+    <span class="Type">int</span> *pArr = arr.data<span class="cppRainbow_lv1_p0">()</span>; <span class="Comment">// 生の配列型</span>
+    <span class="Type">decltype</span><span class="cppRainbow_lv1_p0">(</span>arr<span class="cppRainbow_lv1_p0">)</span>::value_type x = arr<span class="cppRainbow_lv1_p1">[</span><span class="Constant">0</span><span class="cppRainbow_lv1_p1">]</span>;<span class="Comment">// 要素の型 decltypeは[[C++11]]</span>
+
+    <span class="Comment">// 走査：iteratorはautoでもOK</span>
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span>vector&lt;<span class="Type">int</span>&gt;::iterator it = arr.begin<span class="cppRainbow_lv2_p0">()</span>;
+            it != arr.end<span class="cppRainbow_lv2_p0">()</span>;
+            it++<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; *it &lt;&lt; endl;    <span class="Comment">// *でiteratorから値を取得</span>
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// イテレータ・リバースイテレータ (とそのconst版)</span>
+    arr3.begin<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.end<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.rbegin<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.rend<span class="cppRainbow_lv1_p0">()</span>;
+    arr3.cbegin<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.cend<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.crbegin<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr3.crend<span class="cppRainbow_lv1_p0">()</span>;
+
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp; i : arr<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> <span class="Comment">// range based for</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+
+    <span class="Comment">// 要素数</span>
+    cout &lt;&lt; arr.size<span class="cppRainbow_lv1_p0">()</span> &lt;&lt; endl;
+
+    <span class="Type">auto</span> is_odd = <span class="cppRainbow_lv1_p1">[]</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span>&amp; x<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> <span class="Statement">return</span> x % <span class="Constant">2</span>; <span class="cppRainbow_lv1_p2">}</span>;<span class="Comment">// [[C++11]]</span>
+
+    <span class="Comment">// 要素のコピー</span>
+    <span class="Type">auto</span> new_arr = arr;
+
+    <span class="Comment">// 検索</span>
+    count<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_p0">)</span>;<span class="Comment">// 2の数を検索</span>
+    cout &lt;&lt; <span class="Constant">&quot;odd&quot;</span> &lt;&lt; count_if<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> is_odd<span class="cppRainbow_lv1_p0">)</span> &lt;&lt; endl;
+
+    <span class="Type">auto</span> it1 = find<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Type">auto</span> it2 = find_if<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> is_odd<span class="cppRainbow_lv1_p0">)</span>;
+    cout &lt;&lt; *it2 &lt;&lt; endl;
+    <span class="Comment">// 見付からなければ第2匹数を返す。</span>
+
+    <span class="Comment">// 存在確認</span>
+    any_of<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> is_odd<span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Comment">// findを使用しても良い</span>
+
+    <span class="Comment">// 要素の追加・削除</span>
+    arr.push_back<span class="cppRainbow_lv1_p0">(</span><span class="Constant">4</span><span class="cppRainbow_lv1_p0">)</span>;
+    arr.pop_back<span class="cppRainbow_lv1_p0">()</span>;
+    arr.insert<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span> + <span class="Constant">1</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span>;
+
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp; i : arr<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+    arr.erase<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span> + <span class="Constant">2</span><span class="cppRainbow_lv1_p0">)</span>;
+    arr.clear<span class="cppRainbow_lv1_p0">()</span>;
+
+    arr = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">8</span><span class="cppRainbow_lv1_p2">}</span>;
+
+    <span class="Comment">// ソート</span>
+    sort<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_p0">)</span>;
+
+    <span class="Comment">// 逆順</span>
+    reverse<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Comment">// またはリバースイテレータを使用すれば良い</span>
+    arr.rbegin<span class="cppRainbow_lv1_p0">()</span><span class="cppRainbow_lv0_o2">,</span> arr.rend<span class="cppRainbow_lv1_p0">()</span>;
+
+
+    <span class="Comment">// function apply</span>
+    <span class="Type">auto</span> twotimes1 = <span class="cppRainbow_lv1_p1">[]</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span>&amp; x<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> x *= <span class="Constant">2</span>; <span class="cppRainbow_lv1_p2">}</span>; <span class="Comment">// [[C++11]]</span>
+    <span class="Type">auto</span> twotimes2 = <span class="cppRainbow_lv1_p1">[]</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span>&amp; x<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> <span class="Statement">return</span> x * <span class="Constant">2</span>; <span class="cppRainbow_lv1_p2">}</span>;<span class="Comment">// [[C++11]]</span>
+    cout &lt;&lt; <span class="Constant">&quot;transform&quot;</span> &lt;&lt; endl;
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp; i : arr<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+    for_each<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> twotimes1<span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp; i : arr<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+    <span class="Comment">// for_each: 関数を適応</span>
+    <span class="Comment">// transform: 第3引数は出力先、返値を使用</span>
+    transform<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> twotimes2<span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp; i : arr<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// filter</span>
+    vector&lt;<span class="Type">int</span>&gt; newarr;
+    copy_if<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> newarr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> is_odd<span class="cppRainbow_lv1_p0">)</span>;
+
+    arr = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="cppRainbow_lv1_p2">}</span>;
+
+
+    <span class="Comment">// reduce (include &lt;numeric&gt;)</span>
+    <span class="Comment">// 処理を省略すると和の計算(operator +)となる。</span>
+    <span class="Type">int</span> prod = accumulate<span class="cppRainbow_lv1_p0">(</span>arr.cbegin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.cend<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">1</span><span class="cppRainbow_lv1_o0">,</span> multiplies&lt;<span class="Type">int</span>&gt;<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_p0">)</span>;
+    <span class="Type">int</span> prod2 = reduce<span class="cppRainbow_lv1_p0">(</span>arr.cbegin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.cend<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">1</span><span class="cppRainbow_lv1_o0">,</span> multiplies&lt;<span class="Type">int</span>&gt;<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_p0">)</span>; <span class="Comment">// accumulateとちがい、前からとは限らない[[C++17]]</span>
+    cout &lt;&lt; prod &lt;&lt; prod2 &lt;&lt;endl;
+    <span class="Comment">// multipries以外にも、plus, minus, divides, modulus, equal_toなど色々ある [[C++11]]</span>
+
+    <span class="Comment">// max, min</span>
+    <span class="Type">auto</span> it = max_element<span class="cppRainbow_lv1_p0">(</span>arr.begin<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_o0">,</span> arr.end<span class="cppRainbow_lv2_p0">()</span><span class="cppRainbow_lv1_p0">)</span>;
+    cout &lt;&lt; *it &lt;&lt; endl;
+    <span class="Comment">// min_element, maxmin_element (pairを返す)</span>
+
+    <span class="Comment">// all</span>
+    arr = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">20</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">30</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">40</span><span class="cppRainbow_lv1_p2">}</span>;
+    <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span>all_of<span class="cppRainbow_lv2_p0">(</span>arr.cbegin<span class="cppRainbow_lv3_p0">()</span><span class="cppRainbow_lv2_o0">,</span> arr.cend<span class="cppRainbow_lv3_p0">()</span><span class="cppRainbow_lv2_o0">,</span> <span class="cppRainbow_lv3_p1">[]</span><span class="cppRainbow_lv3_p0">(</span><span class="Type">const</span> <span class="Type">int</span> &amp;x<span class="cppRainbow_lv3_p0">)</span><span class="cppRainbow_lv3_p2">{</span> <span class="Statement">return</span> x &gt; <span class="Constant">10</span>;<span class="cppRainbow_lv3_p2">}</span><span class="cppRainbow_lv2_p0">)</span><span class="cppRainbow_lv1_p0">)</span>
+        cout &lt;&lt; <span class="Constant">&quot;&gt; 10&quot;</span> &lt;&lt; endl;
+    <span class="Comment">// any</span>
+    <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span>any_of<span class="cppRainbow_lv2_p0">(</span>arr.cbegin<span class="cppRainbow_lv3_p0">()</span><span class="cppRainbow_lv2_o0">,</span> arr.cend<span class="cppRainbow_lv3_p0">()</span><span class="cppRainbow_lv2_o0">,</span> <span class="cppRainbow_lv3_p1">[]</span><span class="cppRainbow_lv3_p0">(</span><span class="Type">const</span> <span class="Type">int</span> &amp;x<span class="cppRainbow_lv3_p0">)</span><span class="cppRainbow_lv3_p2">{</span> <span class="Statement">return</span> x == <span class="Constant">20</span>;<span class="cppRainbow_lv3_p2">}</span><span class="cppRainbow_lv2_p0">)</span><span class="cppRainbow_lv1_p0">)</span>
+        cout &lt;&lt; <span class="Constant">&quot;there is 20&quot;</span> &lt;&lt; endl;
+
+    <span class="Comment">// Tuple [[C++11]]</span>
+    <span class="Type">auto</span> t = make_tuple<span class="cppRainbow_lv1_p0">(</span><span class="Constant">1</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">3.14</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">&quot;Hello&quot;</span><span class="cppRainbow_lv1_p0">)</span>;
+    cout &lt;&lt; get&lt;<span class="Constant">0</span>&gt;<span class="cppRainbow_lv1_p0">(</span>t<span class="cppRainbow_lv1_p0">)</span> &lt;&lt; endl;<span class="Comment">// -&gt; 1</span>
+    <span class="Type">auto</span> <span class="cppRainbow_lv1_p1">[</span>n<span class="cppRainbow_lv1_o1">,</span> d<span class="cppRainbow_lv1_o1">,</span> s<span class="cppRainbow_lv1_p1">]</span> = t; <span class="Comment">// [[C++17]]</span>
+    tie<span class="cppRainbow_lv1_p0">(</span>n<span class="cppRainbow_lv1_o0">,</span> d<span class="cppRainbow_lv1_o0">,</span> s<span class="cppRainbow_lv1_p0">)</span> = t;<span class="Comment">// [[C++11]]</span>
+    cout &lt;&lt; s &lt;&lt; endl;
+    <span class="Comment">// 2つのアイテムに特化したpairも存在する。</span>
+    <span class="Type">auto</span> p = make_pair<span class="cppRainbow_lv1_p0">(</span><span class="Constant">1</span><span class="cppRainbow_lv1_o0">,</span> <span class="Constant">&quot;Hello&quot;</span><span class="cppRainbow_lv1_p0">)</span>;
+    cout &lt;&lt; p.first &lt;&lt; p.second &lt;&lt; endl;
+
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cppRainbow_lv0_p2">}</span>
+
+<span class="Comment">// g++ helloworld.cpp -o helloworld(実行ファイル名)</span>
+<span class="Comment">// clang++ helloworld.cpp -o helloworld</span>
+<span class="Comment">//  --std=c++11フラグなどでC++のバージョンを指定できる</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

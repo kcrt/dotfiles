@@ -1,0 +1,9 @@
+* 現在のアーキテクチャを調べる
+$ uname -m
+$ arch
+
+* アプリの対応アーキテクチャを調べる
+$ lipo -info `which vim`
+
+* Rosetta上で実行する
+$ arch -x86_64 zsh

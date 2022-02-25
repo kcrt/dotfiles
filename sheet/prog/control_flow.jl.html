@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/control_flow.jl.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="julia">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.juliaRainbow_lv0_p0 { color: #3a5fcd; }
+.juliaRainbow_lv0_o1 { color: #3a5fcd; }
+.juliaRainbow_lv0_p1 { color: #3a5fcd; }
+.PreProc { color: #a020f0; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#</span><span class="Comment">!/usr/bin/env julia</span>
+
+<span class="Comment">#</span><span class="Comment"> 複合式</span>
+z <span class="Statement">=</span> <span class="Statement">begin</span>
+    x <span class="Statement">=</span> <span class="Constant">1</span>
+    y <span class="Statement">=</span> <span class="Constant">2</span>
+    x <span class="Statement">+</span> y
+<span class="Statement">end</span>
+
+a <span class="Statement">=</span> <span class="Constant">10</span>
+fruits <span class="Statement">=</span> <span class="juliaRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">apple</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">&quot;</span><span class="Constant">banana</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">&quot;</span><span class="Constant">fig</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p1">]</span>
+
+<span class="Comment">#</span><span class="Comment"> == if ==</span>
+<span class="Statement">if</span> a <span class="Statement">&lt;</span> <span class="Constant">10</span>
+    println(<span class="Constant">&quot;</span><span class="Constant">less than 10.</span><span class="Constant">&quot;</span>)
+<span class="Statement">elseif</span> a <span class="Statement">==</span> <span class="Constant">10</span>
+    println(<span class="Constant">&quot;</span><span class="Constant">equal to 10.</span><span class="Constant">&quot;</span>)
+<span class="Statement">else</span>
+
+<span class="Statement">end</span>
+
+<span class="Statement">try</span>
+    <span class="Comment">#</span><span class="Comment"> ifの条件は必ずBoolでないといけない</span>
+    <span class="Statement">if</span> <span class="Constant">1</span>    <span class="Comment">#</span><span class="Comment"> TypeError</span>
+        println(<span class="Constant">&quot;</span><span class="Constant">true!</span><span class="Constant">&quot;</span>)
+    <span class="Statement">end</span>
+<span class="Statement">catch</span>
+
+<span class="Statement">end</span>
+
+<span class="Comment">#</span><span class="Comment"> == 3項演算子 ==</span>
+println<span class="juliaRainbow_lv0_p0">(</span>a <span class="Statement">&lt;</span> <span class="Constant">0</span> <span class="Statement">?</span> <span class="Constant">&quot;</span><span class="Constant">negative</span><span class="Constant">&quot;</span> <span class="Statement">:</span> <span class="Constant">&quot;</span><span class="Constant">not negative</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> == 短絡評価 ==</span>
+f<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span> <span class="Statement">=</span> <span class="Statement">begin</span> println(x); <span class="Statement">return</span> <span class="Constant">true</span> <span class="Statement">end</span>
+
+<span class="Constant">false</span> <span class="Statement">&amp;&amp;</span> f<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">Won't be evaluated</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Constant">true</span> <span class="Statement">||</span> f<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">Won't be evaluated</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> bitwiseだと評価される</span>
+<span class="Constant">false</span> <span class="Statement">&amp;</span> f<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">Will be evaluated</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Constant">true</span> <span class="Statement">|</span> f<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">Will be evaluated</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> == for (each) ==</span>
+<span class="Statement">for</span> i <span class="Statement">=</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">5</span>
+    println(i)  <span class="Comment">#</span><span class="Comment"> 1, 2, 3, 4, 5</span>
+<span class="Statement">end</span>
+
+<span class="Statement">for</span> i <span class="Statement">in</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">5</span>    <span class="Comment">#</span><span class="Comment"> in, ∈も同様に使用可能</span>
+    println(i)
+<span class="Statement">end</span>
+
+x <span class="Statement">=</span> <span class="Constant">1</span>
+<span class="Statement">for</span> x <span class="Statement">=</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">3</span>
+    <span class="Comment">#</span><span class="Comment"> forのxと外のxは別物</span>
+<span class="Statement">end</span>
+println<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> 1</span>
+
+<span class="Statement">function</span> aaa()
+    x <span class="Statement">=</span> <span class="Constant">1</span>
+    <span class="Statement">for</span> <span class="Statement">outer</span> x <span class="Statement">=</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">3</span>
+        <span class="Comment">#</span><span class="Comment"> outer: forのxと外のxは共通</span>
+    <span class="Statement">end</span>
+    println(x)  <span class="Comment">#</span><span class="Comment"> 3</span>
+<span class="Statement">end</span>
+
+<span class="Comment">#</span><span class="Comment"> == break, continue</span>
+<span class="Statement">for</span> i <span class="Statement">in</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">10</span>
+    <span class="Statement">if</span> i <span class="Statement">==</span> <span class="Constant">4</span>
+        <span class="Statement">continue</span>    <span class="Comment">#</span><span class="Comment"> 次のループへ</span>
+    <span class="Statement">elseif</span> i <span class="Statement">==</span> <span class="Constant">5</span>
+        <span class="Statement">break</span>       <span class="Comment">#</span><span class="Comment"> ループ終了</span>
+    <span class="Statement">end</span>
+<span class="Statement">end</span>
+
+<span class="Comment">#</span><span class="Comment"> == nested for</span>
+<span class="Statement">for</span> i <span class="Statement">=</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">3</span>, fruit <span class="Statement">in</span> fruits
+    println(i, fruit)
+    <span class="Comment">#</span><span class="Comment"> 1apple, 1banana, 1fig, 2apple, ...</span>
+<span class="Statement">end</span>
+
+<span class="Comment">#</span><span class="Comment"> == loop ==</span>
+<span class="Statement">while</span> a <span class="Statement">&gt;</span> <span class="Constant">0</span>
+    println(a)
+    <span class="Statement">global</span> a <span class="Statement">-=</span> <span class="Constant">1</span>
+<span class="Statement">end</span>
+
+
+<span class="Comment">#</span><span class="Comment"> switch</span>
+
+
+<span class="Comment">#</span><span class="Comment"> goto</span>
+<span class="Statement">function</span> my_goto_func()
+    <span class="PreProc">@goto</span> mylabel
+
+    <span class="PreProc">@label</span> mylabel
+    <span class="Statement">return</span> <span class="Constant">true</span>
+<span class="Statement">end</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

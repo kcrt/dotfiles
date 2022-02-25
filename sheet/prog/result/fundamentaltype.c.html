@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.c.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="c">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Statement { color: #b03060; font-weight: bold; }
+.PreProc { color: #1874cd; }
+.Type { color: #008b00; font-weight: bold; }
+.cRainbow_o0 { color: #3a5fcd; }
+.cRainbow_p0 { color: #3a5fcd; }
+.cRainbow_o1 { color: #cd6600; }
+.cRainbow_p1 { color: #cd6600; }
+.cRainbow_p2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="String">&lt;stdio.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;limits.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;math.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;inttypes.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;stdbool.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;stddef.h&gt;</span>
+
+<span class="Type">int</span> main<span class="cRainbow_p0">(</span><span class="Type">int</span> argc<span class="cRainbow_o0">,</span> <span class="Type">char</span>** argv<span class="cRainbow_p0">){</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 整数: char (文字として%c、数値として%hhi, %hhu; 最低8bit) , shortまたはshort int (%hi, %hu; 最低16bit), int(%iまたは%d, %u; 最低16bit), long (%li, %lu; 最低32bit), long long (%lli, %llu; 最低64bit [[C99]]) </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> 符号付きのsignedと、符号なしのunsigned だが、省略すると符号付き (charのみ環境依存) </span><span class="Comment">*/</span>
+    <span class="Type">char</span> c = <span class="Constant">'a'</span>;                <span class="Comment">/*</span><span class="Comment"> &quot;文字列&quot;ではなく、文字 'a' </span><span class="Comment">*/</span>
+    <span class="Type">signed</span> <span class="Type">int</span> a = <span class="Constant">32</span>;                    <span class="Comment">/*</span><span class="Comment"> このsigned は省略可 </span><span class="Comment">*/</span>
+    <span class="Type">unsigned</span> <span class="Type">long</span> <span class="Type">long</span> l = <span class="Constant">1ULL</span>;<span class="Comment">/*</span><span class="Comment"> 整数定数： 1U, 1L, 1UL, 1LL, 1ULL など (ullなど小文字も可) </span><span class="Comment">*/</span>
+
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%c</span><span class="String"> and </span><span class="Special">%hhu</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> c<span class="cRainbow_o1">,</span> c<span class="cRainbow_p1">)</span>;                                                                                                <span class="Comment">/*</span><span class="Comment"> a and 97 </span><span class="Comment">*/</span>
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;size of 'a' is: </span><span class="Special">%ld</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> <span class="Statement">sizeof</span><span class="cRainbow_p2">(</span><span class="Constant">'a'</span><span class="cRainbow_p2">)</span><span class="cRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 4, 'a'はint [[diff_c_cpp]][[注意]] </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 浮動小数点: float (%f, %e, %g, %a[[C99]]), double (%lf, ...), long double (%Lf, ...); float_t[[C99]], double_t[[C99]] (最低でもfloatまたはdoubleの幅を持つ型) </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d = <span class="Constant">24e-2</span>;<span class="Comment">/*</span><span class="Comment"> 定数はなにもないとdouble; 3.14F (float), 3.14L (long double) </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d2 = <span class="Constant">0x12.34P+10</span>;<span class="Comment">/*</span><span class="Comment"> [[C99]] 16進数で指定する </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d3 = INFINITY;<span class="Comment">/*</span><span class="Comment"> [[C99]] &lt;math.h&gt; INFINITY, -INFINITY, NAN, isinf, isnanも使用可能。 [[C99]]以前では無限大はHUGE_VAL。 </span><span class="Comment">*/</span>
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%f</span><span class="String"> </span><span class="Special">%e</span><span class="String"> </span><span class="Special">%g</span><span class="String"> </span><span class="Special">%a</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> d<span class="cRainbow_o1">,</span> d<span class="cRainbow_o1">,</span> d<span class="cRainbow_o1">,</span> d<span class="cRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 0.240000 2.400000-e01 0.24 0x1.eb85(略)p-3 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> [[C99]] 論理型 [[diff_c_cpp]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> 後方互換性のため論理型は_Boolという名前になっている。 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> stdbool.hを読み込むとbool, true, falseという名前を使用できる。</span><span class="Comment">*/</span>
+    <span class="Type">bool</span> b = <span class="Constant">2</span>;
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> b<span class="cRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 2でなくて1 [[注意]] </span><span class="Comment">*/</span>
+    <span class="Type">unsigned</span> <span class="Type">long</span> b1 = <span class="Constant">true</span> + <span class="Constant">4294967295U</span>;<span class="Comment">/*</span><span class="Comment"> trueは単なる1、1週回ってb1は0になる</span><span class="Comment">*/</span>
+    b += <span class="Constant">4294967294U</span>;                                                                                                                                            <span class="Comment">/*</span><span class="Comment"> boolなら1 (安全) </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> CやC++は変数の宣言だけでは初期化されない [[注意]] </span><span class="Comment">*/</span>
+    <span class="Type">int</span> x;
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;unintialized value is: </span><span class="Special">%d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> x<span class="cRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 何が出るか不明 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 定数 </span><span class="Comment">*/</span>
+    <span class="Type">const</span> <span class="Type">int</span> aa = <span class="Constant">3</span>;
+
+    <span class="Comment">/*</span><span class="Comment"> wchar_t などchar以外の文字型に関してはunicode[[参照]] </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> limits.h - 変数の上限・下限 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> SCHAR_MIN, SHRT_MIN, INT_MIN, LONG_MIN, LLONG_MIN[[C99]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> SCHAR_MAX, SHRT_MAX, INT_MAX, LONG_MAX, LLONG_MAX[[C99]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> UCHAR_MAX, USHRT_MAX, UINT_MAX, ULONG_MAX, ULLONG_MAX[[C99]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> CHAR_MIN, CHAR_MAX </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> FLT_MIN, DBL_MIN, LDBL_MIN and FLT_MAX, DBL_MAX, LDBL_MAX </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> FLT_EPSILON, DBL_EPSILON, LDBL_EPSILON </span><span class="Comment">*/</span>
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;long is </span><span class="Special">%li</span><span class="String"> - </span><span class="Special">%li</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> <span class="Constant">LONG_MIN</span><span class="cRainbow_o1">,</span> <span class="Constant">LONG_MAX</span><span class="cRainbow_p1">)</span>;
+
+    <span class="Comment">/*</span><span class="Comment"> [[C99]] inttypes.h (または stdint.h) </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> intN_t (N bitの整数) , int_leastN_t (最低N bitの整数), int_fastN_t (早いやつ) </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> 同様にuintN_t, uint_leastN_t, uint_fastN_t も使用可能 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> N = 8, 16, 32, 64は最低でも使えることが保証されている。</span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> ポインタ: intptr_t, 使える中で一番でかいやつ: intmax_t, uintmax_t </span><span class="Comment">*/</span>
+    <span class="Type">int64_t</span> i64min = <span class="Constant">INT64_MIN</span>;
+    printf<span class="cRainbow_p1">(</span><span class="String">&quot;%&quot;</span> PRId64 <span class="String">&quot;</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> i64min<span class="cRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> PRI(d|u)N マクロを使用する </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> その他の型 </span><span class="Comment">*/</span>
+    <span class="Type">size_t</span> t = <span class="Statement">sizeof</span><span class="cRainbow_p1">(</span><span class="Type">int</span><span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> サイズやループカウンタに使用 </span><span class="Comment">*/</span>
+    <span class="Type">ptrdiff_t</span> pp = &amp;d - &amp;d2;<span class="Comment">/*</span><span class="Comment"> stddef.h: アドレスの差 </span><span class="Comment">*/</span>
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cRainbow_p0">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

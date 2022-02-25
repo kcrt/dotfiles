@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/error_handling.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Type { color: #008b00; font-weight: bold; }
+.pythonRainbow_p1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+
+<span class="Comment"># Python 2 と 3では構文が違うので要注意</span>
+
+<span class="Statement">try</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Hello world.</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+    <span class="Statement">raise</span> <span class="Type">ValueError</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Special Error!</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Statement">except</span> <span class="pythonRainbow_p0">(</span><span class="Type">ValueError</span><span class="pythonRainbow_o0">,</span> <span class="Type">ZeroDivisionError</span><span class="pythonRainbow_p0">)</span> <span class="Statement">as</span> err:
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Invalid value!: {0}</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p1">(</span>err<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+<span class="Statement">except</span> <span class="Type">OSError</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Strange OS Error</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Statement">except</span>:
+    <span class="Comment"># その他のすべてのエラー (非推奨)</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Unknown error</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+    <span class="Statement">raise</span>
+<span class="Statement">else</span>:
+    <span class="Comment"># エラーがなかった場合</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">There is no error!</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+<span class="Statement">finally</span>:
+    <span class="Comment"># エラーがあってもなくても</span>
+    <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Operation finished.</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+
+
+<span class="Statement">class</span> <span class="Identifier">MySpecialError</span><span class="pythonRainbow_p0">(</span><span class="Type">Exception</span><span class="pythonRainbow_p0">)</span>:    <span class="Comment"># ユーザー定義例外はExceptionから派生させる</span>
+    <span class="Statement">pass</span>
+
+<span class="Comment"># 主な例外(抜粋)</span>
+<span class="Comment"># ArithmeticError(FloatingPointError, OverflowError, ZeroDivisionError), AssertionError, AttributeError, BufferError, EOFError, ImportError, LookupError(IndexError, KeyError), MemoryError, NameError, OSError(ConnectionError, FileExistsError, FileNotFoundError, PermissionError), ReferenceError, RuntimeError(NotImplementedError), SystemError, TypeError, ValueError(UnicodeError)</span>
+<span class="Comment"># Warning(DeprecationWarning, RuntimeWarning, UserWarning, FutureWarning)に関しては see: <a href="https://docs.python.jp/3/library/warnings.html">https://docs.python.jp/3/library/warnings.html</a></span>
+<span class="Comment"># 例外の一覧は see: <a href="https://docs.python.jp/3/library/exceptions.html#exception-hierarchy">https://docs.python.jp/3/library/exceptions.html#exception-hierarchy</a> </span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

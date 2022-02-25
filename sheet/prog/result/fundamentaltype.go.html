@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.go.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="go">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.goRainbow_o1 { color: #cd6600; }
+.goRainbow_o0 { color: #3a5fcd; }
+.goRainbow_p2 { color: #43cd80; }
+.goRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Type { color: #008b00; font-weight: bold; }
+.goRainbow_p1 { color: #cd6600; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Statement">package</span> main
+
+<span class="Statement">import</span> <span class="String">&quot;fmt&quot;</span>
+<span class="Statement">import</span> <span class="String">&quot;reflect&quot;</span>
+<span class="Statement">import</span> <span class="String">&quot;math&quot;</span>
+
+<span class="Statement">func</span> main<span class="goRainbow_p0">()</span> <span class="goRainbow_p0">{</span>
+
+    <span class="Statement">var</span> a <span class="Type">int</span> = <span class="Constant">32</span>
+    <span class="Statement">var</span> helloMessage = <span class="String">&quot;Hello, world!&quot;</span> <span class="Comment">// 省略した型は推定される</span>
+    <span class="Statement">var</span> x<span class="goRainbow_o0">,</span> y<span class="goRainbow_o0">,</span> z = <span class="Constant">1</span><span class="goRainbow_o0">,</span> <span class="String">&quot;Hello&quot;</span><span class="goRainbow_o0">,</span> <span class="Constant">3.2</span>      <span class="Comment">// 一度に複数もOK</span>
+    <span class="Statement">var</span> b <span class="Type">int</span>                          <span class="Comment">// 数値を省略すると0や&quot;など、型に合った値で初期化される</span>
+    fmt.Println<span class="goRainbow_p1">(</span>a<span class="goRainbow_o1">,</span> b<span class="goRainbow_o1">,</span> x<span class="goRainbow_o1">,</span> y<span class="goRainbow_o1">,</span> z<span class="goRainbow_p1">)</span>
+
+    <span class="Comment">/* 整数: uint, int */</span>
+
+    <span class="Comment">/* 浮動小数点: float32 float64*/</span>
+    <span class="Statement">var</span> f <span class="Type">float64</span> = <span class="Constant">3.2e-33</span>
+    math.Inf<span class="goRainbow_p1">(</span><span class="Constant">1</span><span class="goRainbow_p1">)</span> <span class="Comment">/* Inf(正の数値) = +Inf, Inf(負の数値) = -Inf */</span>
+    math.NaN<span class="goRainbow_p1">()</span>  <span class="Comment">/* not a number */</span>
+    <span class="Comment">/* math.IsInf(), math.IsNaN() */</span>
+
+    <span class="Comment">/* 論理型 */</span>
+    <span class="Statement">var</span> m <span class="Type">bool</span> = <span class="Statement">false</span> <span class="Comment">/* true と false */</span>
+
+    <span class="Comment">/* 定数 */</span>
+    <span class="Statement">const</span> aa = <span class="Constant">32</span>
+    <span class="Statement">const</span> <span class="goRainbow_p1">(</span>
+        bb = <span class="Constant">3</span>
+        cc = <span class="Constant">4</span>
+    <span class="goRainbow_p1">)</span>
+
+    <span class="Comment">/* runeなどに関してはstring, unicode[[参照]] */</span>
+
+    <span class="Comment">/* 変数の上限･下限 */</span>
+    fmt.Println<span class="goRainbow_p1">(</span>math.MinInt8<span class="goRainbow_p1">)</span>
+    fmt.Println<span class="goRainbow_p1">(</span>math.MaxUint8<span class="goRainbow_p1">)</span>
+    <span class="Comment">// MaxInt8, MinInt8, MaxInt16, MinInt16, MaxInt32, MinInt32, MaxInt64, MinInt64, MaxUint8, MaxUint16, MaxUint32, MaxUint64</span>
+
+    <span class="Comment">/* サイズの決まっている型</span>
+<span class="Comment">    int8, int16, int32 == rune, int64</span>
+<span class="Comment">    uint, uint8 == byte, uint16, uint32, uint64 */</span>
+    <span class="Statement">var</span> l <span class="Type">int64</span> = <span class="Constant">0x123456789abcdef0</span>
+
+    <span class="Comment">/* 型の確認 */</span>
+    fmt.Println<span class="goRainbow_p1">(</span>reflect.TypeOf<span class="goRainbow_p2">(</span>helloMessage<span class="goRainbow_p2">)</span><span class="goRainbow_p1">)</span>
+
+    fmt.Println<span class="goRainbow_p1">(</span>f<span class="goRainbow_o1">,</span> m<span class="goRainbow_o1">,</span> l<span class="goRainbow_p1">)</span> <span class="Comment">// DELETE THIS</span>
+
+<span class="goRainbow_p0">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

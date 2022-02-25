@@ -1,0 +1,10 @@
+cat main.json | jq
+cat main.json | jq .items[].name
+cat main.json | jq ".items[].name? | "No name"
+cat main.json | jq ".items[] | .name"
+cat main.json | jq ".items[] | {name: .name, price: .price}"
+cat main.json | jq "[.items[].price] | add"
+cat main.json | jq '.["@items"]'
+	@csv: csvへ
+引数
+	-r: "" ダブルクオーテーションなし

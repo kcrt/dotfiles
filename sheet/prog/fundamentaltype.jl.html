@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.jl.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="julia">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.juliaRainbow_lv1_p0 { color: #cd6600; }
+.PreProc { color: #a020f0; }
+.juliaRainbow_lv0_o0 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.juliaRainbow_lv0_p0 { color: #3a5fcd; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#</span><span class="Comment">!/usr/bin/env julia</span>
+
+<span class="Statement">import</span> Printf
+
+<span class="Comment">#</span><span class="Comment"> 変数の宣言</span>
+x <span class="Statement">=</span> <span class="Constant">32</span>
+x <span class="Statement">=</span> <span class="Constant">&quot;</span><span class="Constant">Hello</span><span class="Constant">&quot;</span>
+<span class="Statement">local</span> xx<span class="Statement">::</span><span class="Type">Int32</span> <span class="Statement">=</span> <span class="Constant">1</span>
+
+<span class="Comment">#</span><span class="Comment"> 変数のスコープ</span>
+<span class="Statement">for</span> i <span class="Statement">in</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">5</span>
+    <span class="Statement">global</span> y <span class="Statement">=</span> i
+    z <span class="Statement">=</span> i
+<span class="Statement">end</span>
+println<span class="juliaRainbow_lv0_p0">(</span>y<span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> =&gt; ok</span>
+<span class="Comment">#</span><span class="Comment"> println(z)    # =&gt; UndefVarError</span>
+
+
+<span class="Comment">#</span><span class="Comment"> 整数:</span>
+<span class="Comment">#</span><span class="Comment"> Int8, Int16, Int32, Int64, Int128</span>
+<span class="Comment">#</span><span class="Comment"> UInt8, UInt16, UInt32, UInt64, UInt128</span>
+<span class="Comment">#</span><span class="Comment"> Int, UInt (環境で変わる)</span>
+<span class="Comment">#</span><span class="Comment"> Integer (すべてのIntの親)</span>
+<span class="Comment">#</span><span class="Comment"> リテラル変数の型は環境によって変わる</span>
+typeof<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="juliaRainbow_lv0_p0">)</span>       <span class="Comment">#</span><span class="Comment"> =&gt; Int64 (環境による)</span>
+<span class="Constant">0x20</span>
+<span class="Constant">0b10111100</span>
+<span class="Constant">0xdead_beaf</span>     <span class="Comment">#</span><span class="Comment"> _を区切りとして使える</span>
+x <span class="Statement">=</span> typemax<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Int64</span><span class="juliaRainbow_lv0_p0">)</span>
+x <span class="Statement">+</span> <span class="Constant">1</span>   <span class="Comment">#</span><span class="Comment"> =&gt; -9223372036854775808: wraparoundh</span>
+
+<span class="Comment">#</span><span class="Comment"> BigInt, BigFloat</span>
+<span class="Type">BigInt</span><span class="juliaRainbow_lv0_p0">(</span><span class="Constant">100</span><span class="juliaRainbow_lv0_p0">)</span>
+big<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">100</span><span class="juliaRainbow_lv0_p0">)</span>
+parse<span class="juliaRainbow_lv0_p0">(</span><span class="Type">BigInt</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">12345678901234567890</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+parse<span class="juliaRainbow_lv0_p0">(</span><span class="Type">BigFloat</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">1.2345678901234567890</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Constant">big&quot;</span><span class="Constant">12345</span><span class="Constant">&quot;</span>
+<span class="Constant">big&quot;</span><span class="Constant">123.4</span><span class="Constant">&quot;</span>
+
+<span class="Comment">#</span><span class="Comment"> BigFloatの精度</span>
+precision<span class="juliaRainbow_lv0_p0">(</span><span class="Type">BigFloat</span><span class="juliaRainbow_lv0_p0">)</span>
+setprecision<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">512</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Statement">do</span>
+    println(<span class="Constant">big&quot;</span><span class="Constant">0.1</span><span class="Constant">&quot;</span>)
+<span class="Statement">end</span>
+
+
+
+<span class="Comment">#</span><span class="Comment"> 浮動小数点: Float16, Float32, Float64 (=倍精度)</span>
+<span class="Comment">#</span><span class="Comment"> AbstractFloat (Floatの親)</span>
+x <span class="Statement">=</span> <span class="Constant">0.3</span> <span class="Comment">#</span><span class="Comment"> Float64</span>
+<span class="Constant">1</span>.
+<span class="Constant">2.5e-4</span>
+<span class="Constant">0x1.8p3</span>
+float<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Constant">2.0f3</span>   <span class="Comment">#</span><span class="Comment"> fを使うとFloat32</span>
+isfinite<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>
+isinf<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>
+isnan<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>
+
+a <span class="Statement">=</span> <span class="Constant">0.24</span>
+Printf.<span class="PreProc">@printf</span>(<span class="Constant">&quot;</span><span class="Special">%f</span><span class="Constant"> </span><span class="Special">%e</span><span class="Special">\n</span><span class="Special">%g</span><span class="Constant"> </span><span class="Special">%a</span><span class="Special">\n</span><span class="Constant">&quot;</span>, a, a, a, a)
+
+
+eps<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Float64</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> 上下限</span>
+typemin<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Int32</span><span class="juliaRainbow_lv0_p0">)</span>      <span class="Comment">#</span><span class="Comment"> =&gt; -2147483648</span>
+typemax<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Int32</span><span class="juliaRainbow_lv0_p0">)</span>      <span class="Comment">#</span><span class="Comment"> =&gt; 2147483647</span>
+
+
+<span class="Comment">#</span><span class="Comment"> Bool</span>
+<span class="Constant">true</span> <span class="Statement">||</span> <span class="Constant">false</span>
+
+<span class="Comment">#</span><span class="Comment"> complex</span>
+<span class="Constant">1</span> <span class="Statement">+</span> <span class="Constant">2im</span>
+
+<span class="Comment">#</span><span class="Comment"> 有理数</span>
+x <span class="Statement">=</span> <span class="Constant">6</span> <span class="Statement">//</span> <span class="Constant">9</span>  <span class="Comment">#</span><span class="Comment"> == 2 // 3</span>
+rationalize<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">1.5</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> == 3 // 2</span>
+numerator<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 2: 分子</span>
+denominator<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> 3: 分母</span>
+float<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 0.66666..</span>
+typeof<span class="juliaRainbow_lv0_p0">(</span>x<span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> Rational{Int64}</span>
+
+<span class="Comment">#</span><span class="Comment"> 無理数</span>
+typeof<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">π</span><span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> Irrational{:π}</span>
+
+<span class="Comment">#</span><span class="Comment"> 型</span>
+typeof<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> =&gt; Int64</span>
+isa<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Type">Int</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> =&gt; true</span>
+supertype<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Int</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> =&gt; Signed</span>
+<span class="Statement">using</span> InteractiveUtils  <span class="Comment">#</span><span class="Comment"> REPLでは不要</span>
+subtypes<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Signed</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> =&gt; BitInt, Int128, Int64, ...</span>
+
+<span class="Type">Int64</span> <span class="Statement">&lt;:</span> <span class="Type">Integer</span>    <span class="Comment">#</span><span class="Comment"> true; &quot;&lt;:&quot; == is a subtype of</span>
+
+
+<span class="Comment">#</span><span class="Comment"> シンボル (Symbol)</span>
+<span class="Identifier">:hello</span>
+typeof<span class="juliaRainbow_lv0_p0">(</span><span class="Identifier">:hello</span><span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> &gt; Symbol</span>
+print<span class="juliaRainbow_lv0_p0">(</span><span class="Type">Symbol</span><span class="juliaRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Constant">hello</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv1_p0">)</span> <span class="Statement">==</span> <span class="Identifier">:hello</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Type">Symbol</span><span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">he</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">l</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">lo</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+my_var <span class="Statement">=</span> <span class="Identifier">:hello</span>
+hello <span class="Statement">=</span> <span class="Constant">&quot;</span><span class="Constant">Hello, world</span><span class="Constant">&quot;</span>
+println<span class="juliaRainbow_lv0_p0">(</span>eval<span class="juliaRainbow_lv1_p0">(</span>my_var<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> my_var =&gt; :hello =&gt; &quot;Hello, world&quot;</span>
+<span class="Comment">#=</span>
+<span class="Comment">Multi line Comment</span>
+<span class="Comment">is </span>
+<span class="Comment">here</span>
+<span class="Comment">=#</span>
+<span class="Comment">#</span><span class="Comment"> 定数</span>
+<span class="Statement">const</span> c <span class="Statement">=</span> <span class="Constant">3</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

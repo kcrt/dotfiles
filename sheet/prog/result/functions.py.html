@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/functions.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+
+<span class="Statement">def</span> <span class="Identifier">myHello</span><span class="pythonRainbow_p0">(</span>greeting<span class="pythonRainbow_o0">,</span> name=<span class="String">&quot;</span><span class="String">kcrt</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>:
+    <span class="Statement">return</span> f<span class="String">&quot;</span><span class="String">{greeting}, {name}.</span><span class="String">&quot;</span>
+
+
+<span class="Comment"># 型ヒント付きの時</span>
+<span class="Statement">def</span> <span class="Identifier">myHello2</span><span class="pythonRainbow_p0">(</span>greeting: <span class="Identifier">str</span><span class="pythonRainbow_o0">,</span> name: <span class="Identifier">str</span> = <span class="String">&quot;</span><span class="String">kcrt</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> -&gt; <span class="Identifier">str</span>:
+    <span class="Statement">return</span> f<span class="String">&quot;</span><span class="String">{greeting}, {name}.</span><span class="String">&quot;</span>
+
+
+myHello<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">John</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; Hello, John.</span>
+myHello<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">你好</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># =&gt; 你好, kcrt.</span>
+myHello<span class="pythonRainbow_p0">(</span>name=<span class="String">&quot;</span><span class="String">Mary</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> greeting=<span class="String">&quot;</span><span class="String">Good morning</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; Good morning, Mary.</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

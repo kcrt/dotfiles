@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.c.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="c">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.cRainbow_lv2_p0 { color: #43cd80; }
+.cRainbow_lv1_o2 { color: #cd6600; }
+.cRainbow_lv1_p2 { color: #cd6600; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.Type { color: #2e8b57; font-weight: bold; }
+.cRainbow_lv2_p1 { color: #43cd80; }
+.cRainbow_lv1_p1 { color: #cd6600; }
+.cRainbow_lv3_p1 { color: #b22222; }
+.cRainbow_lv0_p2 { color: #3a5fcd; }
+.cRainbow_lv0_o0 { color: #3a5fcd; }
+.cRainbow_lv0_p0 { color: #3a5fcd; }
+.cRainbow_lv1_o0 { color: #cd6600; }
+.cRainbow_lv1_p0 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="Constant">&lt;stdio.h&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;string.h&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;stdlib.h&gt;</span>
+
+
+<span class="Type">int</span> compare_int<span class="cRainbow_lv0_p0">(</span><span class="Type">const</span> <span class="Type">void</span>* a<span class="cRainbow_lv0_o0">,</span> <span class="Type">const</span> <span class="Type">void</span>* b<span class="cRainbow_lv0_p0">)</span><span class="cRainbow_lv0_p2">{</span>
+
+    <span class="Statement">if</span><span class="cRainbow_lv1_p0">(</span>*<span class="cRainbow_lv2_p0">(</span><span class="Type">const</span> <span class="Type">int</span> *<span class="cRainbow_lv2_p0">)</span> a &lt; *<span class="cRainbow_lv2_p0">(</span><span class="Type">const</span> <span class="Type">int</span> *<span class="cRainbow_lv2_p0">)</span>b<span class="cRainbow_lv1_p0">)</span><span class="cRainbow_lv1_p2">{</span>
+        <span class="Statement">return</span> -<span class="Constant">1</span>;
+    <span class="cRainbow_lv1_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span><span class="cRainbow_lv1_p0">(</span>*<span class="cRainbow_lv2_p0">(</span><span class="Type">const</span> <span class="Type">int</span> *<span class="cRainbow_lv2_p0">)</span> a &gt; *<span class="cRainbow_lv2_p0">(</span><span class="Type">const</span> <span class="Type">int</span> *<span class="cRainbow_lv2_p0">)</span>b<span class="cRainbow_lv1_p0">)</span><span class="cRainbow_lv1_p2">{</span>
+        <span class="Statement">return</span> <span class="Constant">1</span>;
+    <span class="cRainbow_lv1_p2">}</span><span class="Statement">else</span><span class="cRainbow_lv1_p2">{</span>
+        <span class="Statement">return</span> <span class="Constant">0</span>;
+    <span class="cRainbow_lv1_p2">}</span>
+
+<span class="cRainbow_lv0_p2">}</span>
+
+<span class="Type">int</span> main<span class="cRainbow_lv0_p0">(</span><span class="Type">int</span> argc<span class="cRainbow_lv0_o0">,</span> <span class="Type">char</span>** argv<span class="cRainbow_lv0_p0">)</span><span class="cRainbow_lv0_p2">{</span>
+
+    <span class="Comment">// 通常の配列型 (C言語と同じ)</span>
+    <span class="Type">int</span> arr<span class="cRainbow_lv1_p1">[]</span> = <span class="cRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="cRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="cRainbow_lv1_p2">}</span>;<span class="Comment">// 要素数は省略できる</span>
+    printf<span class="cRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Special">%d</span><span class="Constant"> </span><span class="Special">%zu</span><span class="Constant"> </span><span class="Special">%ld</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="cRainbow_lv1_o0">,</span>
+            arr<span class="cRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="cRainbow_lv2_p1">]</span><span class="cRainbow_lv1_o0">,</span>
+            <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv2_p0">)</span><span class="cRainbow_lv1_o0">,</span><span class="Comment">// 配列のサイズ(byte)</span>
+            <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv2_p0">)</span> / <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv3_p1">[</span><span class="Constant">0</span><span class="cRainbow_lv3_p1">]</span><span class="cRainbow_lv2_p0">)</span><span class="cRainbow_lv1_p0">)</span>;<span class="Comment">// 個数</span>
+
+    <span class="Comment">// C言語で配列を扱うには、ポインタの知識が必須になる</span>
+    <span class="Comment">// 100個のintを確保して初期化</span>
+    <span class="Type">int</span> *m;
+    m = <span class="cRainbow_lv1_p0">(</span><span class="Type">int</span> *<span class="cRainbow_lv1_p0">)</span>malloc<span class="cRainbow_lv1_p0">(</span><span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span><span class="Type">int</span><span class="cRainbow_lv2_p0">)</span> * <span class="Constant">100</span><span class="cRainbow_lv1_p0">)</span>;<span class="Comment">// stdlib</span>
+    memset<span class="cRainbow_lv1_p0">(</span>m<span class="cRainbow_lv1_o0">,</span> <span class="Constant">0</span><span class="cRainbow_lv1_o0">,</span> <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span><span class="Type">int</span><span class="cRainbow_lv2_p0">)</span> * <span class="Constant">100</span><span class="cRainbow_lv1_p0">)</span>;<span class="Comment">// string.h</span>
+
+    <span class="Comment">// arrをコピー</span>
+    memcpy<span class="cRainbow_lv1_p0">(</span>m<span class="cRainbow_lv1_o0">,</span> arr<span class="cRainbow_lv1_o0">,</span> <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv2_p0">)</span><span class="cRainbow_lv1_p0">)</span>;
+
+    <span class="Comment">// arrをソート</span>
+    qsort<span class="cRainbow_lv1_p0">(</span>arr<span class="cRainbow_lv1_o0">,</span> <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv2_p0">)</span> / <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span>arr<span class="cRainbow_lv3_p1">[</span><span class="Constant">0</span><span class="cRainbow_lv3_p1">]</span><span class="cRainbow_lv2_p0">)</span><span class="cRainbow_lv1_o0">,</span>
+            <span class="Statement">sizeof</span><span class="cRainbow_lv2_p0">(</span><span class="Type">int</span><span class="cRainbow_lv2_p0">)</span><span class="cRainbow_lv1_o0">,</span> compare_int<span class="cRainbow_lv1_p0">)</span>;
+    <span class="Statement">for</span><span class="cRainbow_lv1_p0">(</span><span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++<span class="cRainbow_lv1_p0">)</span>
+        printf<span class="cRainbow_lv1_p0">(</span><span class="Constant">&quot;</span><span class="Special">%d</span><span class="Constant"> &quot;</span><span class="cRainbow_lv1_o0">,</span> arr<span class="cRainbow_lv2_p1">[</span>i<span class="cRainbow_lv2_p1">]</span><span class="cRainbow_lv1_p0">)</span>;
+
+    free<span class="cRainbow_lv1_p0">(</span>m<span class="cRainbow_lv1_p0">)</span>;
+
+    printf<span class="cRainbow_lv1_p0">(</span><span class="Constant">&quot;Hello, world!</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="cRainbow_lv1_p0">)</span>;
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cRainbow_lv0_p2">}</span>
+
+<span class="Comment">// gcc helloworld.c -o helloworld(実行ファイル名)</span>
+<span class="Comment">// clang helloworld.c -o helloworld</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

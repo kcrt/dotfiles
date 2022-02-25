@@ -1,0 +1,52 @@
+* 作成
+git init
+git clone <uri>
+* 表示
+git diff [_id_ _id_]	省略時はstageとworking space
+git diff --cached		HEADとstageの差
+git log [-p] [filename]	-p: 差分付きで表示
+(git log-graph)
+git blame filename		変更者を表示
+* 取り消し
+git reset --hard		最後のコミットした状態に戻す(もとに戻せないので注意)
+git reset _id_			現在のブランチの先端をidへ移動
+git revert HEAD			最後のコミットを取り消す
+						HEAD^ HEADの親, HEAD~4 4代前
+git commit --amend		コミットをやり直す
+git checkout _id_ _file_特定のバージョンをチェックアウトする
+git rm --cached file	stageから削除(ローカルのファイルは残す)
+* ブランチ
+git branch				ブランチを表示
+git branch _branch_		ブランチを作成(切り替えは行わない)
+git branch -d _branch_	ブランチを削除
+git checkout _branch_	ブランチの切り替え
+git merge _branch_		現在のブランチに指定のブランチをmerge
+git worktree add _dir_ [_branch_]
+						_dir_にブランチの中身をリンク
+git worktree prune		作業終了
+* 更新
+git fetch [remote]		originから最新の変更を取得
+git pull				originから最新の変更を取得してmerge
+* コミット
+git commit [-a]			-a: ローカルの変更を全てコミット
+git format-patch origin	originとの差分パッチを作成
+git push [remote]		変更をoriginへ反映
+git tag v1.0			タグをつける
+git tag -l				タグを確認
+git tag [-a] v.1.0 HASH	あとからタグ付け
+git push origin --tags	タグ情報をpush(デフォルトではpushされない)
+* 差分・merge
+git diff
+git diff --base
+git reset --hard
+git rebase master		現在のブランチにmasterの変更点を反映
+* リポジトリ
+git remote add _name_ _uri_
+git branch --track localbranch remotebranch
+						git pull, pushのデフォルトを設定
+* stash
+git stash [-u]			-u: untracked(新規ファイル)も含める
+git stash list
+git stash apply stash@{0}
+* その他
+git archive, git bisect, git gc, git fsck, git stash

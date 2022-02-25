@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.jl.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="julia">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.juliaRainbow_lv1_p0 { color: #cd6600; }
+.PreProc { color: #a020f0; }
+.Type { color: #2e8b57; font-weight: bold; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.juliaRainbow_lv0_o0 { color: #3a5fcd; }
+.juliaRainbow_lv0_p0 { color: #3a5fcd; }
+.juliaRainbow_lv0_o1 { color: #3a5fcd; }
+.juliaRainbow_lv0_p1 { color: #3a5fcd; }
+.juliaRainbow_lv1_o1 { color: #cd6600; }
+.juliaRainbow_lv1_p1 { color: #cd6600; }
+.juliaRainbow_lv1_o0 { color: #cd6600; }
+.Error { color: #ffffff; background-color: #ff0000; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#</span><span class="Comment">!/usr/bin/env julia</span>
+
+<span class="Comment">#</span><span class="Comment"> === Array ===</span>
+l <span class="Statement">=</span> <span class="juliaRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">3</span><span class="juliaRainbow_lv0_p1">]</span>   <span class="Comment">#</span><span class="Comment"> (3 x 1) Array{Int64,1}</span>
+l<span class="juliaRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="juliaRainbow_lv0_p1">]</span>    <span class="Comment">#</span><span class="Comment"> =&gt; 1, 1-origin</span>
+l<span class="juliaRainbow_lv0_p1">[</span><span class="Error">end</span><span class="juliaRainbow_lv0_p1">]</span>  <span class="Comment">#</span><span class="Comment"> =&gt; 3, 最後の要素</span>
+l<span class="juliaRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="Statement">:</span><span class="Error">end</span><span class="juliaRainbow_lv0_p1">]</span><span class="Comment">#</span><span class="Comment"> =&gt; 要素すべて (部分配列)</span>
+l<span class="juliaRainbow_lv0_p1">[</span><span class="Statement">:</span><span class="juliaRainbow_lv0_p1">]</span>    <span class="Comment">#</span><span class="Comment"> =&gt; すべての要素のコピー</span>
+view<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="Statement">:</span><span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> =&gt; 要素1, 2の参照部分配列 (変更できる)</span>
+lv <span class="Statement">=</span> <span class="PreProc">@view</span> l[<span class="Constant">1</span><span class="Statement">:</span><span class="Constant">2</span>] <span class="Comment">#</span><span class="Comment"> 同上</span>
+l2<span class="Statement">=</span> <span class="juliaRainbow_lv0_p1">[</span><span class="Constant">1</span>          <span class="Comment">#</span><span class="Comment"> ,と同じ</span>
+     <span class="Constant">2</span>
+     <span class="Constant">3</span><span class="juliaRainbow_lv0_p1">]</span>
+
+<span class="Comment">#</span><span class="Comment"> コピー</span>
+l<span class="juliaRainbow_lv0_p1">[</span><span class="Statement">:</span><span class="juliaRainbow_lv0_p1">]</span>    <span class="Comment">#</span><span class="Comment"> =&gt; すべての要素のコピー</span>
+
+<span class="Comment">#</span><span class="Comment"> 要素数</span>
+length<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> =&gt; 3 : 要素数</span>
+size<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> =&gt; (3,) </span>
+
+<span class="Comment">#</span><span class="Comment"> 検索</span>
+findfirst<span class="juliaRainbow_lv0_p0">(</span>isequal<span class="juliaRainbow_lv1_p0">(</span><span class="Constant">2</span><span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_o0">,</span> l<span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> =&gt;2, なければnothing</span>
+findnext<span class="juliaRainbow_lv0_p0">(</span>isequal<span class="juliaRainbow_lv1_p0">(</span><span class="Constant">2</span><span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_o0">,</span> l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> pos指定 </span>
+<span class="Comment">#</span><span class="Comment"> findlast, findprev, findall</span>
+<span class="Comment">#</span><span class="Comment"> isequal(val), iseven, isodd</span>
+
+<span class="Comment">#</span><span class="Comment"> 存在確認</span>
+in<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="juliaRainbow_lv0_o0">,</span> l<span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> =&gt; true</span>
+<span class="Constant">1</span> <span class="Statement">in</span> l
+<span class="Constant">1</span> <span class="Statement">∈</span> l
+
+
+<span class="Comment">#</span><span class="Comment"> 要素の追加</span>
+<span class="Comment">#</span><span class="Comment"> 「!」は対象そのものを変更する関数についている</span>
+push<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">4</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">5</span><span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> l = [1, 2, 3, 4, 5]</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+append<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="juliaRainbow_lv1_p1">[</span><span class="Statement">-</span><span class="Constant">1</span><span class="juliaRainbow_lv1_o1">,</span> <span class="Statement">-</span><span class="Constant">2</span><span class="juliaRainbow_lv1_p1">]</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> -1, -2を末尾に追加 (Pythonのappend)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> 先頭/任意の場所への追加</span>
+insert<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">10</span><span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> 指定の場所に追加: 1が先頭</span>
+pushfirst<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">5</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">10</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 5, 10を先頭に追加</span>
+
+prepend<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="juliaRainbow_lv1_p1">[</span><span class="Constant">8</span><span class="juliaRainbow_lv1_o1">,</span> <span class="Constant">9</span><span class="juliaRainbow_lv1_p1">]</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> appendの先頭バージョン</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> 削除</span>
+println<span class="juliaRainbow_lv0_p0">(</span>pop<span class="Statement">!</span><span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 末尾の要素を取得して削除</span>
+println<span class="juliaRainbow_lv0_p0">(</span>popfirst<span class="Statement">!</span><span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> 先頭要素</span>
+deleteat<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">5</span><span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> 5番目の要素を削除</span>
+
+<span class="Comment">#</span><span class="Comment"> </span>
+<span class="Comment">#</span><span class="Comment"> ソート</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">sort</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+sort<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+sort<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_o0">,</span> by <span class="Statement">=</span> x <span class="Statement">-&gt;</span> abs<span class="juliaRainbow_lv1_p0">(</span>x<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> by = で方法を指定</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> 走査</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">run</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Statement">for</span> i <span class="Statement">in</span> l    <span class="Comment">#</span><span class="Comment"> =, in, ∈も同様に使用可能</span>
+    println(i)
+<span class="Statement">end</span>
+
+
+<span class="Comment">#</span><span class="Comment"> 逆順</span>
+l <span class="Statement">=</span> <span class="juliaRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">3</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">5</span><span class="juliaRainbow_lv0_o1">,</span> <span class="Constant">10</span><span class="juliaRainbow_lv0_p1">]</span>
+reverse<span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+reverse<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>l<span class="juliaRainbow_lv0_p0">)</span>
+<span class="Statement">for</span> i <span class="Statement">in</span> Iterators.reverse(l)
+    println(i)
+<span class="Statement">end</span>
+
+twice <span class="Statement">=</span> <span class="juliaRainbow_lv0_p0">(</span>x<span class="Statement">::</span> <span class="Type">Int</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Statement">-&gt;</span> x <span class="Statement">*</span><span class="Constant">2</span>
+<span class="Comment">#</span><span class="Comment"> map (function applied array)</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">map: </span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> map<span class="juliaRainbow_lv1_p0">(</span>twice<span class="juliaRainbow_lv1_o0">,</span> l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> broadcastでもよい</span>
+println<span class="juliaRainbow_lv0_p0">(</span>twice.<span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l <span class="Statement">*</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>       <span class="Comment">#</span><span class="Comment"> そもそもjuliaならこれでも良い</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l <span class="Statement">.*</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>      <span class="Comment">#</span><span class="Comment"> そもそもjuliaならこれでも良い</span>
+<span class="Comment">#</span><span class="Comment"> filter</span>
+l3 <span class="Statement">=</span> filter<span class="juliaRainbow_lv0_p0">(</span>isodd<span class="juliaRainbow_lv0_o0">,</span> l<span class="juliaRainbow_lv0_p0">)</span>   <span class="Comment">#</span><span class="Comment"> 奇数のみ取得</span>
+println<span class="juliaRainbow_lv0_p0">(</span>l3<span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> filter!を使用すれば、配列自体を変更できる。</span>
+<span class="Comment">#</span><span class="Comment"> reduce</span>
+prod <span class="Statement">=</span> reduce<span class="juliaRainbow_lv0_p0">(</span><span class="Statement">*</span><span class="juliaRainbow_lv0_o0">,</span> l<span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> *はjuliaでは関数</span>
+println<span class="juliaRainbow_lv0_p0">(</span>prod<span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> 最大・最小</span>
+println<span class="juliaRainbow_lv0_p0">(</span>maximum<span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>         <span class="Comment">#</span><span class="Comment"> =&gt; value</span>
+println<span class="juliaRainbow_lv0_p0">(</span>findmax<span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>         <span class="Comment">#</span><span class="Comment"> =&gt; (value, index)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>argmax<span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>          <span class="Comment">#</span><span class="Comment"> =&gt; index</span>
+println<span class="juliaRainbow_lv0_p0">(</span>extrema<span class="juliaRainbow_lv1_p0">(</span>l<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>         <span class="Comment">#</span><span class="Comment"> =&gt; (min, max)</span>
+<span class="Comment">#</span><span class="Comment"> minimum, findmin, argmin</span>
+
+<span class="Comment">#</span><span class="Comment"> リスト内包表記</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="juliaRainbow_lv1_p1">[</span> n <span class="Statement">*</span> n <span class="Statement">for</span> n <span class="Statement">in</span> l <span class="Statement">if</span> n <span class="Statement">&gt;</span> <span class="Constant">2</span> <span class="Error">])</span>
+g <span class="Statement">=</span> ( n <span class="Statement">*</span> n <span class="Statement">for</span> n <span class="Statement">in</span> l <span class="Statement">if</span> n <span class="Statement">&gt;</span> <span class="Constant">2</span> )   <span class="Comment">#</span><span class="Comment"> generator</span>
+print(collect(g))   <span class="Comment">#</span><span class="Comment"> collectでrangeやgeneratorをArrayに変換</span>
+
+<span class="Comment">#</span><span class="Comment"> all</span>
+all(isodd, l)
+<span class="Comment">#</span><span class="Comment"> any</span>
+any(isodd, l)
+
+
+<span class="Comment">#</span><span class="Comment"> 多次元配列</span>
+m <span class="Statement">=</span> [<span class="Constant">1</span> <span class="Constant">2</span> <span class="Constant">3</span>]     <span class="Comment">#</span><span class="Comment"> (1 x 3) Array{Int64,2}</span>
+n <span class="Statement">=</span> [<span class="Constant">1</span> <span class="Constant">2</span> <span class="Constant">3</span>      <span class="Comment">#</span><span class="Comment"> (3 x 3)</span>
+     <span class="Constant">4</span> <span class="Constant">5</span> <span class="Constant">6</span>
+     <span class="Constant">7</span> <span class="Constant">8</span> <span class="Constant">9</span>]
+n2 <span class="Statement">=</span> [<span class="Constant">1</span> <span class="Constant">2</span> <span class="Constant">3</span>; <span class="Constant">4</span> <span class="Constant">5</span> <span class="Constant">6</span>; <span class="Constant">7</span> <span class="Constant">8</span> <span class="Constant">9</span>]  <span class="Comment">#</span><span class="Comment"> 上と同じ</span>
+n[<span class="Constant">1</span>, <span class="Constant">1</span>]         <span class="Comment">#</span><span class="Comment"> =&gt; 1</span>
+
+length(n)   <span class="Comment">#</span><span class="Comment"> =&gt; 9</span>
+size(n)     <span class="Comment">#</span><span class="Comment"> =&gt; (3, 3)</span>
+
+<span class="Comment">#</span><span class="Comment"> 行列の計算</span>
+n <span class="Statement">*</span> n   <span class="Comment">#</span><span class="Comment"> 行列の積</span>
+n <span class="Statement">.*</span> n  <span class="Comment">#</span><span class="Comment"> アダマール積</span>
+log.(n) <span class="Comment">#</span><span class="Comment"> .付き関数はすべての要素に関数を適応する</span>
+
+<span class="Comment">#</span><span class="Comment"> 型の指定</span>
+<span class="Type">Float64</span>[<span class="Constant">1</span>, <span class="Constant">2</span>]       <span class="Comment">#</span><span class="Comment"> Floatの配列</span>
+
+<span class="Comment">#</span><span class="Comment"> === Tuple ===</span>
+<span class="Comment">#</span><span class="Comment"> immutable</span>
+t <span class="Statement">=</span> (<span class="Constant">1</span>, <span class="Constant">2</span>, <span class="Constant">3</span>, <span class="Constant">4</span>, <span class="Constant">5</span>)
+t[<span class="Constant">1</span>]    <span class="Comment">#</span><span class="Comment"> =&gt; 1</span>
+(<span class="Constant">1</span>, )   <span class="Comment">#</span><span class="Comment"> 要素数1のTuple</span>
+typeof(t)   <span class="Comment">#</span><span class="Comment"> =&gt; NTuple{5, Int64}</span>
+
+t <span class="Statement">=</span> (<span class="Constant">&quot;</span><span class="Constant">kcrt</span><span class="Constant">&quot;</span>, <span class="Constant">32</span>)
+typeof(t)   <span class="Comment">#</span><span class="Comment"> =&gt; Tuple{String,Int64}</span>
+
+<span class="Comment">#</span><span class="Comment"> 名前付きタプル</span>
+t <span class="Statement">=</span> (a <span class="Statement">=</span> <span class="Constant">1</span>, b <span class="Statement">=</span> <span class="Constant">&quot;</span><span class="Constant">Hello</span><span class="Constant">&quot;</span>)
+t.a     <span class="Comment">#</span><span class="Comment"> =&gt; 1</span>
+typeof(t)   <span class="Comment">#</span><span class="Comment"> =&gt; NamedTuple{(:a, :b),Tuple{Int64,String}}</span>
+
+<span class="Comment">#</span><span class="Comment"> swap</span>
+a <span class="Statement">=</span> <span class="Constant">1</span>; b <span class="Statement">=</span> <span class="Constant">2</span>
+a, b <span class="Statement">=</span> b, a
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

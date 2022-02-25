@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/control_flow.js.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="javascript.jsx">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Todo { color: #0000ff; background-color: #ffff00; padding-bottom: 1px; }
+.javascriptRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.javascriptRainbow_lv0_p0 { color: #3a5fcd; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Constant">&quot;use strict&quot;</span><span class="Statement">;</span>
+
+<span class="Identifier">let</span> a = <span class="Constant">10</span><span class="Statement">;</span>
+<span class="Identifier">let</span> fruits = <span class="Identifier">[</span><span class="Constant">&quot;apple&quot;</span><span class="Normal">,</span> <span class="Constant">&quot;banana&quot;</span><span class="Normal">,</span> <span class="Constant">&quot;fig&quot;</span><span class="Identifier">]</span><span class="Statement">;</span>
+
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;a&quot;</span><span class="Normal">)</span><span class="Statement">;</span> <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;b&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Statement">if</span> <span class="javascriptRainbow_lv0_p0">(</span>a &lt; <span class="Constant">10</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;less than 10.&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+<span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>a == <span class="Constant">10</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;equal to 10.&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+<span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span><span class="javascriptRainbow_lv0_p2">{</span>
+
+<span class="javascriptRainbow_lv0_p2">}</span>
+
+
+<span class="Comment">// for</span>
+<span class="Statement">for</span> <span class="Normal">(</span><span class="Identifier">let</span> i = <span class="Constant">0</span><span class="Statement">;</span> i &lt; <span class="Constant">5</span><span class="Statement">;</span> i++<span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>i<span class="Normal">)</span><span class="Statement">;</span>
+<span class="Identifier">}</span>
+
+<span class="Comment">// break and continue</span>
+<span class="Statement">OuterLoop</span>: <span class="Statement">for</span> <span class="Normal">(</span><span class="Identifier">let</span> i = <span class="Constant">0</span><span class="Statement">;</span> i &lt; <span class="Constant">5</span><span class="Statement">;</span> i++<span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Statement">InnerLoop</span>: <span class="Statement">for</span> <span class="Normal">(</span><span class="Identifier">let</span> j = <span class="Constant">0</span><span class="Statement">;</span> j &lt; <span class="Constant">5</span><span class="Statement">;</span> j++<span class="Normal">)</span><span class="Identifier">{</span>
+        <span class="Statement">if</span> <span class="javascriptRainbow_lv0_p0">(</span>j == <span class="Constant">2</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+            <span class="Statement">continue</span><span class="Statement">;</span>
+        <span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span> <span class="javascriptRainbow_lv0_p0">(</span>j == <span class="Constant">3</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+            <span class="Statement">continue</span> OuterLoop<span class="Statement">;</span>
+        <span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span> <span class="javascriptRainbow_lv0_p0">(</span>j == <span class="Constant">4</span><span class="javascriptRainbow_lv0_p0">)</span><span class="javascriptRainbow_lv0_p2">{</span>
+            <span class="Statement">break</span><span class="Statement">;</span>
+        <span class="javascriptRainbow_lv0_p2">}</span>
+    <span class="Identifier">}</span>
+<span class="Identifier">}</span>
+
+
+<span class="Comment">// foreach</span>
+<span class="Comment">// for in:</span>
+<span class="Comment">//  オブジェクトの列挙可能(Enumerable)なプロパティを取得する。</span>
+<span class="Comment">//  予期せぬプロパティ(プロトタイプのものも含む)を取得してしまう可能性がある。</span>
+<span class="Comment">// for of [[2015]]:</span>
+<span class="Comment">//  Iterableなオブジェクト(配列を含む)から値を取得する。</span>
+<span class="Statement">for</span> <span class="Normal">(</span><span class="Identifier">let</span> i <span class="Statement">in</span> fruits<span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>i<span class="Normal">)</span><span class="Comment">// 0, 1, 2</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>fruits[i]<span class="Normal">)</span><span class="Comment">// apple, banana, fig</span>
+<span class="Identifier">}</span>
+<span class="Statement">for</span> <span class="Normal">(</span><span class="Identifier">let</span> fruit <span class="Statement">of</span> fruits<span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>fruit<span class="Normal">)</span><span class="Comment">// </span>
+<span class="Identifier">}</span>
+<span class="Comment">// map, forEachに関しても参照 </span><span class="Todo">TODO</span><span class="Comment">:</span>
+
+<span class="Comment">// while</span>
+<span class="Statement">while</span><span class="Normal">(</span>a &gt; <span class="Constant">0</span><span class="Normal">)</span><span class="Identifier">{</span>
+    a--<span class="Statement">;</span>
+<span class="Identifier">}</span>
+<span class="Statement">do</span><span class="javascriptRainbow_lv0_p2">{</span>
+    a++<span class="Statement">;</span>
+<span class="javascriptRainbow_lv0_p2">}</span><span class="Statement">while</span><span class="Normal">(</span>a &lt; <span class="Constant">5</span><span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Comment">// infinite loop</span>
+<span class="Statement">for</span> <span class="Normal">(</span><span class="Statement">;;</span><span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Statement">break</span><span class="Statement">;</span>
+<span class="Identifier">}</span>
+<span class="Comment">// switch</span>
+<span class="Comment">// 整数でなくても良い</span>
+<span class="Statement">switch</span><span class="Normal">(</span>a<span class="Normal">)</span><span class="Identifier">{</span>
+    <span class="Statement">case</span> <span class="Constant">0</span>:
+    <span class="Statement">case</span> <span class="Constant">1</span>:
+        <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;0 or 1&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+        <span class="Statement">break</span><span class="Statement">;</span>
+    <span class="Statement">case</span> <span class="Constant">2</span>:
+        <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;two&quot;</span><span class="Normal">)</span><span class="Statement">;</span><span class="Comment">// fallthrough</span>
+    <span class="Statement">default</span>:
+        <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;other&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+<span class="Identifier">}</span>
+
+<span class="Comment">// goto</span>
+<span class="Comment">// ない</span>
+
+<span class="Comment">// node helloworld.js で実行</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

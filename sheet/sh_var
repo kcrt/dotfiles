@@ -1,0 +1,21 @@
+bash
+${var%.*}		拡張子以外
+${var##*.}		拡張子のみ
+
+zsh
+${var:a}		fullpath
+${var:A}		fullpath(リンク展開)
+${var:e}		拡張子
+${var:h}		ディレクトリのみ
+${var:l}		小文字に
+${var:r}		拡張子以外
+${var:s/a/b/}, ${var:gs/a/b/}
+				文字列の置換
+${var:t}		ファイル名のみ (最後の/の後)
+${var:u}		大文字に
+${var:?message}	存在していない場合はmessageを表示する
+${var#prefix}	patternを頭から取り除く
+${var%suffix}	patternを末から取り除く
+					例: var=foo.txtのとき、${var%txt}pdfでfoo.pdf
+
+var=$(( (var + 1) * 3 ))

@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/bytes.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Identifier { color: #458b74; }
+.pythonRainbow_p1 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> struct <span class="PreProc">import</span> pack, unpack
+
+<span class="Comment"># immutable(変更不可能)なbytesと、mutable(変更可能)なbytearrayがある。</span>
+<span class="Comment"># ここではbytesarrayを主に説明する。</span>
+
+b1 = b<span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span>                   <span class="Comment"># bytes型</span>
+b2 = <span class="Identifier">bytearray</span><span class="pythonRainbow_p0">(</span>b<span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>        <span class="Comment"># bytearray型</span>
+<span class="Comment"># b&quot;こんにちわ&quot;                 # ASCII文字以外は不可</span>
+b3 = <span class="Identifier">bytearray</span><span class="pythonRainbow_p0">(</span>b<span class="String">&quot;</span><span class="Special">\xDE\xAD\xBE\xEF</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 16進数から</span>
+b4 = <span class="Identifier">bytearray</span>.fromhex<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">DEADBEEF</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># 16進数から</span>
+a = <span class="Constant">9250</span>
+b5 = a.to_bytes<span class="pythonRainbow_p0">(</span><span class="Constant">2</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">big</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>       <span class="Comment"># intから(バイト数とエンディアン指定)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>b3.hex<span class="pythonRainbow_p1">()</span><span class="pythonRainbow_p0">)</span>                 <span class="Comment"># 16進数へ</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>b3<span class="pythonRainbow_p1">[</span><span class="Constant">1</span><span class="pythonRainbow_p1">]</span><span class="pythonRainbow_p0">)</span>                    <span class="Comment"># 173 ( = 0xDE)</span>
+
+b3.count<span class="pythonRainbow_p0">(</span>b<span class="String">&quot;</span><span class="Special">\xde\xad</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>           <span class="Comment"># 出現数を数える</span>
+b3.count<span class="pythonRainbow_p0">(</span><span class="Constant">173</span><span class="pythonRainbow_p0">)</span>                   <span class="Comment"># 0-255の整数も指定できる</span>
+
+b1.decode<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">utf-8</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>       <span class="Comment"># bytes or bytearrayの内容を文字列として解釈した結果を返す</span>
+<span class="Comment"># b3.decode(&quot;utf-8&quot;)     # 指定したエンコーディングとして解釈できない時は[[ERROR]] UnicodeDecodeError</span>
+b3.decode<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">utf-8</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> errors=<span class="String">&quot;</span><span class="String">ignore</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>       <span class="Comment"># errors = &quot;ignore&quot; または &quot;replace&quot;を使用して回避</span>
+
+<span class="Comment"># struct: pack, unpack</span>
+<span class="Comment"># バイト列(バイナリデータ)の解釈</span>
+<span class="Comment"># C言語のAlignmentとパディングを理解せずに使用しないこと！</span>
+jpegheader = b<span class="String">&quot;</span><span class="Special">\xff\xd8\xff\xe0\x00\x10\x4a\x46\x49\x46\x00\x01\x01\x01\x00\xf0\x00\xf0</span><span class="String">&quot;</span>
+<span class="pythonRainbow_p0">(</span>marker_soi<span class="pythonRainbow_o0">,</span> soi<span class="pythonRainbow_o0">,</span> marker_app0<span class="pythonRainbow_o0">,</span> app0<span class="pythonRainbow_o0">,</span> len_field<span class="pythonRainbow_o0">,</span> JFIF<span class="pythonRainbow_o0">,</span> verno<span class="pythonRainbow_o0">,</span> dpi_unit<span class="pythonRainbow_o0">,</span> width<span class="pythonRainbow_o0">,</span> height<span class="pythonRainbow_p0">)</span> = unpack<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">&gt;BBBBH5sHBHH</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> jpegheader<span class="pythonRainbow_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>f<span class="String">&quot;</span><span class="String">{width} x {height}</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+pascalstr = pack<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">B5s</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="Constant">5</span><span class="pythonRainbow_o0">,</span> b<span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># byte order</span>
+<span class="Comment"># 文字 バイトオーダー サイズ アライメント</span>
+<span class="Comment"># @(省略時) ネイティブ ネイティブ ネイティブ</span>
+<span class="Comment"># = ネイティブ 標準 なし</span>
+<span class="Comment"># &lt; リトルエンディアン 標準 なし</span>
+<span class="Comment"># &gt; ビッグエンディアン 標準 なし</span>
+<span class="Comment"># ! ネットワーク (&gt;と同じ)</span>
+
+<span class="Comment"># フォーマット Cの型 Pythonの型  サイズ(Standard時)</span>
+<span class="Comment"># x (パディング) 読み込まない 1</span>
+<span class="Comment"># c char bytes 1</span>
+<span class="Comment"># b/B singed/unsighed char  integer 1</span>
+<span class="Comment"># ? _Bool bool 1</span>
+<span class="Comment"># h/H signed/unsigned short integer 2</span>
+<span class="Comment"># i/I signed/unsigned int integer 4</span>
+<span class="Comment"># l/L signed/unsigned long integer **4**</span>
+<span class="Comment"># q/Q signed/unsigned long long integer 8</span>
+<span class="Comment"># n/N ssize_t/size_t integer (@のみ使用可)</span>
+<span class="Comment"># e なし(半精度浮動小数点) float 2</span>
+<span class="Comment"># f float float 4</span>
+<span class="Comment"># d double float 8</span>
+<span class="Comment"># s/p char[] bytes (5sなどで指定)</span>
+<span class="Comment"># P void * integer (@のみ使用可)</span>
+<span class="Comment"># hhhhは4hでも良い</span>
+
+<span class="Comment"># .startwith(), .endwith(), .find(), .index(), .join()なども使用できる。</span>
+<span class="Comment"># memoryviewを利用してバッファアクセスを行うことも出来る。</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

@@ -1,0 +1,14 @@
+* port scan
+nmap 192.168.24.1
+* ping
+nmap -sP 192.168.24.0/24
+* OS detection
+nmap -O 192.168.24.1
+	--osscan-limit: 有望なターゲットに絞る
+	--fuzzy: 近似の範囲を広げる
+* TCP
+# SYN Scan - TCPコネクションを開かない
+nmap -sS 
+# TCP Connect Scan - 接続する 
+nmap -sT [-p20-100] 192.168.24.1
+

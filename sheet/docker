@@ -1,0 +1,30 @@
+docker container ls -a
+docker container create|run -it [--detach] [--rm] [--hostname HOSTNAME] [--name NAME] [-v HOST_PATH:CONTAINER_PATH] IMAGE
+	run = create(コンテナの生成: イメージ⇒ コンテナ) + start (起動)
+	-it						interective tty
+	--detach				detach after run
+	--rm					remove after exit
+	--pids-limits 20		limit pids
+	-v LOCAL:REMOTE[:ro]	コンテナにマウント (ro: read-only)
+		例: -v `pwd`:/mnt
+docker container start NAME|CONTAINER_ID -i
+docker container attach NAME|CONTAINER_ID
+docker container kill NAME|CONTAINER_ID
+docker container exec NAME|CONTAINER_ID COMMAND
+docker container rm NAME|CONTAINER_ID
+docker container stats
+docker container top
+docker container pause|unpause
+
+docker image ls				# was: docker images
+docker image build
+docker image import
+docker image history
+docker image pull|push
+docker image rm IMAGE_ID
+docker image save
+docker image tag
+docker inspect CONTAINER|IMAGE
+
+screen ~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/tty
+	# access to docker container

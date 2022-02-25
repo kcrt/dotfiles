@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.go.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="go">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.goRainbow_lv0_p0 { color: #3a5fcd; }
+.goRainbow_lv1_o0 { color: #cd6600; }
+.goRainbow_lv1_p0 { color: #cd6600; }
+.goRainbow_lv2_o0 { color: #43cd80; }
+.goRainbow_lv2_p1 { color: #43cd80; }
+.goRainbow_lv3_p1 { color: #b22222; }
+.goRainbow_lv0_o2 { color: #3a5fcd; }
+.goRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.goRainbow_lv2_p0 { color: #43cd80; }
+.goRainbow_lv3_p0 { color: #b22222; }
+.goRainbow_lv1_p1 { color: #cd6600; }
+.goRainbow_lv1_o2 { color: #cd6600; }
+.goRainbow_lv1_p2 { color: #cd6600; }
+.goRainbow_lv2_p2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Statement">package</span> main
+
+<span class="Statement">import</span> <span class="Constant">&quot;fmt&quot;</span>
+<span class="Statement">import</span> <span class="Constant">&quot;sort&quot;</span>
+<span class="Statement">import</span> <span class="Constant">&quot;strconv&quot;</span>
+<span class="Statement">import</span> <span class="Constant">&quot;reflect&quot;</span>
+
+<span class="Statement">func</span> main<span class="goRainbow_lv0_p0">()</span> <span class="goRainbow_lv0_p2">{</span>
+
+    <span class="Comment">// 配列(固定長)とスライス(可変長)を使用できる。</span>
+    <span class="Comment">// スライスの方が便利なのでよく使用される。</span>
+    arr1 := <span class="goRainbow_lv1_p1">[</span><span class="Constant">5</span><span class="goRainbow_lv1_p1">]</span><span class="Type">int</span><span class="goRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="goRainbow_lv1_p2">}</span>   <span class="Comment">// 配列</span>
+    arr2 := <span class="goRainbow_lv1_p1">[</span>...<span class="goRainbow_lv1_p1">]</span><span class="Type">int</span><span class="goRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="goRainbow_lv1_p2">}</span> <span class="Comment">// 配列 (要素数省略)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>reflect.TypeOf<span class="goRainbow_lv2_p0">(</span>arr2<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span>
+    slice := <span class="goRainbow_lv1_p1">[]</span><span class="Type">int</span><span class="goRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">4</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">5</span><span class="goRainbow_lv1_p2">}</span> <span class="Comment">// スライス</span>
+    slice2 := <span class="Statement">make</span><span class="goRainbow_lv1_p0">(</span><span class="goRainbow_lv2_p1">[]</span><span class="Type">int</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">5</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="goRainbow_lv1_p0">)</span>  <span class="Comment">// 型, 個数, 容量(=確保長, 省略可)</span>
+    <span class="Statement">var</span> slice3 <span class="goRainbow_lv1_p1">[]</span><span class="Type">int</span>              <span class="Comment">// 要素のないスライス</span>
+
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>            <span class="Comment">// 0-origin</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span><span class="Statement">len</span><span class="goRainbow_lv3_p0">(</span>slice<span class="goRainbow_lv3_p0">)</span>-<span class="Constant">1</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 最後のアイテム</span>
+    slice<span class="goRainbow_lv1_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv1_p1">]</span> = <span class="Constant">10</span>                    <span class="Comment">// 要素への代入</span>
+
+    <span class="Comment">// 簡易スライス表現</span>
+    <span class="Comment">// Pythonでいうスライス(配列またはスライスから)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span><span class="Constant">1</span>:<span class="Constant">3</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// slice[1], slice[2]</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span><span class="Constant">2</span>:<span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>  <span class="Comment">// 2 - last</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span>:<span class="Constant">3</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>  <span class="Comment">// 0 - 2</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span>:<span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>   <span class="Comment">// 0 - last</span>
+
+    <span class="Comment">// コピー</span>
+    s1 := slice<span class="goRainbow_lv1_p1">[</span>:<span class="goRainbow_lv1_p1">]</span> <span class="Comment">// Pythonと違ってこれはコピーではない！ [[注意]]</span>
+    s1<span class="goRainbow_lv1_p1">[</span><span class="Constant">1</span><span class="goRainbow_lv1_p1">]</span> = <span class="Constant">100</span>    <span class="Comment">// もとのスライスも変更されてしまう (ただし、capacityを超えると別のデータになったり…)</span>
+    s2 := <span class="Statement">make</span><span class="goRainbow_lv1_p0">(</span><span class="goRainbow_lv2_p1">[]</span><span class="Type">int</span><span class="goRainbow_lv1_o0">,</span> <span class="Statement">len</span><span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">copy</span><span class="goRainbow_lv1_p0">(</span>s2<span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>                    <span class="Comment">// これでコピーとなる</span>
+    s3 := <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span><span class="goRainbow_lv2_p1">[]</span><span class="Type">int</span><span class="goRainbow_lv2_p0">(</span><span class="Statement">nil</span><span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_o0">,</span> slice...<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// これでもOK</span>
+    s2<span class="goRainbow_lv1_p1">[</span><span class="Constant">1</span><span class="goRainbow_lv1_p1">]</span> = <span class="Constant">123</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> s2<span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> s3<span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+
+    fmt.Println<span class="goRainbow_lv1_p0">(</span><span class="Statement">len</span><span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 要素長</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span><span class="Statement">cap</span><span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 容量</span>
+
+    <span class="Comment">// 走査</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;run&quot;</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">for</span> i<span class="goRainbow_lv0_o2">,</span> val := <span class="Statement">range</span> slice <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span>i<span class="goRainbow_lv2_o0">,</span> val<span class="goRainbow_lv2_p0">)</span> <span class="Comment">// i -&gt; index, val -&gt; item</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// 一致の検索</span>
+
+    <span class="Comment">// 要素の追加</span>
+    slice = <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">11</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">12</span><span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> <span class="Statement">append</span><span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_o0">,</span> <span class="Constant">11</span><span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+
+    slice = <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_o0">,</span> slice2...<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// ...が必要</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// appendは便利だが使用に注意が必要</span>
+    <span class="Comment">// 再代入を行わなければ、配列の内容は変わらないが</span>
+    <span class="Comment">// かといって、項目が追加された新しい配列を返しているわけではない…[[注意]]</span>
+    slicex := <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_o0">,</span> <span class="Constant">100</span><span class="goRainbow_lv1_p0">)</span>
+    slicey := <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_o0">,</span> <span class="Constant">200</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;slicex&quot;</span><span class="goRainbow_lv1_p0">)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_p0">)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>slicex<span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slicex<span class="goRainbow_lv1_p0">)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slicey<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 同じ結果！[[注意]]</span>
+
+    <span class="Comment">// 先頭への要素の追加</span>
+    slice = <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span><span class="goRainbow_lv2_p1">[]</span><span class="Type">int</span><span class="goRainbow_lv2_p2">{</span><span class="Constant">100</span><span class="goRainbow_lv2_p2">}</span><span class="goRainbow_lv1_o0">,</span> slice...<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// [[heavy]]</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;%v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// 要素の削除</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;before: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+    slice = <span class="Statement">append</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span>:<span class="Constant">2</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv2_p1">[</span><span class="Constant">3</span>:<span class="goRainbow_lv2_p1">]</span>...<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// slice[2]抜き</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;after del: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+    <span class="Comment">// 末尾削除</span>
+    slice = slice<span class="goRainbow_lv1_p1">[</span>:<span class="Statement">len</span><span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_p0">)</span>-<span class="Constant">1</span><span class="goRainbow_lv1_p1">]</span>
+    <span class="Comment">// 先頭削除</span>
+    slice = slice<span class="goRainbow_lv1_p1">[</span><span class="Constant">1</span>:<span class="goRainbow_lv1_p1">]</span>
+
+    <span class="Comment">// ソート</span>
+    <span class="Comment">// package sort</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;before sort: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+    sort.Ints<span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv1_p0">)</span>
+    <span class="Comment">// 他に、Float64s, Stringsもある</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;after sort: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+    sort.Stable<span class="goRainbow_lv1_p0">(</span>sort.IntSlice<span class="goRainbow_lv2_p0">(</span>slice<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// Stableなソート</span>
+    sort.Sort<span class="goRainbow_lv1_p0">(</span>sort.Reverse<span class="goRainbow_lv2_p0">(</span>sort.IntSlice<span class="goRainbow_lv3_p0">(</span>slice<span class="goRainbow_lv3_p0">)</span><span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// 逆順</span>
+    <span class="Comment">// ない</span>
+    <span class="Comment">// See: Go SliceTricsk</span>
+    <span class="Comment">// <a href="https://github.com/golang/go/wiki/SliceTricks">https://github.com/golang/go/wiki/SliceTricks</a></span>
+
+    <span class="Comment">// map, foreach</span>
+    <span class="Comment">// ない…</span>
+
+    <span class="Comment">// filter</span>
+    <span class="Comment">// ない。自分で実装するしかない</span>
+    <span class="Comment">// (Go公式のSliceTricksより)</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;before: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+    n := <span class="Constant">0</span>
+    <span class="Statement">for</span> _<span class="goRainbow_lv0_o2">,</span> x := <span class="Statement">range</span> slice <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">if</span> x &gt; <span class="Constant">5</span> <span class="goRainbow_lv2_p2">{</span>
+            slice<span class="goRainbow_lv3_p1">[</span>n<span class="goRainbow_lv3_p1">]</span> = x
+            n++
+        <span class="goRainbow_lv2_p2">}</span>
+    <span class="goRainbow_lv1_p2">}</span>
+    slice = slice<span class="goRainbow_lv1_p1">[</span>:n<span class="goRainbow_lv1_p1">]</span>
+    fmt.Printf<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;filtered: %v</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="goRainbow_lv1_o0">,</span> slice<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// reduce</span>
+    <span class="Comment">// ない…</span>
+
+    <span class="Comment">// max min</span>
+    <span class="Comment">// ない…</span>
+
+    <span class="Comment">// all, any ない</span>
+
+    <span class="Comment">// interface{}を介せば型を混ぜることが出来る</span>
+    mixed := <span class="goRainbow_lv1_p1">[]</span><span class="Statement">interface</span><span class="goRainbow_lv1_p2">{}{</span><span class="Constant">1</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">3.14</span><span class="goRainbow_lv1_o2">,</span> <span class="Constant">&quot;Hello&quot;</span><span class="goRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// tupleではないが多値 (multiple-value)がある</span>
+    t1<span class="goRainbow_lv0_o2">,</span> t2 := <span class="Constant">1</span><span class="goRainbow_lv0_o2">,</span> <span class="Constant">2</span>
+    i<span class="goRainbow_lv0_o2">,</span> err := strconv.Atoi<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;12&quot;</span><span class="goRainbow_lv1_p0">)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>t1<span class="goRainbow_lv1_o0">,</span> t2<span class="goRainbow_lv1_p0">)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>i<span class="goRainbow_lv1_o0">,</span> err<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>arr1<span class="goRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>arr2<span class="goRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>slice<span class="goRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>slice2<span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>slice3<span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>mixed<span class="goRainbow_lv2_p1">[</span><span class="Constant">0</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span>
+
+<span class="goRainbow_lv0_p2">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

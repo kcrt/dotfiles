@@ -1,0 +1,5 @@
+* keep power on when lid closes
+gconftool-2 -t string -s /apps/gnome-power-manager/buttons/lid_ac nothing
+sudo -H vim /etc/systemd/logind.conf
+HandleLidSwitch=ignore
+

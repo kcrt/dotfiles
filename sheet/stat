@@ -1,0 +1,57 @@
+=== 過誤 ===
+  * Type I Error
+    * 帰無仮説が正しいのに棄却
+	* 間違って「有意差が有る」といってしまうこと
+	* A p value less than 0.05 was considered statistically significant.
+
+=== 効果量 ===
+Statistics hacks
+		小		中		大
+r		±0.10	±0.30	±0.50
+r^2		0.01	0.09	0.25
+d		0.2		0.5		0.8
+η^2	0.01	0.06	0.14
+
+d はt検定で使われる
+d = t * sqrt((n1 + n2) / (n1*n2))
+η^2は分散分析の効果量
+
+=== 回帰分析 ===
+formula
+通常: y ~ x
+定数項なし: y ~ x - 1
+	たとえばガソリン消費量と走行距離など、x = 0のとき必ず y = 0になる場合にのみ使用する。
+Multiple R-squared: 寄与率・決定係数
+Adjusted R-squared: 調整済み寄与率
+寄与率は説明変数が多くなるほど大きくなる
+Adjustedは自由度で調整を行っている
+1に近いほどモデルは正確、0.5以上がひとつの目安。
+
+=== ロジスティック回帰分析 ===
+  * 偏回帰係数 coef
+    * 0 -> 確率に何の影響も与えない、正 -> 確率アップ、負 -> 確率ダウン
+  * 回帰係数の信頼区間
+    * 95% Confidence Interval : Est ± 1.96 * Std.Error
+=== glm ===
+  * glm - Generalized linear model 一般化線形モデル
+    * "General" linear model (一般線形モデル)とちゃんと区別！
+  * glm(y ~ x)
+    * y = 応答変数(response variable)
+	* x = 説明変数(explanatory variable)
+	* 昔の用語では従属変数(被説明変数)・独立変数
+  * family
+    * 例文: The response variable Y follows the Poisson distribution of mean m. (応答変数 Y は平均 m のポアソン分布にしたがう)
+    * binomial : 応答変数が離散値で{0, 1}または{0, 1, ..., N}
+	* poisson : 応答変数が離散値で、取りうる値は{0, 1, 2, ..., Inf}
+	* Gamma: 応答変数は連続値で正の数
+	* gaussian: 応答変数が連続値で値は∞
+  * summary(glm(...))
+    * z
+	  * 係数(coefficient)の推定値(Estimate) /  標準誤差 (Std.Error)
+	  * 推定値がどれくらいばらつきそうか
+	  * ただし、gaussianの場合t (どれくらいゼロからずれているか)
+	  * gaussianでないときは、Wald 統計量
+	  * Pr(>|z|) が0.05より小さい場合、95% Wald信頼区間にゼロが含まれない
+	  * あんまり「有意」という言葉ではあらわせない
+
+

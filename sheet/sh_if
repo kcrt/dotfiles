@@ -1,0 +1,26 @@
+if [ EXPRESSION ]; then
+( zshでは [[ EXPRESSION ]])
+	...
+else
+	...
+fi
+
+[ は /bin/[、[[はビルドインコマンド
+
+* file
+-b, -c, -p, -S, -g, -k, -u
+-d: Directory	-f: Normal file	-L: Symbolic link
+-r: readable	-w: writable	-x: executable
+-e: exists		-s: size > 0
+
+* string
+-n: not null	-z: null string
+str1 = str2		str1 != str2
+"string" =~ expression
+[[の時はexpresisonは囲まない
+
+* numeric
+-eq		-ge		-gt		-le		-lt		-ne
+
+* logical
+!		-a (AND)	-o (OR) zshでは && ||

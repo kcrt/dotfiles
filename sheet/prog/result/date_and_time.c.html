@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/date_and_time.c.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="c">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Statement { color: #b03060; font-weight: bold; }
+.PreProc { color: #1874cd; }
+.Type { color: #008b00; font-weight: bold; }
+.cRainbow_p0 { color: #3a5fcd; }
+.cRainbow_o1 { color: #cd6600; }
+.cRainbow_p1 { color: #cd6600; }
+.cRainbow_p2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="String">&lt;stdio.h&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;time.h&gt;</span>
+
+<span class="Type">int</span> main<span class="cRainbow_p0">(</span><span class="Type">void</span><span class="cRainbow_p0">){</span>
+
+<span class="Comment">/*</span><span class="Comment"> == 型 == </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 時刻を示すtime_t型と、カレンダー上の日付を示すtm構造体を使用する。</span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 他に経過時間を示すclock_tが使用できる。 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> [[POSIX]] time_tではUnix時間からの秒数である。厳密には整数か浮動小数点かは未規定だが、浮動小数点での実装はないと思って良い。 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 2038年問題も参照すること。 </span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == 現在の日付と時刻 == </span><span class="Comment">*/</span>
+<span class="Type">time_t</span> nowvar = time<span class="cRainbow_p1">(</span><span class="Constant">NULL</span><span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> またはtime(&amp;nowbar); </span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == オブジェクトの生成 == </span><span class="Comment">*/</span>
+<span class="Type">struct</span> tm mybirthtimetm;
+<span class="Comment">/*</span><span class="Comment"> 構造体のアイテムを直接指定 </span><span class="Comment">*/</span>
+mybirthtimetm.tm_year = <span class="Constant">84</span>; <span class="Comment">/*</span><span class="Comment"> = 1984年; 2018年は118 </span><span class="Comment">*/</span>
+mybirthtimetm.tm_mon = <span class="Constant">8</span>; <span class="Comment">/*</span><span class="Comment"> = 9月; 0-11で指定 </span><span class="Comment">*/</span>
+mybirthtimetm.tm_mday = <span class="Constant">24</span>;
+mybirthtimetm.tm_hour = <span class="Constant">12</span>;
+mybirthtimetm.tm_min = <span class="Constant">3</span>;
+mybirthtimetm.tm_sec = <span class="Constant">24</span>; <span class="Comment">/*</span><span class="Comment"> 0-60で指定、60は閏秒 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> もしくは環境が許せば[[POSIX拡張]]のstrptimeを使用できる </span><span class="Comment">*/</span>
+strptime<span class="cRainbow_p1">(</span><span class="String">&quot;1984-09-24 12:03:24&quot;</span><span class="cRainbow_o1">,</span> <span class="String">&quot;%Y-%m-</span><span class="Special">%d</span><span class="String"> %H:%M:</span><span class="Special">%S</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> &amp;mybirthtimetm<span class="cRainbow_p1">)</span>;
+<span class="Comment">/*</span><span class="Comment"> struct tmからtime_tに変換 </span><span class="Comment">*/</span>
+<span class="Type">time_t</span> mybirthtime = mktime<span class="cRainbow_p1">(</span>&amp;mybirthtimetm<span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> tm_wday(曜日)も書き換えられる </span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == オブジェクトからのアイテムの取得 == </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 取得にはまずtime_tをstruct tm に変換する必要がある </span><span class="Comment">*/</span>
+<span class="Type">struct</span> tm* nowtm = localtime<span class="cRainbow_p1">(</span>&amp;nowvar<span class="cRainbow_p1">)</span>;
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%04d</span><span class="String">-</span><span class="Special">%02d</span><span class="String">-</span><span class="Special">%02d</span><span class="String"> </span><span class="Special">%02d</span><span class="String">:</span><span class="Special">%02d</span><span class="String">:</span><span class="Special">%02d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> nowtm-&gt;tm_year + <span class="Constant">1900</span><span class="cRainbow_o1">,</span> nowtm-&gt;tm_mon<span class="cRainbow_o1">,</span> nowtm-&gt;tm_mday<span class="cRainbow_o1">,</span> nowtm-&gt;tm_hour<span class="cRainbow_o1">,</span> nowtm-&gt;tm_min<span class="cRainbow_o1">,</span> nowtm-&gt;tm_sec<span class="cRainbow_p1">)</span>;
+<span class="Comment">/*</span><span class="Comment"> localtimeはstaticなデータへのポインタを返す。解放は不要。</span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 自前の変数に格納する安全な(POSIX拡張)localtime_rや(C11)localtime_s(&amp;nowvar, &amp;nowtm)の使用を考慮 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> UTCで取得する gmtime, gmtime_sも使用可能</span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == 曜日 == </span><span class="Comment">*/</span>
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> nowtm-&gt;tm_wday<span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> Sun = 0, Mon = 1, ... </span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == Unix time == </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> POSIXではtime_tそのものがepochからの秒数 </span><span class="Comment">*/</span>
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%lld</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> <span class="cRainbow_p2">(</span><span class="Type">long</span> <span class="Type">long</span><span class="cRainbow_p2">)</span>nowvar<span class="cRainbow_p1">)</span>;
+
+
+<span class="Comment">/*</span><span class="Comment"> == プロセッサー時間・高分解能時間 == </span><span class="Comment">*/</span>
+<span class="Type">clock_t</span> dur = clock<span class="cRainbow_p1">()</span>; <span class="Comment">/*</span><span class="Comment"> クロックカウンタを取得 </span><span class="Comment">*/</span>
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%lf</span><span class="String">(sec)</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> dur * <span class="Constant">1.0</span> / <span class="Constant">CLOCKS_PER_SEC</span><span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> 秒に変換 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> (POSIX) さらに高分解能・モノトニックなクロックも使用できる </span><span class="Comment">*/</span>
+<span class="Type">struct</span> timespec ts;
+clock_getres<span class="cRainbow_p1">(</span>CLOCK_REALTIME<span class="cRainbow_o1">,</span> &amp;ts<span class="cRainbow_p1">)</span>;
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;分解能: </span><span class="Special">%lld</span><span class="String"> (sec.) + </span><span class="Special">%ld</span><span class="String"> (ns.)</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> <span class="cRainbow_p2">(</span><span class="Type">long</span> <span class="Type">long</span><span class="cRainbow_p2">)</span>ts.tv_sec<span class="cRainbow_o1">,</span> ts.tv_nsec<span class="cRainbow_p1">)</span>;
+clock_gettime<span class="cRainbow_p1">(</span>CLOCK_REALTIME<span class="cRainbow_o1">,</span> &amp;ts<span class="cRainbow_p1">)</span>;
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%lld</span><span class="String"> (sec.) + </span><span class="Special">%ld</span><span class="String"> (ns.)</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> <span class="cRainbow_p2">(</span><span class="Type">long</span> <span class="Type">long</span><span class="cRainbow_p2">)</span>ts.tv_sec<span class="cRainbow_o1">,</span> ts.tv_nsec<span class="cRainbow_p1">)</span>;
+<span class="Comment">/*</span><span class="Comment"> クロックにはCLOCK_REALTIME(Unix timeな実時間), CLOCK_REALTIME_COARSE(CLOCK_REALTIMEより早いが精度が低い), CLOCK_MONOTONIC, CLOCK_MONOTONIC_COARSE, CLOCK_MONOTONIC_RAW, CLOCK_BOOTTIME, CLOCK_PROCESS_CPUTIME_ID, CLOCK_THREAD_CPUTIME_IDが指定できる。 </span><span class="Comment">*/</span>
+
+
+<span class="Comment">/*</span><span class="Comment"> == 時間の計算 == </span><span class="Comment">*/</span>
+<span class="Type">double</span> delta = difftime<span class="cRainbow_p1">(</span>nowvar<span class="cRainbow_o1">,</span> mybirthtime<span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> (秒) </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> 単純な引き算(mybirthtime - nowvar)と違い、POSIX環境でなくても使用可能(POSIX以外ではtime_tが秒単位とは限らない) </span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == 時差情報 == </span><span class="Comment">*/</span>
+<span class="Type">struct</span> tm *birthdate_gmtm = gmtime<span class="cRainbow_p1">(</span>&amp;mybirthtime<span class="cRainbow_p1">)</span>;
+<span class="Comment">/*</span><span class="Comment"> 安全なgmtime_rやgmtime_s(time_t*, struct tm*)を推奨</span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> それ以上のタイムゾーン処理は、標準ライブラリのみでは難しい</span><span class="Comment">*/</span>
+
+<span class="Comment">/*</span><span class="Comment"> == 文字列へ == </span><span class="Comment">*/</span>
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%s</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> ctime<span class="cRainbow_p2">(</span>&amp;mybirthtime<span class="cRainbow_p2">)</span><span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> time_t -&gt; 文字列 </span><span class="Comment">*/</span>
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%s</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> asctime<span class="cRainbow_p2">(</span>&amp;mybirthtimetm<span class="cRainbow_p2">)</span><span class="cRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> struct tm -&gt; 文字列 </span><span class="Comment">*/</span>
+<span class="Comment">/*</span><span class="Comment"> (C11) 安全なctime_s, asctime_sを推奨 </span><span class="Comment">*/</span>
+<span class="Type">char</span> buf<span class="cRainbow_p1">[</span><span class="Constant">256</span><span class="cRainbow_p1">]</span>;
+strftime<span class="cRainbow_p1">(</span>buf<span class="cRainbow_o1">,</span> <span class="Statement">sizeof</span> buf<span class="cRainbow_o1">,</span> <span class="String">&quot;%Y-%m-</span><span class="Special">%d</span><span class="String"> %H:%M:</span><span class="Special">%S</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> &amp;mybirthtimetm<span class="cRainbow_p1">)</span>;
+printf<span class="cRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%s</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cRainbow_o1">,</span> buf<span class="cRainbow_p1">)</span>;
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+<span class="cRainbow_p0">}</span>
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

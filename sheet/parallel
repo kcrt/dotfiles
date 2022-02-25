@@ -1,0 +1,4 @@
+ls * | echo {}
+ls * | parallel -j 4 --dry-run echo {}
+ls *.png | parallel -j 4 --dry-run convert {} {.}.jpg
+

@@ -1,0 +1,78 @@
+a[href*="kyoko-np.net"]:before{
+	content:"[虚構💩]";
+	color: black;
+}
+
+div#fc2_bottom_bnr{
+	display: none !important;
+}
+
+/* ascii.jp */
+div#google_center_div{
+	display: none !important;
+}
+
+/* amazon */
+div.itemPriceDrop{
+	background-color: yellow;
+}
+
+/* kamibakusho */
+div.articlebody>div.blogbody>div.main, div.articlebody>div.blogbody>div.mainmore{
+	line-height: 140% !important;
+}
+
+/* afpbb.com */
+div.bottom_fixed_ad {
+	display: none !important;
+}
+div.GoogleActiveViewElement {
+	display: none !important;
+}
+aside.ad-overlay {
+	display: none !important;
+}
+
+/* togetter.com */
+div#ad_overlay {
+	display: none !important;
+}
+
+/* gendai.ismedia.jp */
+div#MG_pc_inArticle {
+	display: none !important;
+}
+div#MG_pc_overlay {
+	display: none !important;
+}
+
+/* www.huffingtonpost.jp */
+div#entry_paragraph_1 {
+	display: none !important;
+}
+
+/* news.livedoor.com */
+div.yadsOverlayCnt {
+	display: none !important;
+}
+
+/* campify.jp */
+div.pc-overlay-ad {
+	display: none !important;
+}
+
+/* gizmode.jp */
+div.l-ad {
+	display: none !important;
+}
+
+/* lovekoi.net */
+ins.adsbygoogle {
+	display: none !important;
+}
+
+/* daylyportalz.jp */
+div#gg-static-unit {
+	display: none !important;
+}
+

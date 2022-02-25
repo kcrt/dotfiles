@@ -1,0 +1,43 @@
+require("GEOquery")
+gse = getGEO("GSEXXXX")
+# gse = getGEO(filename="GSE68848_series_matrix.txt.gz")
+names(GSMList(gse))
+gse.1.eset = gse[[1]] 
+
+GEO Platform (GPL)
+These files describe a particular type of microarray. They are annotation files.
+マイクロアレイプラットフォーム
+Table(gpl)
+# tableではない！
+
+GEO Sample (GSM)
+Files that contain all the data from the use of a single chip. For each gene there will be multiple scores including the main one, held in the VALUE column.
+一つ一つのサンプル
+
+GEO Series (GSE)
+Lists of GSM files that together form a single experiment.
+一連の実験データ
+GSMをたくさん含んでいる
+配列のことも
+  * GSE->GSM
+    GSMList(gse)[[1]]など
+  * GSE->Expression Set
+exprs(gse)
+write.table(exprs(gse[[1]]), "GSE_exprs.txt")
+write.table(pData(gse[[1]]), "GSE_pData.txt")
+
+
+GEO Dataset (GDS)
+These are curated files that hold a summarised combination of a GSE file and its GSM files. They contain normalised expression levels for each gene from each sample (i.e. just the VALUE field from the GSM file).
+GSMの集合体
+GSEと違って一つの実験データとは限らない
+  * GDS2eSet
+
+
+発現情報 eSet
+combine(eset1, eset2)
+
+
+pathview(gene.data=c(keggd$ID), pathway.id="05200", species = "hsa", gene.idtype = "KEGG")
+require("affy")
+rmadata= justRMA()

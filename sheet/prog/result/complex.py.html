@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/complex.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_p1 { color: #cd6600; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.pythonRainbow_o1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">import</span> cmath
+
+<span class="Comment"># 複素数</span>
+<span class="Comment"># 虚数単位はj [[注意]]</span>
+z = <span class="Constant">1</span> + <span class="Constant">2j</span>
+z2 = z * z
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">z * z = {0} + {1}i</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p1">(</span>z2.real<span class="pythonRainbow_o1">,</span> z2.imag<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># =&gt; -3.0 + 4.0i</span>
+
+z3 = <span class="Constant">3</span> + <span class="Constant">0j</span>         <span class="Comment"># 虚部が0の複素数型</span>
+z4 = <span class="Identifier">complex</span><span class="pythonRainbow_p0">(</span><span class="Constant">3</span><span class="pythonRainbow_o0">,</span> <span class="Constant">0</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># complex()を使用しても良い</span>
+
+z.conjugate<span class="pythonRainbow_p0">()</span>, <span class="Identifier">abs</span><span class="pythonRainbow_p0">(</span>z<span class="pythonRainbow_p0">)</span>   <span class="Comment"># 複素共役と絶対値</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>cmath.phase<span class="pythonRainbow_p1">(</span>z<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>   <span class="Comment"># 偏角</span>
+<span class="pythonRainbow_p0">(</span>abs_val<span class="pythonRainbow_o0">,</span> arg_val<span class="pythonRainbow_p0">)</span> = cmath.polar<span class="pythonRainbow_p0">(</span>z<span class="pythonRainbow_p0">)</span>
+<span class="Comment"># cmath.rect()</span>
+<span class="Comment"># cmath.sqrt(), cmath.exp(), cmath.log(), ...</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

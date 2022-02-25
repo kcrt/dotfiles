@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/hash.jl.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="julia">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.juliaRainbow_lv1_p0 { color: #cd6600; }
+.juliaRainbow_lv2_o0 { color: #43cd80; }
+.juliaRainbow_lv2_p0 { color: #43cd80; }
+.juliaRainbow_lv0_o0 { color: #3a5fcd; }
+.juliaRainbow_lv0_o2 { color: #3a5fcd; }
+.juliaRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.juliaRainbow_lv0_p0 { color: #3a5fcd; }
+.juliaRainbow_lv0_p1 { color: #3a5fcd; }
+.juliaRainbow_lv1_o1 { color: #cd6600; }
+.juliaRainbow_lv1_p1 { color: #cd6600; }
+.Error { color: #ffffff; background-color: #ff0000; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#</span><span class="Comment">!/usr/bin/env julia</span>
+
+<span class="Comment">#</span><span class="Comment"> Dict</span>
+person <span class="Statement">=</span> <span class="Type">Dict</span><span class="juliaRainbow_lv0_p0">(</span>
+    <span class="Constant">&quot;</span><span class="Constant">name</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">&quot;</span><span class="Constant">Kyohei, Takahashi</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">nickname</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">&quot;</span><span class="Constant">kcrt</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">addr</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">&quot;</span><span class="Constant">kcrt@kcrt.net</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span>
+    <span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">34</span>
+<span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_p0">)</span>
+keytype<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> 型を取得</span>
+valtype<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> </span>
+<span class="Comment">#</span><span class="Comment"> 型は推測される(上記だとDict{String, Any})</span>
+<span class="Comment">#</span><span class="Comment"> {&quot;a&quot; =&gt; 1, &quot;b&quot; =&gt; 2} という書き方があったが[[obsolete]]</span>
+
+<span class="Comment">#</span><span class="Comment"> tupleの配列でもよい。</span>
+<span class="Comment">#</span><span class="Comment"> また、型を指定することも出来る。</span>
+my_dict <span class="Statement">=</span> <span class="Type">Dict</span><span class="juliaRainbow_lv0_p2">{</span><span class="Type">String</span><span class="juliaRainbow_lv0_o2">,</span> <span class="Type">Int64</span><span class="juliaRainbow_lv0_p2">}</span><span class="juliaRainbow_lv0_p0">(</span><span class="juliaRainbow_lv1_p1">[</span><span class="juliaRainbow_lv2_p0">(</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv2_o0">,</span> <span class="Constant">1</span><span class="juliaRainbow_lv2_p0">)</span><span class="juliaRainbow_lv1_o1">,</span> <span class="juliaRainbow_lv2_p0">(</span><span class="Constant">&quot;</span><span class="Constant">b</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv2_o0">,</span> <span class="Constant">2</span><span class="juliaRainbow_lv2_p0">)</span><span class="juliaRainbow_lv1_p1">]</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Type">Dict</span><span class="juliaRainbow_lv0_p0">(</span><span class="Identifier">:a</span> <span class="Statement">=&gt;</span> <span class="Constant">1</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Identifier">:b</span> <span class="Statement">=&gt;</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>  <span class="Comment">#</span><span class="Comment"> keyにシンボルを使用することも出来る。</span>
+<span class="Comment">#</span><span class="Comment"> データの取得</span>
+println<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv1_p1">[</span><span class="Constant">&quot;</span><span class="Constant">nickname</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv1_p1">]</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> =&gt; &quot;kcrt&quot;</span>
+<span class="Comment">#</span><span class="Comment"> person[&quot;nokey&quot;]   # [[ERROR]] KeyError</span>
+get<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">nokey</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">default</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span> <span class="Comment">#</span><span class="Comment"> 無ければデフォルトを返す</span>
+get<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">nokey</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">default</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 無ければデフォルトを格納</span>
+
+<span class="Comment">#</span><span class="Comment"> 辞書に追加</span>
+person<span class="juliaRainbow_lv0_p1">[</span><span class="Constant">&quot;</span><span class="Constant">birthday</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p1">]</span> <span class="Statement">=</span> <span class="Constant">&quot;</span><span class="Constant">1984-09-24</span><span class="Constant">&quot;</span>
+<span class="Comment">#</span><span class="Comment"> 辞書から削除</span>
+delete<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> 取得して削除</span>
+my_item <span class="Statement">=</span> pop<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">age</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">default</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>    <span class="Comment">#</span><span class="Comment"> 取得して削除(defaultは省略可)</span>
+
+<span class="Comment">#</span><span class="Comment"> 項目数の取得</span>
+println<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">length: </span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_o0">,</span> length<span class="juliaRainbow_lv1_p0">(</span>person<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> キーの有無の確認</span>
+haskey<span class="juliaRainbow_lv0_p0">(</span>person<span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">name</span><span class="Constant">&quot;</span><span class="juliaRainbow_lv0_p0">)</span>
+println<span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">name</span><span class="Constant">&quot;</span> <span class="Statement">in</span> keys<span class="juliaRainbow_lv1_p0">(</span>person<span class="juliaRainbow_lv1_p0">)</span><span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> 結合</span>
+dict1 <span class="Statement">=</span> <span class="Type">Dict</span><span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">1</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">b</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">2</span><span class="juliaRainbow_lv0_p0">)</span>
+dict2 <span class="Statement">=</span> <span class="Type">Dict</span><span class="juliaRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">3</span><span class="juliaRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">d</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">4</span><span class="juliaRainbow_lv0_p0">)</span>
+d <span class="Statement">=</span> merge<span class="juliaRainbow_lv0_p0">(</span>dict1<span class="juliaRainbow_lv0_o0">,</span> dict2<span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> 結合Dictを返す</span>
+println<span class="juliaRainbow_lv0_p0">(</span>d<span class="juliaRainbow_lv0_p0">)</span>
+<span class="Comment">#</span><span class="Comment"> または、</span>
+merge<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span>dict1<span class="juliaRainbow_lv0_o0">,</span> dict2<span class="juliaRainbow_lv0_p0">)</span>        <span class="Comment">#</span><span class="Comment"> dict1に結合</span>
+println<span class="juliaRainbow_lv0_p0">(</span>dict1<span class="juliaRainbow_lv0_p0">)</span>
+
+merge<span class="Statement">!</span><span class="juliaRainbow_lv0_p0">(</span><span class="Statement">+</span><span class="juliaRainbow_lv0_o0">,</span> dict1<span class="juliaRainbow_lv0_o0">,</span> dict2<span class="juliaRainbow_lv0_p0">)</span>     <span class="Comment">#</span><span class="Comment"> Keyが被っている場合は和にする</span>
+println<span class="juliaRainbow_lv0_p0">(</span>dict1<span class="juliaRainbow_lv0_p0">)</span>
+
+<span class="Comment">#</span><span class="Comment"> 走査</span>
+<span class="Statement">for</span> (key, value) <span class="Statement">in</span> pairs(person)   <span class="Comment">#</span><span class="Comment"> =, in, ∈ のどれでもOK</span>
+    println(<span class="Constant">&quot;</span><span class="Identifier">$key</span><span class="Constant"> is </span><span class="Identifier">$value</span><span class="Constant">&quot;</span>)
+<span class="Statement">end</span>
+<span class="Statement">for</span> key <span class="Statement">in</span> keys(person) <span class="Comment">#</span><span class="Comment"> =, in, ∈ のどれでもOK</span>
+    println(key)
+<span class="Statement">end</span>
+<span class="Statement">for</span> value <span class="Statement">in</span> values(person) <span class="Comment">#</span><span class="Comment"> =, in, ∈ のどれでもOK</span>
+    println(value)
+<span class="Statement">end</span>
+<span class="Comment">#</span><span class="Comment"> 内包表記</span>
+myperson <span class="Statement">=</span> <span class="Type">Dict</span><span class="juliaRainbow_lv0_p0">(</span>key <span class="Statement">=&gt;</span> uppercase<span class="juliaRainbow_lv1_p0">(</span>value<span class="juliaRainbow_lv1_p0">)</span> <span class="Statement">for</span> (key, value) <span class="Statement">in</span> person<span class="Error">)</span>
+println(myperson)
+<span class="Comment">#</span><span class="Comment"> defaultdict, ordereddict</span>
+
+<span class="Comment">#</span><span class="Comment"> fruits[&quot;Ehime&quot;]       # &quot;=&gt; Mikan&quot;: 値の取得</span>
+<span class="Comment">#</span><span class="Comment"> fruits[&quot;Kagawa&quot;] = &quot;Udon&quot; # 値の設定</span>
+<span class="Comment">#</span><span class="Comment"> get(fruits, &quot;Hiroshima&quot;, &quot;Lemon&quot;) # 取得(デフォルト付き)</span>
+<span class="Comment">#</span><span class="Comment"> </span>
+<span class="Comment">#</span><span class="Comment"> </span>
+<span class="Comment">#</span><span class="Comment"> keys(fruits)  # キーの集合</span>
+<span class="Comment">#</span><span class="Comment"> values(fruits)    # 値の集合</span>
+
+
+<span class="Comment">#</span><span class="Comment"> Pair</span>
+mypair <span class="Statement">=</span> <span class="Constant">&quot;</span><span class="Constant">a</span><span class="Constant">&quot;</span> <span class="Statement">=&gt;</span> <span class="Constant">1</span>   <span class="Comment">#</span><span class="Comment"> Pair{String,Int64}</span>
+mypair[<span class="Constant">1</span>] <span class="Comment">#</span><span class="Comment"> =&gt; &quot;a&quot;</span>
+mypair[<span class="Constant">2</span>] <span class="Comment">#</span><span class="Comment"> =&gt; 1</span>
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

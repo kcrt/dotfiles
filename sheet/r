@@ -1,0 +1,460 @@
+===== 統計関数 =====
+sum(ARR), length(ARR), mean(ARR), median(ARR)
+ncol(MAT), nrow(MAT)
+abs(VAR), max(ARR), min(ARR), range(ARR)
+var(ARR)			不偏分散
+sd(ARR)				標準偏差
+scale(ARR)			Z-scoreを求める
+cov(ARR1, ARR2)		不遍共分散 偏差の積の平均
+cor(ARR1, ARR2)		相関係数 cov(...) / ( sd(1) * sd(2) )
+				一例: abs(r) <= 0.2 ほとんど相関なし, 0.2 - 0.4 弱い相関, 0.4-0.7 中程度の相関, 0.7-1.0 強い相関あり
+
+===== 数値・数学関数 =====
+ceilling(val)		切り上げ
+choose(n, k)		n C kを求める
+as.numeric("123"), as.character, as.integer, as.logical
+1:10				c(1, 2, 3, ..., 10)と同じ
+seq(1, 10)
+	by=NUM			増分
+
+===== 変数の処理 =====
+ifelse(EXPRESSION, TRUEVAL, FALSEVAL)
+						例: heavy <- ifelse(weightsd > 2.0, 1, 0)
+ARR <- numeric(length)	配列を作成, ARR[i]でアクセス可能
+ARR <- factor(ARR2)		要素型に変換
+ARR <- factor(ARR, levels=c("AA", "BB", "CC")...), ordered=TRUE)
+						順序付きカテゴリデータに変換
+nlevels(FACTORS)		要素型の種類の数
+rep(VAR, NUM)			繰り返しデータを作成(例：rep("A", 3) == "A", "A", "A")
+seq(from, to, diff)		from〜toまでで、増分diffの等差数列を作成
+val <- matrix(c(.., .., ...), a, b )
+						サイズがa(縦) x b(横)の行列を作成
+						標準では縦方向に割付、byrow=TRUEにすると横方向に割り付ける
+t(MATRIX)				行列の転置(行と列を入れ替える)
+solve(MATRIX)			逆行列を得る
+MATRIX1 %*% MATRIX2		行列の積を求める
+diag(N)					N x Nの単位行列の作成
+MATRIX[1,]
+MATRIX[,2]
+						行列の一部の取り出し
+val <- cbind(VEC1, VEC2)
+val <- rbind(VEC1, VEC2)
+						ベクトルを並べた行列を作成
+rownames(val) <- c("aa", "bb")
+colnames(val) <- c("aa", "bb")
+						行と列の名前を設定
+
+subset(dataflame, select=c(col1, col2,...),subset=(col1 > 0))
+newdata <- subset(mydata, age >= 20 | age < 10, select=c(ID, Weight))
+						dataframeからデータを抽出
+newdata = na.omit(dataframe)
+						NAが含まれている行を削除
+newdata = merge(df1, df2, by="name")
+						共通項nameを利用してデータフレームを合成
+attach(df), detach()	VBでいうとこのWithみたいなもん
+
+lapply(list, func)
+sapply(list, func)
+						リストに関数を適応。sapplyは可能なら結果をベクトルで返す
+apply(matrix, AAA, func)
+	AAA = 1: 行ごと, 2: 列ごと
+mappry(func, PARAM1VEC, PARAM2VEC, ...)
+
+which(vec %% 1 == 0)	vectorの該当アイテムのindiciesを返す
+
+===== データの読み込み =====
+  * CSV
+VAR <- read.table("tabeseparated.txt", header="TRUE")
+VAR <- read.csv("filename.csv")
+	VAR$COLNAMEで配列にアクセス可能
+
+  * Excel
+OLD: VAR <- read.xls("filename.xls", sheet="SheetName", na.strings=..., fileEncoding="UTF-8) # library(gdata)
+require("readxl")
+data = read_excel("filename.xlsx", sheet="Sheetname")
+
+edit(VAR)
+	データの編集
+sink("filename.txt")	 sink()まで出力データをファイルに書き込み
+
+===== グラフ描画  =====
+hist(VAR)				ヒストグラム 刻み幅breaks=seq(min, max, num)
+
+plot(DATA)				ベクトル、複素数、行列など
+plot(XDATA, YDATA)		散布図
+plot(FUNCTION, from, to) 関数を描画
+	pch=GROUP			pchが違うと異なる記号をつかう
+						"A"や"B"なども使える
+						0□, 1○, 2△, 3＋, 4×, 
+						5◇, 6▽, 7□に×, 8＋に×, 9◇に＋, 
+						10○に＋, 11✡, 12田, 13○に×, 14□に▽, 
+						15■, 16●, 17▲, 18◆, 19●, 
+						20・, 21○, 22□, 23◇, 24△, 25▽
+	xlim=c(0, 10)		x軸
+	ylim=c(0, 10)		y軸
+	type =	"p"			点プロット
+			"l"			折れ線グラフ
+			"b"			点と線
+			"h"			垂線
+			"s","S"		階段状
+	log = "x", "y", "xy"
+						対数グラフ
+	main = "title"		表題
+	sub = "subtitle"	副題
+	xlab = "x軸"
+	ylab = "y軸"		軸ラベル
+	tmag = 1.2			文字の大きさ(倍率)
+	asp					両軸のスケール比
+table(VAR)				度数分布表
+table(VAR1, VAR2)		クロス集計表
+curve(FUNCTION_USING_x, from=.., to=...)
+						グラフ描画, add=TRUEで重ねて描画
+barplot(VAR)
+boxplot(VEC)
+boxplot(DATA~GROUP)
+	箱ひげ図
+	width
+	varwidth=TRUE		幅を観測数の平方根に比例させる
+	outline=FALSE		外れ値は描かれない
+	border=色
+	col=色
+	horizontal=			横向きか
+
+stripchart(VAL~GROUP)
+	一次元散布図
+	method="overplot"	重ね書き
+		   "jitter"		少しずらす
+		   "stack"		積み重ねる
+	vertical=TRUE		垂直に
+	group.names
+	xlab, ylab, pch, col, cex
+						plot参照
+
+legend()				凡例
+
+library(gplots); plotmeans(var~group)
+						平均値±SDのグラフを描画
+
+qqnorm(VEC); qqline(VEC)
+						Q-Qプロット(正規分布かどうか)を描画する
+
+===== 時系列 =====
+ts(data, start=XX, end=XX, frequency = XX, deltat = 1)
+	start				dataの観測開始時間
+	end					観測完了時間
+	frequency			周波数 (単位時間内の観測値数)
+	deltat
+
+ts(DATA, freq=4, start=c(2010, 2))
+						2010年第2四半期から始まるデータ
+ts(DATA, freq=12, start=c(2010, 2))
+						2010年2月から始まるデータ
+
+as.ts(x)				時系列データに変換
+is.ts(x)
+
+diff(VECTOR)			差
+
+ts.union(DATA1, DATA2, ..., [dframe = FALSE])
+ts.intersect(DATA1, DATA2, ..., [dframe = FALSE])
+						時系列データを結合して返す
+						union -> データがなければNA
+						intersect -> すべてのデータが揃ってる列だけ
+	dframe				=TRUEならデータフレームを返す。=FALSEなら時系列データ
+
+start(XXX), end(XXX), frequency(XXX)
+						時系列データから開始時間や終了時間などを取得
+window(DATA, start=XXX, end=XXX)
+						時系列データを範囲指定して取り出し
+lag(DATA, k=XXX)		データをkだけ早めて返す
+
+
+
+===== 分布関数 =====
+dnorm(x, mean, sd)		xのときの正規分布確率密度を返す
+						例：curve(dnorm(x, 0, 1), from=-4, to=4)
+rnorm(n, mean, sd)		正規母集団からn個を無作為抽出
+dt(x, free)				xの時のt分布の確率密度を返す(自由度=free)
+
+===== 乱数 =====
+runif(n, min, max)		一様乱数の生成
+
+===== 制御 =====
+for(i in 1:10000){
+	...
+}
+
+===== 母比率の信頼区間 =====
+	binom.test(x, n)	x: 成功数, n: 母体数
+
+===== 検定 =====
+正規性の検定：標本の母集団が正規分布か
+	shapiro.test(x)
+	p < 0.05で正規分布ではない
+
+連検定：2値データの並びがランダムであるかどうか
+	library(tseries)
+	runs.test(as.factor(VAR))
+
+
+2項検定：2値変数の検定
+	dbinom(成功数, 全体の数, 成功確率)
+	_成功確率_の時、全体の中でちょうど_成功数_の成功が起こる確率を占める
+	pbinom(成功数, 全体の数, 成功確率)
+	_成功確率_の時、全体の中で_成功数_*以下の*成功が起こる確率を占める
+	binom.test(成功数, 母体数, p=成功確率)
+
+2群の比率の差の検定
+	prop.test(c(x1, x2), c(n1, n2), correct=FALSE)
+	地域Aでn1人中x1人が支持、地域Bではn2人中x2人が支持している時に有意差があるかなど
+
+１つの平均値の検定、母分散が既知：標準正規分布を用いた検定
+１つの平均値の検定、母分散が未知：t検定
+	VARが母集団(平均=mu)からも無作為抽出かを調べる
+	t.test(VAR, alternative="two.sided"(default) | "less" | "greater", mu=母平均)
+wilcoxon検定(ノンパラメトリック) Wilcoxon singed rank test 対応のある変数の検定
+	wilcox.test(x, y, paired=TRUE, exact=TRUE)
+	exact=TRUEがないと数が多い時に近似になる
+	同じ値があるときは近似になるのでlibrary(exactRankTest)のwilcox.exact関数を使う
+
+独立な2群間のt検定
+	t.test(VAR1, VAR2, var.equal=FALSE(default)|TRUE)
+	t.test(VAR~GROUP)
+	equal = TRUEで通常のt検定
+	t検定の前提条件：標本の無作為抽出、母集団の分布が正規分布、2つの母集団の分散が等質
+	母集団の分散が等質でない(var.testが失敗 p<0.05)した場合はequal=FALSEでWelchのt検定を行う
+対応のあるt検定
+	t.test(VAR2 - VAR1) もしくは t.test(VAR1, VAR2, paired=TRUE)
+	変化量の検定を行う
+ノンパラメトリック検定：マン・ホイットニーのU検定 対応がない場合、数が違ってもOK
+	wilcox.test(x, y[, correct=FALSE])
+	exact=TRUEがないと数が多い時に近似になる
+	同じ値があるときは近似になるのでlibrary(coin)のwilcox_test(VARS ~ TYPE, distribution="exact")関数を使う
+	もしくはBrunner-Munzel検定も考慮
+Brunner-Munzel検定
+	分布が異なる場合も使用できる
+	library(lawstat)
+	brunner.munzel.test(VAR1, VAR2)
+
+共分散分析(ANCOVA)：共変量を利用して群の効果に関する分析を行う
+	summary(lm(VAR2~VAR1+群分けのための変数))
+	summary(aov(VAR2~VAR1+群分けのための変数))
+	例：summary(lm(BP_after_drug~BP_before_drug+is_control))
+
+分散の等質性の検定
+	var.test(VAR1, VAR2)
+	var.test(VAR~GROUP)
+3群以上の分散の等質性
+	bartlett.test(分析対象~群分けのための変数)
+
+相関係数の検定：無相関検定(ピアソンの積率相関係数) 母集団が正規分布の場合
+	cor.test(VAR1, VAR2)
+相関係数の検定(母集団の分布不明)：スピアマンの順位相関係数
+	cor.test(VAR1, VAR2, method="spearman")
+
+独立性の検定：χ二乗検定
+	chisq.test(table(VAR1, VAR2), correct=FALSE)
+	correct=FALSEでイェーツ補正をoff
+	期待度が小さい場合警告を出してくれる
+独立性の検定を行いたいが、期待度<10のセルがある場合：フィッシャーの正確確率検定
+	fisher.test(MATRIX_OF_2x2)
+	fisher.test(matrix(c(a,b,c,d),nrow=2))
+
+3つ以上の平均値の比較：1元配置分散分析(対応なし)
+	oneway.test(対象~群分け変数 [, var.equal=TRUE])
+	pairwide.t.test(VAR~GROUP)
+	summary(aov(分析対象の変数~群分けのための変数))
+	どの群間に差があるかは分からない→TukeyHSDを使う
+	例：	var <- c(1, 2, 3, 2, 3, 4, 3, 4, 5)
+			type <- factor(c("math", "math", "math", "eng", "eng", "eng", "sci", "sci", "sci"))
+			summary(aov(var~type))
+
+ノンパラメトリックなANOVA:
+kruskal.test(VAR~GROUP)
+kruskal(VAR, GROUP)			要 library(agricolae)
+							一緒に群間の検定もしてくれる
+
+3つ以上の平均値の比較(対応あり)：一元配置分散分析
+	summary(aov(分析対象の変数~群分けのための変数+Error(対応分けのための変数)))
+	例：	var <- c(1, 2, 3, 2, 3, 4, 3, 4, 5)
+			type <- factor(c("math", "math", "math", "eng", "eng", "eng", "sci", "sci", "sci"))
+			people <- factor(rep(c("Yamada", "Tanaka", "Hashimoto"), 3))
+			summary(aov(var~type+Error(people)))	# peopleで対応あり
+
+多重比較：Tukeyの方法
+	TukeyHSD(aov(分析対象の変数~群分けのための変数))
+	どの群間に差があるかを調べる
+
+2元配置分散分析
+	summary(aov(データ~要素1*要素2))
+
+質問紙尺度：cronbacのα係数
+library(psy)
+cronbach(DATA)
+	α>= 0.8：妥当な尺度
+
+===== 回帰分析 =====
+単回帰・重回帰分析
+	summary(lm(ANSWER~PARAM))
+	summary(lm(ANSWER~PARAM1+PARAM2))
+	R^2 >= 50%は欲しい
+	library("car");
+	outlier.test(MODEL)
+		外れ値を調べる
+
+===== 因子分析 =====
+	factanel(DATA, factors=num)
+	DATAにnum個の因子があるか解析
+
+===== 検定力分析 =====
+t検定の検定力分析
+	power.t.test(n=.., delta=.., sd=.., sig.level=0.05, power=0.80, strict=TRUE[, type="one.sample" | "paired")
+	どこかをNULLにするとそれを求める
+	n			サンプルサイズ(1群の)
+	delta		母平均の差
+	sd			簿標準偏差
+	sig.level	有意水準(p)
+	power		検定力(1-β)
+library(pwr)を使う場合
+	pwr.t.test(n=.., d=.., sig.level=.., power=..)
+	どこかをNULLにするとそれを求める
+	n			サンプルサイズ(1群の)
+	d			効果の大きさ
+	sig.level	有意水準(p)
+	power		検定力(1-β)
+	d = 母平均の差 / 母標準偏差
+	t-testなら0.2: 小さい効果, 0.5: 中等度の効果, 0.8: 大きい効果
+	cohen.ES(test="t" | "r"(無交換検定) | "anov"(一元配置分散分析) | "chisq"(カイ二乗検定) | "線形モデル", size="small" | "medium" | "large")でも求めることが出来る
+
+	pwr.anova.test()	一元配置分散分析
+	pwr.chisq.test()	χ二乗検定
+	pwr.f2.test()		線形分析：分散分析・回帰分析
+
+===== メタ解析 =====
+  * http://stackoverflow.com/questions/36967850/using-metafor-or-meta-for-meta-analysis-of-proportions
+dat = data.frame(xi=c(29,39,23,6,30,58), ni=c(38,65,33,26,81,70))
+dat$pi = with(dat, xi/ni)
+dat = escalc(measure="PFT", xi=xi, ni=ni, data=dat, add=0)
+res = rma(yi, vi, method="FE", data=dat)
+pred <- predict(res, transf=transf.ipft.hm, targs=list(ni=dat$ni))
+# forest(res, transf=transf.ipft.hm, targs=list(ni=dat$ni), alim=c(0,1), refline=NA, digits=3)
+dat.back <- summary(dat, transf=transf.ipft, ni=dat$ni)
+forest(dat.back$yi, ci.lb=dat.back$ci.lb, ci.ub=dat.back$ci.ub, psize=1,
+       xlim=c(-.5,1.8), alim=c(0,1), ylim=c(-1,8), refline=NA, digits=3, xlab="Proportion")
+addpoly(pred$pred, ci.lb=pred$ci.lb, ci.ub=pred$ci.ub, row=-0.5, digits=3, mlab="FE Model", efac=1.3)
+abline(h=0.5)
+text(-0.5, 7, "Egg",               pos=4)
+text( 1.8, 7, "Proportion [95% CI]", pos=2)
+
+
+===== ggplot2 =====
+model = glm(result ~ logsIgE, data=data, family=binomial)
+summary(model)
+pp = ggplot(buckwheat, aes(logsIgE, Result)) +
+		ggtitle("") + 
+		stat_smooth(method="glm", method.args=list(family="binomial")) +
+		coord_cartesian(xlim=c(-1,2), ylim=c(0,1)) +
+		scale_x_continuous(label=c("-1"=0.1, "0"="1", "1"="10", "2"="100")) +
+		xlab("specific IgE") + ylab("Probability for failed challenge") +
+		theme(text=element_text(size=12, family="Times"));
+print(pp)
+
+
+===== 環境 =====
+install.packages("packagename")
+savePlot(filename="filename")
+
+
+===== dplyr =====
+require("dplyr")
+data = data %>%
+       dplyr::filter(sex == "male") %>%
+	   dplyr::filter(age >= 30, smoke == 1) %>%
+	   dplyr::filter_("height <= 130 | height >= 170") %>%		# 文字列として受け取る
+	   dplyr::mutate(newage = age + 10) %>%
+	   dplyr::select(name, sex, age, newage) %>%
+	   dplyr::arrange(age, desc(height)) %>%
+	   dplyr::rename(namae = name) %>%
+	   head(10)
+
+select help functions: starts_with, contains, everything, matches ...
+join
+
+one_of
+starts_with
+cotains
+
+===== RStan =====
+install.packages(c("inline", "RCpp", "rstan"))
+
+  * Stancode
+
+	data {
+		int<lower=1> N;
+		real y[N];
+	}
+	parameters {
+		real mu;
+		real<lower=0> sigma;
+	}
+	model {
+		mu ~ normal(0, 1000);	// 事前分布
+		sigma ~ normal(0, 1000);
+		y ~ normal(mu, sigma);
+	}
+
+  * data, parameters
+	int A;
+	real B;
+	vector[10] V;	// ベクトル・マトリックスは全て実数
+	row_vector[10] RV;	// ベクトル・マトリックスは全て実数
+	matrix[100, 100] M;
+	// array
+	int arr[10];
+	real arrr[10, 10];
+		// 参照はarrr[1,3]またはarr[1][3]
+	vector[5] vec[5];
+	// constrained data type
+	int<lower=1> C
+	real<lower=0, upper=10> D;
+	ordered[N] ov;
+	positive_ordered[N] pov;
+	
+  * model
+	x, yがvectorの時は、
+		y ~ normal(beta * x + alpha, sigma);
+	vectorでない場合は、
+		for(i in 1:N)
+			y[i] ~ normal(beta * x[i] + alpha, sigma);
+	と表記する
+	線形回帰
+		y ~ normal(beta * x + alpha, sigma);
+	ロジスティック回帰
+		y ~ bernoulli_logit(beta * x + alpha);
+			// bernoulli_logit は bernoulli(inv_logit(...))
+	一様分布
+		s~uniform(min, max)
+
+require("rstan")
+fit = stan( file="stancode.stan" | model_code=str, data=list(N=..., y=...), iter=1000, warmup=100, chain=4)
+plot(fit)
+traceplot(fit)
+print(fit)
+require("shinystan")
+launch_shinystan(fit)
+
+===== 媒介分析 (mediation analysis) =====
+
+===== SEM (lavaan) =====
+
+require("lavaan")
+
+model="Point ~ Age + Weight
+Weight ~ Age
+"
+fit = sem(model, data=AgeHeight, se="boot")
+summary(fit, fit.measures = TRUE)
+semPaths(fit, "std", rotation = 2, edge.label.cex = 1.0, exoVar = FALSE)
+
+
+require("semPlot")

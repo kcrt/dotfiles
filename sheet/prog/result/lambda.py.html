@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/lambda.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">from</span> math <span class="PreProc">import</span> sqrt
+<span class="PreProc">from</span> functools <span class="PreProc">import</span> partial
+
+
+pythagoras = <span class="Statement">lambda</span> a, b: sqrt<span class="pythonRainbow_p0">(</span>a ** <span class="Constant">2</span> + b ** <span class="Constant">2</span><span class="pythonRainbow_p0">)</span>
+pythagoras<span class="pythonRainbow_p0">(</span><span class="Constant">3</span><span class="pythonRainbow_o0">,</span> <span class="Constant">4</span><span class="pythonRainbow_p0">)</span>
+
+pythagoras3 = partial<span class="pythonRainbow_p0">(</span>pythagoras<span class="pythonRainbow_o0">,</span> a=<span class="Constant">3</span><span class="pythonRainbow_p0">)</span>
+pythagoras3<span class="pythonRainbow_p0">(</span>b = <span class="Constant">4</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># クラスメソッドにはpartialmethod</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

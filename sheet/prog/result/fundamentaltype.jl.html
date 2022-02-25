@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.jl.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="julia">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.Todo { color: #006400; background-color: #9aff9a; padding-bottom: 1px; }
+.juliaRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Type { color: #008b00; font-weight: bold; }
+.Statement { color: #b03060; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#</span><span class="Comment">!/usr/bin/env julia</span>
+
+
+x <span class="Statement">=</span> <span class="Constant">32</span>
+x <span class="Statement">=</span> <span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span>
+
+<span class="Comment">#</span><span class="Comment"> 整数:</span>
+<span class="Comment">#</span><span class="Comment"> Int8, Int16, Int32, Int64, Int128</span>
+<span class="Comment">#</span><span class="Comment"> UInt8, UInt16, UInt32, UInt64, UInt128</span>
+<span class="Comment">#</span><span class="Comment"> Int, UInt (環境で変わる)</span>
+<span class="Comment">#</span><span class="Comment"> リテラル変数の型は環境によって変わる</span>
+typeof<span class="juliaRainbow_p0">(</span><span class="Constant">1</span><span class="juliaRainbow_p0">)</span>       <span class="Comment">#</span><span class="Comment"> =&gt; Int64 (環境による)</span>
+<span class="Constant">0x20</span>
+<span class="Constant">0b10111100</span>
+x <span class="Statement">=</span> typemax<span class="juliaRainbow_p0">(</span><span class="Type">Int64</span><span class="juliaRainbow_p0">)</span>
+x <span class="Statement">+</span> <span class="Constant">1</span>   <span class="Comment">#</span><span class="Comment"> =&gt; -9223372036854775808: wraparoundh</span>
+
+<span class="Comment">#</span><span class="Comment"> BigInt</span>
+<span class="Comment">#</span><span class="Comment"> </span><span class="Todo">TODO</span><span class="Comment">:</span>
+
+
+<span class="Comment">#</span><span class="Comment"> 浮動小数点: Float16, Float32, Float64 (=倍精度)</span>
+x <span class="Statement">=</span> <span class="Constant">0.3</span>
+
+
+<span class="Comment">#</span><span class="Comment"> 上下限</span>
+typemin<span class="juliaRainbow_p0">(</span><span class="Type">Int32</span><span class="juliaRainbow_p0">)</span>      <span class="Comment">#</span><span class="Comment"> =&gt; -2147483648</span>
+typemax<span class="juliaRainbow_p0">(</span><span class="Type">Int32</span><span class="juliaRainbow_p0">)</span>      <span class="Comment">#</span><span class="Comment"> =&gt; 2147483647</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/hash.go.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="go">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.goRainbow_lv0_p0 { color: #3a5fcd; }
+.goRainbow_lv1_o0 { color: #cd6600; }
+.goRainbow_lv1_p0 { color: #cd6600; }
+.goRainbow_lv2_o0 { color: #43cd80; }
+.goRainbow_lv2_p1 { color: #43cd80; }
+.goRainbow_lv0_o2 { color: #3a5fcd; }
+.goRainbow_lv0_p2 { color: #3a5fcd; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.goRainbow_lv2_p0 { color: #43cd80; }
+.goRainbow_lv1_p1 { color: #cd6600; }
+.goRainbow_lv1_o2 { color: #cd6600; }
+.goRainbow_lv1_p2 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Statement">package</span> main
+
+<span class="Statement">import</span> <span class="Constant">&quot;fmt&quot;</span>
+
+<span class="Statement">func</span> main<span class="goRainbow_lv0_p0">()</span> <span class="goRainbow_lv0_p2">{</span>
+
+    <span class="Statement">var</span> person = <span class="Type">map</span><span class="goRainbow_lv1_p1">[</span><span class="Type">string</span><span class="goRainbow_lv1_p1">]</span><span class="Type">string</span><span class="goRainbow_lv1_p2">{</span> <span class="Comment">// string -&gt; stringなmap</span>
+        <span class="Constant">&quot;name&quot;</span>:     <span class="Constant">&quot;Kyohei, Takahashi&quot;</span><span class="goRainbow_lv1_o2">,</span>
+        <span class="Constant">&quot;nickname&quot;</span>: <span class="Constant">&quot;kcrt&quot;</span><span class="goRainbow_lv1_o2">,</span>
+        <span class="Constant">&quot;addr&quot;</span>:     <span class="Constant">&quot;kcrt@kcrt.net&quot;</span><span class="goRainbow_lv1_o2">,</span>
+        <span class="Constant">&quot;age&quot;</span>:      <span class="Constant">&quot;34&quot;</span><span class="goRainbow_lv1_o2">,</span> <span class="Comment">// 「,」か「}」が必要</span>
+    <span class="goRainbow_lv1_p2">}</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>person<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// 内容の参照</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>person<span class="goRainbow_lv2_p1">[</span><span class="Constant">&quot;name&quot;</span><span class="goRainbow_lv2_p1">]</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 存在しなければ型の初期値</span>
+
+    <span class="Comment">// 辞書追加・変更</span>
+    person<span class="goRainbow_lv1_p1">[</span><span class="Constant">&quot;birthday&quot;</span><span class="goRainbow_lv1_p1">]</span> = <span class="Constant">&quot;1984-09-24&quot;</span>
+    <span class="Comment">// 削除</span>
+    <span class="Statement">delete</span><span class="goRainbow_lv1_p0">(</span>person<span class="goRainbow_lv1_o0">,</span> <span class="Constant">&quot;age&quot;</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Comment">// 項目数</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span><span class="Statement">len</span><span class="goRainbow_lv2_p0">(</span>person<span class="goRainbow_lv2_p0">)</span><span class="goRainbow_lv1_p0">)</span>
+    <span class="Comment">// キーの存在確認</span>
+    <span class="Statement">if</span> val<span class="goRainbow_lv0_o2">,</span> ok := person<span class="goRainbow_lv1_p1">[</span><span class="Constant">&quot;name&quot;</span><span class="goRainbow_lv1_p1">]</span>; ok <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span>val<span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span> <span class="Statement">else</span> <span class="goRainbow_lv1_p2">{</span>
+        <span class="Statement">println</span><span class="goRainbow_lv2_p0">(</span><span class="Constant">&quot;no key&quot;</span><span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+    <span class="Comment">// 結合</span>
+    <span class="Comment">// ない</span>
+    <span class="Comment">// 走査</span>
+    <span class="Statement">for</span> key<span class="goRainbow_lv0_o2">,</span> value := <span class="Statement">range</span> person <span class="goRainbow_lv1_p2">{</span>
+        fmt.Println<span class="goRainbow_lv2_p0">(</span>key<span class="goRainbow_lv2_o0">,</span> <span class="Constant">&quot;is&quot;</span><span class="goRainbow_lv2_o0">,</span> value<span class="goRainbow_lv2_p0">)</span>
+    <span class="goRainbow_lv1_p2">}</span>
+
+<span class="goRainbow_lv0_p2">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

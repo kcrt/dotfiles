@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.r.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="r">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Type { color: #2e8b57; font-weight: bold; }
+.rRainbow_lv0_p1 { color: #3a5fcd; }
+.rRainbow_lv1_p1 { color: #cd6600; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.rRainbow_lv0_o0 { color: #3a5fcd; }
+.rRainbow_lv0_p0 { color: #3a5fcd; }
+.rRainbow_lv1_o0 { color: #cd6600; }
+.rRainbow_lv1_p0 { color: #cd6600; }
+.rRainbow_lv0_p2 { color: #3a5fcd; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Identifier">print</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">&quot;Hello, world!&quot;</span><span class="rRainbow_lv0_p0">)</span>
+<span class="PreProc">require</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">&quot;tidyverse&quot;</span><span class="rRainbow_lv0_p0">)</span>
+
+<span class="Comment"># vector, matrix, data.frame, list, array, pairlist, ...</span>
+
+<span class="Comment"># まず理解すべきなのはvector</span>
+<span class="Comment"># vector はすべてが同じ型からなる1次元配列である。</span>
+<span class="Identifier">c</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">1L</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">2L</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">3L</span><span class="rRainbow_lv0_p0">)</span>   <span class="Comment"># =&gt; 1 2 3からなるvector(integer)</span>
+<span class="Constant">1</span><span class="Special">:</span><span class="Constant">3</span>                 <span class="Comment"># =&gt; 1 2 3 の vector(integer)</span>
+<span class="Identifier">c</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">2</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">3</span><span class="rRainbow_lv0_p0">)</span>          <span class="Comment"># vector(double) Rの数値の標準はdouble</span>
+<span class="Constant">2</span>                   <span class="Comment"># 実はこれも要素が1のベクトル</span>
+
+<span class="Comment"># 最も大きい型に自動的に設定拡張される。</span>
+<span class="Identifier">typeof</span><span class="rRainbow_lv0_p0">(</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">TRUE</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">FALSE</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; logical</span>
+<span class="Identifier">typeof</span><span class="rRainbow_lv0_p0">(</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">TRUE</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">1L</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p0">)</span>     <span class="Comment"># =&gt; integer</span>
+<span class="Identifier">typeof</span><span class="rRainbow_lv0_p0">(</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">TRUE</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">1</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p0">)</span>      <span class="Comment"># =&gt; double</span>
+<span class="Identifier">typeof</span><span class="rRainbow_lv0_p0">(</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">TRUE</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">&quot;a&quot;</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># =&gt; character</span>
+<span class="Comment"># NULL &lt; raw &lt; logical &lt; integer &lt; double &lt; complex &lt; character &lt; list &lt; expression</span>
+
+a <span class="Statement">=</span> <span class="Constant">1</span><span class="Special">:</span><span class="Constant">5</span>
+a<span class="rRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="rRainbow_lv0_p1">]</span>                <span class="Comment"># 最初の要素 (1-origin)</span>
+a<span class="rRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="Special">:</span><span class="Constant">3</span><span class="rRainbow_lv0_p1">]</span>              <span class="Comment"># 1-3番目の要素</span>
+a<span class="rRainbow_lv0_p1">[</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">1</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">3</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p1">]</span>          <span class="Comment"># 1, 3番目の要素 (ベクトルを指定)</span>
+a<span class="rRainbow_lv0_p1">[</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Statement">-</span><span class="Constant">1</span><span class="rRainbow_lv1_o0">,</span> <span class="Statement">-</span><span class="Constant">2</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p1">]</span>        <span class="Comment"># 1, 2番目*以外*の要素 (負のベクトルを指定)</span>
+a<span class="rRainbow_lv0_p1">[</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">T</span><span class="rRainbow_lv1_o0">,</span><span class="Constant">F</span><span class="rRainbow_lv1_o0">,</span><span class="Constant">T</span><span class="rRainbow_lv1_o0">,</span><span class="Constant">T</span><span class="rRainbow_lv1_o0">,</span><span class="Constant">F</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p1">]</span>     <span class="Comment"># TRUE(例では1,3,4)に対応する要素 (logicalベクトルを指定)</span>
+<span class="Identifier">head</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="rRainbow_lv0_p0">)</span>          <span class="Comment"># 最初の1要素</span>
+<span class="Identifier">tail</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="rRainbow_lv0_p0">)</span>          <span class="Comment"># 最後の1要素</span>
+
+<span class="Constant">2</span><span class="Special">:</span><span class="Constant">4</span> <span class="Statement">*</span> <span class="Constant">3</span><span class="Special">:</span><span class="Constant">5</span>           <span class="Comment"># 6 12 20 (2x3, 3x4, 4x5)</span>
+
+<span class="Comment"># 要素のコピー</span>
+b <span class="Statement">=</span> a               <span class="Comment"># これだけでOK</span>
+
+<span class="Comment"># 要素長</span>
+<span class="Identifier">length</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 一致の検索</span>
+a <span class="Statement">%%</span> <span class="Constant">2</span> <span class="Statement">==</span> <span class="Constant">1</span>         <span class="Comment"># T, F, T, F, T (logical vector)</span>
+<span class="Identifier">sum</span><span class="rRainbow_lv0_p0">(</span>a <span class="Statement">%%</span> <span class="Constant">2</span> <span class="Statement">==</span> <span class="Constant">1</span><span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># 奇数の個数</span>
+
+<span class="Comment"># 存在確認</span>
+<span class="Identifier">match</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">5</span><span class="rRainbow_lv0_o0">,</span> a<span class="rRainbow_lv0_p0">)</span>         <span class="Comment"># あればindex, なければNA</span>
+<span class="Constant">5</span> <span class="Statement">%in%</span> a            <span class="Comment"># 存在をT/Fで返す</span>
+
+<span class="Comment"># 要素の追加・削除</span>
+<span class="Identifier">print</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">&quot;add&quot;</span><span class="rRainbow_lv0_p0">)</span>
+a
+a<span class="rRainbow_lv0_p1">[</span><span class="Constant">10</span><span class="rRainbow_lv0_p1">]</span> <span class="Statement">=</span> <span class="Constant">2</span>           <span class="Comment"># 自動的に要素が10個まで拡張される</span>
+                    <span class="Comment"># (間はNAになる)</span>
+a   <span class="Comment"># 1  2  3  4  5 NA NA NA NA  2</span>
+<span class="Identifier">append</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> b<span class="rRainbow_lv0_p0">)</span>        <span class="Comment"># 結合した配列を返す(もとの配列は変わらない)</span>
+<span class="Identifier">append</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> <span class="Constant">100</span><span class="rRainbow_lv0_o0">,</span> after<span class="Statement">=</span><span class="Constant">2</span><span class="rRainbow_lv0_p0">)</span> <span class="Comment"># 第2要素の後に100を追加</span>
+
+a <span class="Statement">=</span> a<span class="rRainbow_lv0_p1">[</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Statement">-</span><span class="Constant">3</span><span class="rRainbow_lv1_o0">,</span> <span class="Statement">-</span><span class="Constant">4</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p1">]</span>    <span class="Comment"># 要素3, 4を消去</span>
+
+a<span class="rRainbow_lv0_p1">[</span>a <span class="Statement">%%</span> <span class="Constant">2</span> <span class="Statement">==</span> <span class="Constant">1</span><span class="rRainbow_lv0_p1">]</span>      <span class="Comment"># 奇数のみ抽出</span>
+
+<span class="Comment"># ソート</span>
+<span class="Identifier">sort</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>             <span class="Comment"># ソート済みを取得(元は変わらない)</span>
+<span class="Identifier">sort</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> decreasing<span class="Statement">=</span><span class="Constant">T</span><span class="rRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 逆順</span>
+<span class="Identifier">rev</span><span class="rRainbow_lv0_p0">(</span>b<span class="rRainbow_lv0_p0">)</span>              <span class="Comment"># 逆順を取得</span>
+
+<span class="Comment"># 走査</span>
+<span class="Statement">for</span><span class="rRainbow_lv0_p0">(</span>item <span class="Statement">in</span> a<span class="rRainbow_lv0_p0">)</span><span class="rRainbow_lv0_p2">{</span>
+    <span class="Identifier">print</span><span class="rRainbow_lv1_p0">(</span>item<span class="rRainbow_lv1_p0">)</span>
+<span class="rRainbow_lv0_p2">}</span>
+
+<span class="Comment"># function apply</span>
+<span class="Constant">&quot;f apply&quot;</span>
+a <span class="Statement">=</span> <span class="Constant">1</span><span class="Special">:</span><span class="Constant">5</span>
+<span class="Comment"># ベクトル対応の関数ならそのまま使用できる。</span>
+<span class="Identifier">sqrt</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>     <span class="Comment"># 1.00 1.41 1.73 2.00 2.24</span>
+<span class="Comment"># applyファミリー(apply, lapply, tapply...)</span>
+<span class="Comment"># vector に関数を適応する場合はsapplyが便利</span>
+twice <span class="Statement">=</span> <span class="Type">function</span><span class="rRainbow_lv0_p0">(</span>x<span class="rRainbow_lv0_p0">)</span> <span class="rRainbow_lv0_p2">{</span> <span class="Statement">return</span><span class="rRainbow_lv1_p0">(</span>x <span class="Statement">*</span> <span class="Constant">2</span><span class="rRainbow_lv1_p0">)</span> <span class="rRainbow_lv0_p2">}</span>
+<span class="Identifier">sapply</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> twice<span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># 2 4 6 ...</span>
+<span class="Identifier">Map</span><span class="rRainbow_lv0_p0">(</span>twice<span class="rRainbow_lv0_o0">,</span> a<span class="rRainbow_lv0_p0">)</span>       <span class="Comment"># listを返す</span>
+<span class="Identifier">map</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> twice<span class="rRainbow_lv0_p0">)</span>       <span class="Comment"># listを返す [[tidyverse]]</span>
+<span class="Identifier">map_dbl</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> twice<span class="rRainbow_lv0_p0">)</span>   <span class="Comment"># vector(double)を返す [[tidyverse]]</span>
+
+<span class="Comment"># filter</span>
+<span class="Constant">&quot;filter&quot;</span>
+a<span class="rRainbow_lv0_p1">[</span>a <span class="Statement">&gt;</span> <span class="Constant">3</span><span class="rRainbow_lv0_p1">]</span>
+isodd <span class="Statement">=</span> <span class="Type">function</span><span class="rRainbow_lv0_p0">(</span>x<span class="rRainbow_lv0_p0">)</span> <span class="rRainbow_lv0_p2">{</span><span class="Statement">return</span><span class="rRainbow_lv1_p0">(</span>x <span class="Statement">%%</span> <span class="Constant">2</span> <span class="Statement">==</span><span class="Constant">1</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p2">}</span>
+<span class="Identifier">Filter</span><span class="rRainbow_lv0_p0">(</span>isodd<span class="rRainbow_lv0_o0">,</span> a<span class="rRainbow_lv0_p0">)</span>
+<span class="Identifier">keep</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> isodd<span class="rRainbow_lv0_p0">)</span>      <span class="Comment"># [[tidyverse]]</span>
+<span class="Identifier">discard</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> isodd<span class="rRainbow_lv0_p0">)</span>   <span class="Comment"># keepの逆 [[tidyverse]]</span>
+
+<span class="Comment"># reduce</span>
+<span class="Constant">&quot;reduce&quot;</span>
+<span class="Identifier">Reduce</span><span class="rRainbow_lv0_p0">(</span><span class="Normal">`*`</span><span class="rRainbow_lv0_o0">,</span> a<span class="rRainbow_lv0_p0">)</span>
+<span class="Identifier">reduce</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_o0">,</span> <span class="Normal">`*`</span><span class="rRainbow_lv0_p0">)</span>  <span class="Comment"># [[tidyverse]] </span>
+
+
+<span class="Comment"># もともとMap, Filter, Reduceがあるが、関数が第1引数なので</span>
+<span class="Comment"># パイプ演算子と組み合わせれない</span>
+<span class="Comment"># purrr[[tidyverse]]の関数なら下記のように出来る</span>
+a <span class="Statement">%&gt;%</span> <span class="Identifier">keep</span><span class="rRainbow_lv0_p0">(</span>isodd<span class="rRainbow_lv0_p0">)</span> <span class="Statement">%&gt;%</span> <span class="Identifier">map</span><span class="rRainbow_lv0_p0">(</span>twice<span class="rRainbow_lv0_p0">)</span> <span class="Statement">%&gt;%</span> <span class="Identifier">reduce</span><span class="rRainbow_lv0_p0">(</span><span class="Normal">`*`</span><span class="rRainbow_lv0_p0">)</span>
+
+
+<span class="Comment"># min max</span>
+<span class="Identifier">max</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>
+<span class="Identifier">min</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>
+<span class="Identifier">which.max</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># index</span>
+<span class="Identifier">which.min</span><span class="rRainbow_lv0_p0">(</span>a<span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># index</span>
+
+<span class="Comment">#all, any</span>
+<span class="Identifier">all</span><span class="rRainbow_lv0_p0">(</span>a <span class="Statement">&gt;</span> <span class="Constant">3</span><span class="rRainbow_lv0_p0">)</span>
+<span class="Identifier">any</span><span class="rRainbow_lv0_p0">(</span>a <span class="Statement">==</span> <span class="Constant">2</span><span class="rRainbow_lv0_p0">)</span>
+
+
+<span class="Comment"># list</span>
+<span class="Comment"># 型も要素数も同じでなくても良い</span>
+<span class="Comment"># list自体を入れ子にすることも出来る</span>
+l <span class="Statement">=</span> <span class="Type">list</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">TRUE</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">1</span><span class="Special">:</span><span class="Constant">5</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">3.14</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">&quot;Hello&quot;</span><span class="rRainbow_lv0_p0">)</span>
+l<span class="rRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="rRainbow_lv0_p1">]</span>    <span class="Comment"># 第1要素 (リストとして) </span>
+l<span class="rRainbow_lv0_p1">[</span><span class="rRainbow_lv1_p1">[</span><span class="Constant">1</span><span class="rRainbow_lv1_p1">]</span><span class="rRainbow_lv0_p1">]</span>  <span class="Comment"># 第1要素</span>
+<span class="Identifier">names</span><span class="rRainbow_lv0_p0">(</span>l<span class="rRainbow_lv0_p0">)</span> <span class="Statement">&lt;-</span> <span class="Identifier">c</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">&quot;a&quot;</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">&quot;b&quot;</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">&quot;c&quot;</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">&quot;d&quot;</span><span class="rRainbow_lv0_p0">)</span>
+l<span class="Special">$</span><span class="Normal">a</span> <span class="Comment"># namesで名前を付けて、$や[['']]でアクセス可能</span>
+l<span class="rRainbow_lv0_p1">[</span><span class="rRainbow_lv1_p1">[</span><span class="Constant">&quot;a&quot;</span><span class="rRainbow_lv1_p1">]</span><span class="rRainbow_lv0_p1">]</span>
+<span class="Identifier">is.list</span><span class="rRainbow_lv0_p0">(</span>iris<span class="rRainbow_lv0_p0">)</span>    <span class="Comment"># data.framdも一種のリスト</span>
+
+<span class="Comment"># array 多次元のvector</span>
+<span class="Comment"># 要素はすべて同じ型である必要がある</span>
+arr <span class="Statement">=</span> <span class="Type">array</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="Special">:</span><span class="Constant">9</span><span class="rRainbow_lv0_o0">,</span> dim<span class="Statement">=</span><span class="Identifier">c</span><span class="rRainbow_lv1_p0">(</span><span class="Constant">3</span><span class="rRainbow_lv1_o0">,</span> <span class="Constant">3</span><span class="rRainbow_lv1_p0">)</span><span class="rRainbow_lv0_p0">)</span>
+arr<span class="rRainbow_lv0_p1">[</span><span class="Constant">0</span><span class="rRainbow_lv0_p1">]</span> <span class="Statement">=</span> <span class="Constant">&quot;a&quot;</span>
+arr
+
+<span class="Comment"># matrix</span>
+<span class="Type">matrix</span><span class="rRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="Special">:</span><span class="Constant">9</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">3</span><span class="rRainbow_lv0_o0">,</span> <span class="Constant">3</span><span class="rRainbow_lv0_p0">)</span>   <span class="Comment"># 3 x 3のmatrix</span>
+<span class="Identifier">is.array</span><span class="rRainbow_lv0_p0">(</span>arr<span class="rRainbow_lv0_p0">)</span>   <span class="Comment"># matrix はarrayでもある</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

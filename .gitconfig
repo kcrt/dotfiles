@@ -1,0 +1,64 @@
+[user]
+	name = TAKAHASHI Kyohei
+	email = kcrt@kcrt.net
+	#GPG: signingkey = A193875B
+	signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOPgJQcfABeJYG6ANq9VpyO/kcrt/V5gp7pcZpCtW6U kcrt@kcrt.net"
+[gpg]
+	format = "ssh"
+[color]
+	ui = auto
+[core]
+	excludesfile = /Users/kcrt/.gitignore
+	attributesfile = ~/.gitattributes
+	quotepath = false
+	editor = vim
+	autocrlf=input
+	precomposeunicode = true
+[alias]
+	log-graph = log --graph --date=auto:human --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s'
+	yesterday = log --graph --date=auto:human --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s' master@{yesterday}..master
+	oneweek = log --graph --date=short --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s' master@{1.week.ago}..master
+	onemonth = log --graph --date=short --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s' master@{1.month.ago}..master
+	diff-cached = diff --cached
+	unstage = reset HEAD --
+	vim = "!vim -c ':Gitv' ."
+	difff = diff --word-diff
+	diff-word = diff --word-diff
+	st = status -sb
+	co = checkout
+	ci = commit -v
+	diffgvim = difftool --tool=gvimdiff
+	diffvim = difftool --tool=vimdiff
+	diffmeld = difftool --tool=meld
+	diff-so-fancy = "!f() { [ -z \"$GIT_PREFIX\" ] || cd \"$GIT_PREFIX\" && git diff --color \"$@\" | diff-so-fancy  | less --tabs=4 -RFX; }; f"
+	mergegvim = mergetool --tool=gvimdiff
+	mergevim = mergetool --tool=vimdiff
+	mergemeld = mergetool --tool=meld
+	edit-history = rebase -i HEAD~10
+[diff "exstrings"]
+	textconv = ~/dotfiles/script/exstrings.sh
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[commit]
+	gpgsign = true
+	template = ~/.gitcommittemplate
+[pull]
+	rebase = true
+[push]
+	default = simple
+[filter "lfs"]
+	clean = git-lfs clean %f
+	smudge = git-lfs smudge %f
+	required = true
+[color "diff"]
+	old = red
+	new = green
+[credential]
+	helper = osxkeychain
+	helper = cache --timeout 3600
+[init]
+	defaultBranch = main

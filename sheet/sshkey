@@ -1,0 +1,30 @@
+* start ssh-agent (linux, not required for MacOS)
+eval `ssh-agent`
+* create new key
+ssh-keygen
+* list keys
+ssh-add -l
+* list public keys
+ssh-add -L
+* add secret key
+ssh-add keyfile
+* show public key
+ssh-keygen -y -f <secret-key-file>
+
+* 秘密鍵の作成
+openssl genrsa [-aes256] 2048 > private-key.pem
+-aesを指定すると、鍵をAESで暗号化(パスフレーズをつける)
+* 秘密鍵から公開鍵の作成
+openssl rsa -in private-key.pem -pubout -out public-key.pem
+* 秘密鍵からauthorized_keys形式の公開鍵の抽出
+ssh-keygen -y -f private-key.pem
+* 鍵の確認
+openssl rsa [-in|-pubin] private-key.prm -text -noout
+* 変換(PEM -> PKCS #12)
+openssl pkcs12 -export -in public-key.crt -inkey private-key.pem -out converted.p12
+(出力ファイルは秘密鍵を含む)
+
+* 署名
+ssh-keygen -Y sign -f 秘密鍵 -n file ファイル名
+* 署名検証
+ssh-keygen -Y verify -f 署名者公開鍵リスト -I 署名者メールアドレス -n file -s 署名ファイル < ファイル

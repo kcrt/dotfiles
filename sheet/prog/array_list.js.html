@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.js.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="javascript.jsx">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Type { color: #2e8b57; font-weight: bold; }
+.javascriptRainbow_lv0_p0 { color: #3a5fcd; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Constant">&quot;use strict&quot;</span><span class="Statement">;</span>
+
+
+<span class="Identifier">let</span> arr = <span class="Identifier">[</span><span class="Constant">1</span><span class="Normal">,</span> <span class="Constant">2</span><span class="Normal">,</span> <span class="Constant">3</span><span class="Normal">,</span> <span class="Constant">4</span><span class="Normal">,</span> <span class="Constant">5</span><span class="Identifier">]</span><span class="Statement">;</span>
+arr[<span class="Constant">0</span>]<span class="Statement">;</span> <span class="Comment">// 最初の要素</span>
+arr[arr.<span class="Statement">length</span> - <span class="Constant">1</span>]<span class="Statement">;</span>    <span class="Comment">//最後の要素</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr.<span class="Statement">slice</span><span class="Normal">(</span><span class="Constant">1</span><span class="Normal">,</span> <span class="Constant">3</span><span class="Normal">))</span>    <span class="Comment">// スライスも使用できる。=&gt;[2, 3]</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Array</span><span class="Normal">())</span>    <span class="Comment">// 空の配列</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Identifier">[]</span><span class="Normal">)</span>         <span class="Comment">// 空の配列</span>
+
+<span class="Identifier">let</span> arr2 = arr<span class="Statement">;</span>
+arr2[<span class="Constant">0</span>] = <span class="Constant">100</span><span class="Statement">;</span>          <span class="Comment">// Pythonと同じくコピーにはならない</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span><span class="Statement">;</span>
+arr2 = arr.<span class="Statement">slice</span><span class="Normal">()</span>      <span class="Comment">// Pythonのarr[:]と同じ</span>
+arr2[<span class="Constant">0</span>] = <span class="Constant">200</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Array</span><span class="Normal">(</span><span class="Constant">3</span><span class="Normal">,</span> <span class="Constant">4</span><span class="Normal">,</span> <span class="Constant">5</span><span class="Normal">))</span> <span class="Comment">// [3, 4, 5]</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Array</span><span class="Normal">(</span><span class="Constant">3</span><span class="Normal">))</span>       <span class="Comment">// 要素数3の配列 [[注意]]</span>
+
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr.<span class="Statement">length</span><span class="Normal">)</span>
+
+<span class="Comment">// 一致の検索</span>
+arr.<span class="Statement">includes</span><span class="Normal">(</span><span class="Constant">100</span><span class="Normal">)</span><span class="Statement">;</span>  <span class="Comment">// t/f [[2016]]</span>
+arr.<span class="Statement">indexOf</span><span class="Normal">(</span><span class="Constant">100</span><span class="Normal">)</span><span class="Statement">;</span>   <span class="Comment">// 見付からなければ-1</span>
+arr.<span class="Type">find</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x &gt; <span class="Constant">10</span><span class="Normal">)</span><span class="Statement">;</span>      <span class="Comment">// あればその値, なければundefined [[2015]]</span>
+arr.<span class="Statement">findIndex</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x &gt; <span class="Constant">10</span><span class="Normal">)</span><span class="Statement">;</span>     <span class="Comment">// あればindex, なければ-1 [[2015]]</span>
+
+<span class="Comment">// 要素の追加</span>
+arr.<span class="Statement">push</span><span class="Normal">(</span><span class="Constant">200</span><span class="Normal">)</span><span class="Statement">;</span>              <span class="Comment">// 末尾に追加</span>
+arr.<span class="Statement">push</span><span class="Normal">(</span><span class="Constant">201</span><span class="Normal">,</span> <span class="Constant">202</span><span class="Normal">)</span><span class="Statement">;</span>         <span class="Comment">// 複数追加</span>
+arr.<span class="Statement">push</span><span class="Normal">(</span><span class="Identifier">[</span><span class="Constant">203</span><span class="Normal">,</span> <span class="Constant">204</span><span class="Identifier">]</span><span class="Normal">)</span><span class="Statement">;</span>       <span class="Comment">// これだと[203,204]を一つの要素として追加(Pythonのappend)</span>
+arr.<span class="Statement">pop</span><span class="Normal">()</span>
+arr.<span class="Statement">push</span><span class="Normal">(</span>...<span class="Identifier">[</span><span class="Constant">203</span><span class="Normal">,</span> <span class="Constant">204</span><span class="Identifier">]</span><span class="Normal">)</span><span class="Statement">;</span>    <span class="Comment">// 203と204を追加(Spread構文) [[2015]]</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span>
+<span class="Comment">// 先頭/任意の箇所への追加</span>
+arr.<span class="Statement">unshift</span><span class="Normal">(</span><span class="Constant">5</span><span class="Normal">)</span><span class="Statement">;</span>             <span class="Comment">// 先頭に追加</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr.<span class="Statement">shift</span><span class="Normal">())</span>    <span class="Comment">// 先頭から取得して削除</span>
+
+<span class="Comment">// 削除</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr.<span class="Statement">pop</span><span class="Normal">())</span>      <span class="Comment">// 最後の要素を取得して削除</span>
+
+arr2.<span class="Statement">length</span> = <span class="Constant">0</span>             <span class="Comment">// 全削除</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr2<span class="Normal">)</span>
+
+<span class="Comment">// ソート</span>
+arr = <span class="Identifier">[</span><span class="Constant">1</span><span class="Normal">,</span> <span class="Constant">2</span><span class="Normal">,</span> <span class="Constant">100</span><span class="Normal">,</span> <span class="Constant">3</span><span class="Identifier">]</span>
+arr.<span class="Statement">sort</span><span class="Normal">()</span><span class="Statement">;</span>     <span class="Comment">// 配列をソートする</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span>    <span class="Comment">// =&gt; [1, 100, 2, 3] [[注意]]</span>
+<span class="Comment">// 標準は辞書順比較！</span>
+arr.<span class="Statement">sort</span><span class="Normal">((</span><span class="Special">a</span><span class="Normal">,</span><span class="Special"> b</span><span class="Normal">)</span> <span class="Statement">=&gt;</span> a - b<span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// 数値として比較してソート</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span>        <span class="Comment">// [1, 2, 3, 100] [[OK]]</span>
+
+<span class="Comment">// 逆順</span>
+arr.<span class="Statement">reverse</span><span class="Normal">()</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>arr<span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Comment">// map (function apply, foreach)</span>
+<span class="Identifier">let</span> arr3 = arr.<span class="Statement">map</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x * x<span class="Normal">)</span><span class="Statement">;</span>     <span class="Comment">// 新しい配列を作る</span>
+arr.<span class="Statement">forEach</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>x<span class="Normal">))</span><span class="Statement">;</span>   <span class="Comment">// 要素に関数を適応する</span>
+arr.<span class="Statement">forEach</span><span class="Normal">((</span><span class="Special">value</span><span class="Normal">,</span><span class="Special"> index</span><span class="Normal">,</span><span class="Special"> arr</span><span class="Normal">)</span> <span class="Statement">=&gt;</span> <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>value<span class="Normal">))</span><span class="Statement">;</span> <span class="Comment">// indexや配列そのものも取得できる。</span>
+
+<span class="Comment">// filter</span>
+<span class="Identifier">let</span> arr4 = arr.<span class="Statement">filter</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x &gt; <span class="Constant">10</span><span class="Normal">)</span><span class="Statement">;</span> <span class="Comment">// 10以上の要素のみ</span>
+
+<span class="Comment">// reduce</span>
+<span class="Identifier">let</span> prod = arr.<span class="Statement">reduce</span><span class="Normal">((</span><span class="Special">x</span><span class="Normal">,</span><span class="Special"> y</span><span class="Normal">)</span> <span class="Statement">=&gt;</span> x * y<span class="Normal">)</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>prod<span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Comment">// minmax</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Type">Math</span>.<span class="Statement">min</span><span class="Normal">(</span>...arr<span class="Normal">))</span><span class="Statement">;</span>      <span class="Comment">// Spreadを使用する</span>
+
+<span class="Comment">// all</span>
+arr = <span class="Identifier">[</span><span class="Constant">20</span><span class="Normal">,</span> <span class="Constant">30</span><span class="Normal">,</span> <span class="Constant">30</span><span class="Identifier">]</span>
+<span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>arr.<span class="Statement">every</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x &gt; <span class="Constant">10</span><span class="Normal">)</span><span class="javascriptRainbow_lv0_p0">)</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;all &gt; 10&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+<span class="Comment">// any</span>
+<span class="Statement">if</span><span class="javascriptRainbow_lv0_p0">(</span>arr.<span class="Statement">some</span><span class="Normal">(</span><span class="Special">x</span> <span class="Statement">=&gt;</span> x == <span class="Constant">20</span><span class="Normal">)</span><span class="javascriptRainbow_lv0_p0">)</span>
+    <span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span><span class="Constant">&quot;There is 20&quot;</span><span class="Normal">)</span><span class="Statement">;</span>
+
+<span class="Comment">// tuple</span>
+
+
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

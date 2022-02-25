@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/json_readwrite.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.pythonRainbow_o1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Statement { color: #b03060; font-weight: bold; }
+.Identifier { color: #458b74; }
+.pythonRainbow_p1 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="PreProc">import</span> json
+<span class="PreProc">from</span> collections <span class="PreProc">import</span> OrderedDict
+
+<span class="Comment"># object -&gt; str</span>
+myobj = <span class="pythonRainbow_p0">{</span><span class="String">&quot;</span><span class="String">Hello</span><span class="String">&quot;</span>: <span class="String">&quot;</span><span class="String">World</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">Good</span><span class="String">&quot;</span>: <span class="pythonRainbow_p1">[</span><span class="String">&quot;</span><span class="String">Morning</span><span class="String">&quot;</span><span class="pythonRainbow_o1">,</span> <span class="String">&quot;</span><span class="String">Afternoon</span><span class="String">&quot;</span><span class="pythonRainbow_p1">]</span><span class="pythonRainbow_p0">}</span>
+json.dumps<span class="pythonRainbow_p0">(</span>myobj<span class="pythonRainbow_p0">)</span>
+json.dumps<span class="pythonRainbow_p0">(</span>myobj<span class="pythonRainbow_o0">,</span> indent=<span class="Constant">4</span><span class="pythonRainbow_p0">)</span>
+
+<span class="Comment"># str -&gt; object</span>
+mystr = <span class="String">'</span><span class="String">{&quot;b&quot;: 1, &quot;a&quot;: 2}</span><span class="String">'</span>
+json.loads<span class="pythonRainbow_p0">(</span>mystr<span class="pythonRainbow_p0">)</span>
+json.loads<span class="pythonRainbow_p0">(</span>mystr<span class="pythonRainbow_o0">,</span> object_pairs_hook=OrderedDict<span class="pythonRainbow_p0">)</span>  <span class="Comment"># 順番も保持</span>
+
+<span class="Comment"># read json file</span>
+<span class="Statement">with</span> <span class="Identifier">open</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./sample.json</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> <span class="Statement">as</span> fp:
+    json.load<span class="pythonRainbow_p0">(</span>fp<span class="pythonRainbow_p0">)</span>
+    <span class="Comment"># object_pairs_hook=OrderedDict</span>
+
+<span class="Comment"># write json file</span>
+<span class="Statement">with</span> <span class="Identifier">open</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">./sample_out.json</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="String">&quot;</span><span class="String">w</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span> <span class="Statement">as</span> fp:
+    json.dump<span class="pythonRainbow_p0">(</span>myobj<span class="pythonRainbow_o0">,</span> fp<span class="pythonRainbow_o0">,</span> indent=<span class="Constant">4</span><span class="pythonRainbow_p0">)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

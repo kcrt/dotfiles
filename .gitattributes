@@ -1,0 +1,7 @@
+*.docx diff=exstrings
+*.doc diff=exstrings
+*.pptx diff=exstrings
+*.rtf diff=exstrings
+*.zip diff=exstrings
+*.lzh diff=exstrings
+*.rar diff=exstrings

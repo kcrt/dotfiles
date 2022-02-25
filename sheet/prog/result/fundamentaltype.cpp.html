@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/fundamentaltype.cpp.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="cpp">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.Todo { color: #006400; background-color: #9aff9a; padding-bottom: 1px; }
+.String { color: #4a708b; }
+.cppRainbow_o0 { color: #3a5fcd; }
+.cppRainbow_p0 { color: #3a5fcd; }
+.cppRainbow_o1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Special { color: #8a2be2; }
+.Statement { color: #b03060; font-weight: bold; }
+.PreProc { color: #1874cd; }
+.Type { color: #008b00; font-weight: bold; }
+.cppRainbow_p1 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="String">&lt;cstdio&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;limits&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;cmath&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;cinttypes&gt;</span>
+<span class="PreProc">#include </span><span class="String">&lt;stddef.h&gt;</span>
+
+<span class="PreProc">#include </span><span class="String">&lt;iostream&gt;</span>
+<span class="Statement">using</span> <span class="Type">namespace</span> std;
+
+<span class="Type">int</span> main<span class="cppRainbow_p0">(</span><span class="Type">int</span> argc<span class="cppRainbow_o0">,</span> <span class="Type">char</span>** argv<span class="cppRainbow_p0">){</span>
+
+<span class="Comment">// </span><span class="Todo">TODO</span><span class="Comment">: auto</span>
+<span class="Comment">// </span><span class="Todo">TODO</span><span class="Comment">: int a(3)やint a{3}などの書き方での初期化</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 整数: char (最低8bit) , shortまたはshort int(最低16bit), int(最低16bit), long(最低32bit), long long(最低64bit [[C++11]]) </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> 符号付きのsignedと、符号なしのunsigned だが、省略すると符号付き (charのみ環境依存) </span><span class="Comment">*/</span>
+    <span class="Type">char</span> c = <span class="Constant">'a'</span>;                <span class="Comment">/*</span><span class="Comment"> &quot;文字列&quot;ではなく、文字 'a' </span><span class="Comment">*/</span>
+    <span class="Type">signed</span> <span class="Type">int</span> a = <span class="Constant">32</span>;                    <span class="Comment">/*</span><span class="Comment"> このsigned は省略可 </span><span class="Comment">*/</span>
+    <span class="Type">unsigned</span> <span class="Type">long</span> <span class="Type">long</span> l = <span class="Constant">1ULL</span>;<span class="Comment">/*</span><span class="Comment"> 整数定数： 1U, 1L, 1UL, 1LL, 1ULL など (ullなど小文字も可) </span><span class="Comment">*/</span>
+
+    cout &lt;&lt; c &lt;&lt; <span class="String">&quot; and &quot;</span> &lt;&lt; +c &lt;&lt; endl; <span class="Comment">/*</span><span class="Comment"> a and 97; 単項+ で数値にする </span><span class="Comment">*/</span>
+    cout &lt;&lt; <span class="String">&quot;size of 'a' is: &quot;</span> &lt;&lt; <span class="Statement">sizeof</span><span class="cppRainbow_p1">(</span><span class="Constant">'a'</span><span class="cppRainbow_p1">)</span> &lt;&lt; endl;<span class="Comment">/*</span><span class="Comment"> 1, 'a'はchar [[diff_c_cpp]][[注意]] </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 浮動小数点: float, double, long double, float_t[[C++11]], double_t[[C++11]] </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d = <span class="Constant">24e-2</span>;<span class="Comment">/*</span><span class="Comment"> なにもないとdouble; 3.14F (float), 3.14L (long double) </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d2 = <span class="Constant">0x12</span>.34P+<span class="Constant">10</span>;<span class="Comment">/*</span><span class="Comment"> [[C++11]] 16進数で指定する </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d3 = std::nan<span class="cppRainbow_p1">(</span><span class="String">&quot;&quot;</span><span class="cppRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> [[Cr+11]] &lt;cmath&gt; INFINITY, -INFINITY, NAN, std::isinf, std::isfinite, std::isnan, std::isnormalも使用可能 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> NaNについてより詳しく知りたければquiet NaNとsignaling NaNを参照。 </span><span class="Comment">*/</span>
+    <span class="Type">double</span> d4 = std::numeric_limits&lt;<span class="Type">double</span>&gt;::infinity<span class="cppRainbow_p1">()</span>; <span class="Comment">/*</span><span class="Comment"> &lt;climits&gt; 長い…。&lt;cmath&gt; INFINITYのほうが便利。 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 論理型 [[diff_c_cpp]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> C言語と違い、bool, true, falseは予約語である。</span><span class="Comment">*/</span>
+    <span class="Type">bool</span> b = <span class="Constant">2</span>; <span class="Comment">/*</span><span class="Comment"> trueになる </span><span class="Comment">*/</span>
+    cout &lt;&lt; b &lt;&lt; std::boolalpha &lt;&lt; <span class="String">&quot; &quot;</span> &lt;&lt; b &lt;&lt; endl;printf<span class="cppRainbow_p1">(</span><span class="String">&quot;</span><span class="Special">%d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cppRainbow_o1">,</span> b<span class="cppRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 1 true </span><span class="Comment">*/</span>
+    cout &lt;&lt; b * <span class="Constant">4</span> &lt;&lt; endl;<span class="Comment">/*</span><span class="Comment"> 4, 四則演算時にtrueは1(int)に自動で変換される </span><span class="Comment">*/</span>
+
+
+    <span class="Comment">/*</span><span class="Comment"> CやC++は変数の宣言だけでは初期化されない [[注意]] </span><span class="Comment">*/</span>
+    <span class="Type">int</span> x;
+    printf<span class="cppRainbow_p1">(</span><span class="String">&quot;unintialized value is: </span><span class="Special">%d</span><span class="Special">\n</span><span class="String">&quot;</span><span class="cppRainbow_o1">,</span> x<span class="cppRainbow_p1">)</span>;<span class="Comment">/*</span><span class="Comment"> 何が出るか不明 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 定数 </span><span class="Comment">*/</span>
+    <span class="Type">const</span> <span class="Type">int</span> aa = <span class="Constant">3</span>;
+
+    <span class="Comment">/*</span><span class="Comment"> wchar_t などchar以外の文字型に関してはunicode[[参照]] </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> 変数の上下限 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> &lt;climits&gt; (limits.h)ももちろん使用可能だが&lt;limits&gt;の物を紹介する </span><span class="Comment">*/</span>
+    cout &lt;&lt; numeric_limits&lt;<span class="Type">long</span>&gt;::min<span class="cppRainbow_p1">()</span> &lt;&lt; <span class="String">&quot; - &quot;</span> &lt;&lt; numeric_limits&lt;<span class="Type">long</span>&gt;::max<span class="cppRainbow_p1">()</span> &lt;&lt; endl;
+    <span class="Comment">/*</span><span class="Comment"> min, max, epsilon, is_signed, is_integer, has_infinity, lowest[[C++11]] などを使用可能 </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> [[C++11]] &lt;cstdtypes&gt; </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> intN_t (N bitの整数) , int_leastN_t (最低N bitの整数), int_fastN_t (早いやつ) </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> 同様にuintN_t, uint_leastN_t, uint_fastN_t も使用可能 </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> N = 8, 16, 32, 64は最低でも使えることが保証されている。</span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> ポインタ: intptr_t, 使える中で一番でかいやつ: intmax_t, uintmax_t </span><span class="Comment">*/</span>
+    <span class="Type">int64_t</span> i64 = numeric_limits&lt;<span class="Type">int64_t</span>&gt;::min<span class="cppRainbow_p1">()</span>;
+    cout &lt;&lt; i64 &lt;&lt; endl;
+
+    <span class="Comment">/*</span><span class="Comment"> char16_t, char32_t [[C++11]] についてはunicode[[参照]] </span><span class="Comment">*/</span>
+
+    <span class="Comment">/*</span><span class="Comment"> その他の型 </span><span class="Comment">*/</span>
+    <span class="Type">size_t</span> t = <span class="Statement">sizeof</span><span class="cppRainbow_p1">(</span><span class="Type">int</span><span class="cppRainbow_p1">)</span>; <span class="Comment">/*</span><span class="Comment"> サイズやループカウンタに使用 </span><span class="Comment">*/</span>
+    <span class="Type">ptrdiff_t</span> pp = &amp;d - &amp;d2;<span class="Comment">/*</span><span class="Comment"> stddef.h: アドレスの差 </span><span class="Comment">*/</span>
+    <span class="Type">nullptr_t</span> p = <span class="Constant">nullptr</span>;<span class="Comment">/*</span><span class="Comment"> [[C++11]] </span><span class="Comment">*/</span>
+    <span class="Comment">/*</span><span class="Comment"> byte bb {1};    [[C++17]] byte bb = 1 はエラー </span><span class="Comment">*/</span>
+
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cppRainbow_p0">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

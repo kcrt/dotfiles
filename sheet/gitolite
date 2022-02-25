@@ -1,0 +1,8 @@
+* 新規のリポジトリ
+1. gitolite-adminのgitolite.confにリポジトリを登録
+2. push時にリポジトリが自動的に作成される
+3. 現在のリポジトリをoriginとして登録
+	$ git remote add origin ssh://git@kcrt.net:31xx/kcrt/xxxx/xxxx.git
+4. $ git push origin master
+* リポジトリの取得
+$ git clone ssh://git@kcrt.net:31xx/kcrt/xxxx/xxxx.git

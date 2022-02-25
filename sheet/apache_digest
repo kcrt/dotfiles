@@ -1,0 +1,16 @@
+# htdigest -c password_file realm username
+(password_file example: .htpasswd)
+
+.htaccessに
+>>>
+	AuthUserFile fullpath/to/password_file
+	AuthName realm
+	AuthType Digest
+	Require valid-user
+<<<
+
+realmが一致している必要あり。
+500になる時はsudo a2enmod auth_digestしているか確認。
+
+ユーザーの追加は
+htdigest password_file realm username

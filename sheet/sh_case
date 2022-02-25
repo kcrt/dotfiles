@@ -1,0 +1,11 @@
+case $VAR in
+*.txt | *.doc | *.rtf)
+	...
+	;;
+*.csv | *.xls)
+	...
+	;;
+*)
+	...
+	;;
+esac

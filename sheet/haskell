@@ -1,0 +1,140 @@
+ghci
+
+演算子
+&& || not
+not equal は /=
+
+succ
+	「後者(successor)」を取り出す。整数の場合は+1したものとなる
+min _a_ _b_
+max _a_ _b_
+
+2引数関数
+div 92 10 は92 `div` 10と書くことが出来る
+
+
+関数宣言
+doubleMe x = x + x
+Absolute x = if x >= 0 then x else -x
+
+リスト
+let Numbers= [ 1, 2, 3, 4, 5]
+連結
+[1,2,3] ++ [4,5,6]
+	[1,2,3,4,5,6]となる
+"hello" は ['h', 'e', 'l', 'l', 'o']と一緒
+"hello " ++ "world"は"hello world"となる
+++演算子は一つ目のリストを最後まで操作する
+
+'a':" small cat" は"a small cat"となる
+:は先頭に追加
+
+['a','b','c'] !! 1は'b'
+添字を指定、0 origin
+
+head LIST	最初のいっこ
+last LIST	最後のいっこ
+tail LIST	最初以外
+init LIST	最後以外
+length LIST
+null LIST 空リスト [] ならTrue
+reverse LIST
+take _num_ LIST 
+	先頭_num_個を取得
+drop _num_ LIST
+	先頭_num_個を外す
+
+maximum LIST
+minumum LIST
+sum LIST
+product LIST
+elem _target_ LIST	含まれているかどうか 4 `elem` [1,2,3,4]はTrue
+
+[1..20]
+['a'..'z']
+[2,4..20]
+[20,19..1]
+take 4 [1..]は[1,2,3,4]
+
+cycle LIST 無限に繰り返す
+repeat X   ===  cycle [X]
+replicate _num_ X   replicate 3 10 === [10,10,10]
+
+
+リスト内包（フィルタリング）
+[x * 2 | x <- [1..10]]
+[x * 2 | x <- [1..], x < 10]
+
+タプル
+リストと違い違う型もモテる
+(1, 'a', "hello)
+
+要素数が2のタプル＝ペア
+
+fst PAIR
+snd PAIR
+
+zip LIST1 LIST2
+	zip [1,2,3] [4,5,6] === [(1,4), (2,5), (3,6]
+
+型宣言
+	doubleMe :: Int -> Int
+	funcAAA :: Int -> Int -> Int -> Int
+	funcAAA x y z = x + y + z
+	最後が返り値の型
+Int, Integer(無限), Float, Double, Bool, Char, [Char], a(型変数; どんな型でも取りうる)
+[Char]はStringともかける
+型を調べる :t 4.0  :t "test"
+
+クラス
+	Eq 等値か調べる
+	Ord 順序が付けれる
+		4 `compare` 3		=== GT
+		compare関数はGT, LT, EQいずれかを返す
+	Show 文字列化出来る
+		show True			"True"を出力
+	Read 文字列から変換
+		read "3" + 2		5
+		read "2"			型が決まらないのでエラー
+		read "2" :: Int		推論できない方をコンパイラに教えてあげる
+		read "2" :: Float		2.0
+		read "2" :: Bool
+	Enum 順序に並んだ型
+		succ, predが使える
+		..が使える
+	Num 数値
+		Int, Integer, Float, Double
+	Floating  Float か Double
+		sin, sqrtなどは之しか引数にできない
+	Integral  Int か Integer
+		fromIntegral 数値でNum型に変換
+
+asパターン
+firstLetter :: String -> String
+firstLetter "" = "Null String"
+firstLetter all@(x:xs) = "First Letter of " ++ all ++ " is " ++ [x]
+
+ガード
+bmiTell :: Float -> String
+bmiTell bmi
+	| bmi <= 18.5 = "underweight"
+	| bmi <= 25.0 = "normal"
+	| bmi <= 30.0 = "fat"
+	| otherwise = "obese"
+
+whereを使う
+bmiTell weight height
+	| bmi <= 18.5 = "underweight"
+	| bmi <= 25.0 = "normal"
+	| bmi <= 30.0 = "fat"
+	| otherwise = "obese"
+	where bmi = weight / height ^ 2
+
+whereはガードのどこからでも見える
+
+
+文字列
+words "aa bb cc"
+→ ["aa", "bb", "cc]
+
+

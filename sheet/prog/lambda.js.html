@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/lambda.js.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="javascript.jsx">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Type { color: #2e8b57; font-weight: bold; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Constant">&quot;use strict&quot;</span><span class="Statement">;</span>
+
+<span class="Comment">// lambdaのためにアロー関数がよく使用される</span>
+
+
+<span class="Identifier">let</span> twice = <span class="Normal">(</span><span class="Special">x</span><span class="Normal">)</span> <span class="Statement">=&gt;</span> <span class="Identifier">{</span><span class="Statement">return</span> x * <span class="Constant">2</span><span class="Identifier">}</span><span class="Statement">;</span>
+
+<span class="Comment">// 引数が1つの場合、()を省略できる。</span>
+<span class="Comment">// また、returnなしで直接式を書いても良い。</span>
+<span class="Identifier">let</span> twice2 = <span class="Special">x</span> <span class="Statement">=&gt;</span> x * <span class="Constant">2</span><span class="Statement">;</span>
+
+
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>twice<span class="Normal">(</span><span class="Constant">10</span><span class="Normal">))</span><span class="Statement">;</span>
+<span class="Type">console</span>.<span class="Statement">log</span><span class="Normal">(</span>twice<span class="Normal">(</span><span class="Constant">20</span><span class="Normal">))</span><span class="Statement">;</span>
+<span class="Comment">// node helloworld.js で実行</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

@@ -1,0 +1,69 @@
+*100*	Informational	情報
+100	Continue	継続：リクエストの途中
+101	Switching Protocols	プロトコル切り替え
+102	Processing	処理中：WebDAV用
+103	Early Hints	早期のヒント：予想されるヘッダを返す(RFC 8297)
+*200*	Success	成功
+200	OK	OK：正常な場合殆どがこれ。
+201	Created	作成：リクエストによりあらたらりソースが作成された
+202	Accepted	受理：リクエストが受理されたが、処理はまだ完了していない。
+203	Non-Authoritative Information	信頼できない情報：プロキシのデータなど
+204	No Content	内容なし：リクエストを受理したが、返すべきモノがない
+205	Reset Content	内容のリセット：リクエストを受理し、ブラウザを初期状態に返す
+206	Partial Content	部分的内容：部分的GETに対して(分割ダウンロードなど)
+207	Multi-Status	複数のステータス：WebDAV用
+208	Already Reported	すでに報告済み：WebDAV用
+226	IM Used	IM使用：差分の送信を行う(RFC 3229)
+*300*	Redirection	リダイレクション
+300	Multiple Choices	複数の選択：リクエストリソースが複数存在し、選択が必要である
+301	Moved Permanently	恒久的に移動：Locationヘッダで移動先を指定
+302	Found	発見：元は「一時的に移動」だったが、現在は転送で一般的に使用される
+303	See Other	他を参照：リクエストに対するレスポンスが他のURLに存在する
+304	Not Modified	未更新：If-Modified-Sincedでリクエストを行った時など
+305	Use Proxy	プロキシを使用せよ：Locationでプロキシを返す
+306	(Unused)	予約済み
+307	Temporary Redirect	一時的リダイレクト：302の規格外使用が多く新しく制定
+308	Permanent Redirect	恒久的リダイレクト
+*400*	Client Error	クライアントエラー
+400	Bad Request	不正なリクエスト
+401	Unauthorized	認証が必要である
+402	Payment Required	支払いが必要である(予約済み)
+403	Forbidden	禁止されている：アクセス権がないなど
+404	Not Found	未検出：リソースが見つからなかった
+405	Method Not Allowed	許可されていないメソッド(POST禁止時のPOSTなど)
+406	Not Acceptable	受理できない：送られたAcceptヘッダに対応できないときなど
+407	Proxy Authentication Required	プロキシ認証が必要
+408	Request Timeout	リクエストタイムアウト
+409	Conflict	競合：現在のリソースと競合するので完了できない。
+410	Gone	消滅：404と違い、二度と復活しない場合
+411	Length Required	長さが必要：Content-Lengthヘッダがない
+412	Precondition Failed	前提条件で失敗
+413	Payload Too Large	ペイロードが大きすぎる：アップロードサイズ上限超過など(RFC 7231)
+414	URI Too Long	URIが長すぎる：画像をGETで送ろうとしたときなど(RFC 7231)
+415	Unsupported Media Type	サポートされていないメディアタイプ
+416	Range Not Satisfiable	レンジは範囲外：分割ダウンロードで範囲外を指定など (RFC 7233)
+417	Expectation Failed	Expectヘッダに対応できない
+418	I'm a teapot	ティーポットにコーヒーを入れさせようとした場合 (コラム参照) https://www.google.com/teapot
+421	Misdirected Request	誤ったリクエスト先 (RFC 7540)
+422	Unprocessable Entity	処理できないエンティティ (WebDAV)
+423	Locked	ロックされている (WebDAV)
+424	Failed Dependency	依存関係で失敗 (WebDAV)
+425	Too Early	Early dataの受け入れ失敗 (RFC 8470)
+426	Upgrade Required	アップグレード要求
+451	Unavailable For Legal Reasons	法的理由で利用不可(403から派生)
+*500*	Server Error	サーバーエラー
+500	Internal Server Error	サーバー内部エラー：この本をもっている人が最もよく見かけるもの
+501	Not Implemented	未実装
+502	Bad Gateway	不正なゲートウェイ (職場でエロサイトを開いたときなど)
+503	Service Unavailable	サービス利用不可 (サーバーが過負荷やメンテナンスで落ちているなど)
+504	Gateway Timeout	ゲートウェイタイムアウト
+505	HTTP Version Not Supported	サポートされていないHTTPバージョン
+506	Variant Also Negotiates	多重ネゴシエーション	transparent content negotiationで循環参照など
+507	Insufficient Storage	容量不足	(WebDAV)
+508	Loop Detected	ループを検出	(WebDAV)
+509	Bandwidth Limit Exceeded	帯域幅制限超過	(IANA非登録)
+510	Not Extended	拡張できない(拡張モジュールが読み込めない)
+511	Network Authentication Required	ネットワーク認証が必要 (登録制の無料WiFiで出るやつ)
+
+Source: https://ja.wikipedia.org/wiki/HTTPステータスコード
+

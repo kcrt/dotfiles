@@ -1,0 +1,5 @@
+otool -L _file_		リンクしているdylib(dll)を表示
+install_name_tool -change _from_ _to_ _filename_
+					_filename_でリンクされているファイルを_from_から_to_へ
+nm _file_			シンボルテーブルを表示
+

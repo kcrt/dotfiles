@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/control_flow.cpp.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="cpp">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.cppRainbow_lv0_o0 { color: #3a5fcd; }
+.cppRainbow_lv2_p1 { color: #43cd80; }
+.cppRainbow_lv2_p2 { color: #43cd80; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.Type { color: #2e8b57; font-weight: bold; }
+.cppRainbow_lv0_p0 { color: #3a5fcd; }
+.cppRainbow_lv1_p0 { color: #cd6600; }
+.cppRainbow_lv2_o0 { color: #43cd80; }
+.cppRainbow_lv2_p0 { color: #43cd80; }
+.cppRainbow_lv3_p1 { color: #b22222; }
+.cppRainbow_lv0_p2 { color: #3a5fcd; }
+.cppRainbow_lv1_o2 { color: #cd6600; }
+.cppRainbow_lv1_p2 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">#include </span><span class="Constant">&lt;iostream&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;vector&gt;</span>
+<span class="PreProc">#include </span><span class="Constant">&lt;boost/range/irange.hpp&gt;</span>
+
+<span class="Statement">using</span> <span class="Type">namespace</span> std;
+
+<span class="Statement">using</span> <span class="Type">namespace</span> std::string_literals;
+
+<span class="Type">int</span> main<span class="cppRainbow_lv0_p0">(</span><span class="Type">int</span> argc<span class="cppRainbow_lv0_o0">,</span> <span class="Type">char</span>** argv<span class="cppRainbow_lv0_p0">)</span><span class="cppRainbow_lv0_p2">{</span>
+
+
+    <span class="Comment">// if</span>
+    <span class="Type">int</span> a = <span class="Constant">10</span>;
+    <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span>a &lt; <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; <span class="Constant">&quot;less than 10&quot;</span> &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span>a == <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        cout &lt;&lt; <span class="Constant">&quot;equal to 10&quot;</span> &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span><span class="Statement">else</span><span class="cppRainbow_lv1_p2">{</span>
+        <span class="Comment">// 何もしないときは何も入れなくて良い</span>
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// ブロックを使用せずに単文を使用することも出来る。</span>
+    <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span>a == <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span>
+        cout &lt;&lt; <span class="Constant">&quot;a is 10!&quot;</span> &lt;&lt; endl;
+
+    <span class="Comment">// 初期化節をおくことも可能 [[C++17]]</span>
+    <span class="Statement">if</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span> l = <span class="Constant">&quot;abc&quot;</span>s.length<span class="cppRainbow_lv2_p0">()</span>; l == <span class="Constant">3</span><span class="cppRainbow_lv1_p0">)</span>
+        cout &lt;&lt; <span class="Constant">&quot;length is 3!&quot;</span> &lt;&lt; endl;
+
+    <span class="Type">auto</span> <span class="Type">constexpr</span> iec559 = numeric_limits&lt;<span class="Type">double</span>&gt;::is_iec559;
+    <span class="Statement">if</span> <span class="Type">constexpr</span> <span class="cppRainbow_lv1_p0">(</span>iec559<span class="cppRainbow_lv1_p0">)</span> <span class="cppRainbow_lv1_p2">{</span> <span class="Comment">// コンパイル時条件分け [[C++17]]</span>
+        cout &lt;&lt; <span class="Constant">&quot;IEC 559&quot;</span> &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// for (初期化文; 条件; 繰り返し文)</span>
+    <span class="Comment">// 初期化節で宣言した変数はfor内のみで有効</span>
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        printf<span class="cppRainbow_lv2_p0">(</span><span class="Constant">&quot;</span><span class="Special">%d</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="cppRainbow_lv2_o0">,</span> i<span class="cppRainbow_lv2_p0">)</span>;<span class="Comment">// 0 1 2 3 4</span>
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// break, continue</span>
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        <span class="Statement">if</span> <span class="cppRainbow_lv2_p0">(</span>i == <span class="Constant">4</span><span class="cppRainbow_lv2_p0">)</span><span class="cppRainbow_lv2_p2">{</span>
+            <span class="Statement">continue</span>;
+        <span class="cppRainbow_lv2_p2">}</span><span class="Statement">else</span> <span class="Statement">if</span><span class="cppRainbow_lv2_p0">(</span>i == <span class="Constant">5</span><span class="cppRainbow_lv2_p0">)</span><span class="cppRainbow_lv2_p2">{</span>
+            <span class="Statement">break</span>;
+        <span class="cppRainbow_lv2_p2">}</span>
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// infinite loop</span>
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span>;;<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        <span class="Statement">break</span>;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Statement">for</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; <span class="Constant">5</span>; i++<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        <span class="Comment">// int i = 1;// C++ではコンパイルエラー [[C/C++]]</span>
+        printf<span class="cppRainbow_lv2_p0">(</span><span class="Constant">&quot;</span><span class="Special">%d</span><span class="Special">\n</span><span class="Constant">&quot;</span><span class="cppRainbow_lv2_o0">,</span> i<span class="cppRainbow_lv2_p0">)</span>;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// foreach (Range-based for) [[C++11]]</span>
+    vector&lt;<span class="Type">int</span>&gt; v = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">1</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">2</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">3</span><span class="cppRainbow_lv1_p2">}</span>;
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">const</span> <span class="Type">int</span> i: v<span class="cppRainbow_lv1_p0">)</span><span class="Comment">// constの値渡し</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span>&amp; i: v<span class="cppRainbow_lv1_p0">)</span> <span class="cppRainbow_lv1_p2">{</span><span class="Comment">// リファレンス (auto&amp;でも良い)</span>
+        i *= <span class="Constant">2</span>;            <span class="Comment">// constでなければ書き換えも可能</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+    vector&lt;<span class="Type">bool</span>&gt; v2 = <span class="cppRainbow_lv1_p2">{</span><span class="Constant">true</span><span class="cppRainbow_lv1_o2">,</span> <span class="Constant">false</span><span class="cppRainbow_lv1_p2">}</span>;
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span>&amp;&amp; b: v2<span class="cppRainbow_lv1_p0">)</span><span class="Comment">// 右辺値参照 (vector&lt;bool&gt;のアイテムはリファレンスを取れない)</span>
+        cout &lt;&lt; b &lt;&lt; endl;
+
+    <span class="Statement">for</span> <span class="cppRainbow_lv1_p0">(</span><span class="Type">auto</span> i : boost::irange<span class="cppRainbow_lv2_p0">(</span><span class="Constant">0</span><span class="cppRainbow_lv2_o0">,</span> <span class="Constant">5</span><span class="cppRainbow_lv2_p0">)</span><span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> <span class="Comment">//  [[boost]]</span>
+        cout &lt;&lt; i &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Comment">// loop</span>
+    <span class="Statement">while</span> <span class="cppRainbow_lv1_p0">(</span>a &gt; <span class="Constant">0</span><span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        a--;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Statement">while</span> <span class="cppRainbow_lv1_p0">(</span>a &lt; <span class="Constant">10</span><span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span>
+        a++;
+        <span class="Statement">if</span> <span class="cppRainbow_lv2_p0">(</span>a == <span class="Constant">4</span><span class="cppRainbow_lv2_p0">)</span> <span class="Statement">continue</span>;
+        <span class="Statement">if</span> <span class="cppRainbow_lv2_p0">(</span>a == <span class="Constant">6</span><span class="cppRainbow_lv2_p0">)</span> <span class="Statement">break</span>;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+    <span class="Statement">do</span> <span class="cppRainbow_lv1_p2">{</span>
+        a--;
+    <span class="cppRainbow_lv1_p2">}</span> <span class="Statement">while</span> <span class="cppRainbow_lv1_p0">(</span>a &lt; <span class="Constant">0</span><span class="cppRainbow_lv1_p0">)</span>;
+
+    <span class="Comment">// switch (select case)</span>
+    <span class="Statement">switch</span><span class="cppRainbow_lv1_p0">(</span><span class="Type">int</span> len = <span class="Constant">&quot;abc&quot;</span>s.length<span class="cppRainbow_lv2_p0">()</span>; len<span class="cppRainbow_lv1_p0">)</span><span class="cppRainbow_lv1_p2">{</span> <span class="Comment">// 整数, enumのみ可</span>
+        <span class="Statement">case</span> <span class="Constant">0</span>:
+            cout &lt;&lt; <span class="Constant">&quot;zero&quot;</span> &lt;&lt; endl;
+            <span class="Statement">break</span>;
+        <span class="Statement">case</span> <span class="Constant">3</span>:
+            cout &lt;&lt; <span class="Constant">&quot;three&quot;</span> &lt;&lt; endl; <span class="Comment">// break忘れるとfallthrough[[注意]]</span>
+            <span class="cppRainbow_lv2_p1">[</span><span class="cppRainbow_lv3_p1">[</span>fallthrough<span class="cppRainbow_lv3_p1">]</span><span class="cppRainbow_lv2_p1">]</span>;<span class="Comment">// コンパイラにfallthroughを明示的に知らせる[[C++17]]</span>
+        <span class="Statement">default</span>:
+            cout &lt;&lt; <span class="Constant">&quot;other&quot;</span> &lt;&lt; endl;
+    <span class="cppRainbow_lv1_p2">}</span>
+
+<span class="Comment">// goto</span>
+    <span class="Statement">goto</span> mylabel;
+<span class="Statement">mylabel</span>:
+    <span class="Statement">return</span> <span class="Constant">0</span>;
+
+<span class="cppRainbow_lv0_p2">}</span>
+
+<span class="Comment">// g++ helloworld.cpp -o helloworld(実行ファイル名)</span>
+<span class="Comment">// clang++ helloworld.cpp -o helloworld</span>
+<span class="Comment">//  --std=c++11フラグなどでC++のバージョンを指定できる</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

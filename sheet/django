@@ -1,0 +1,14 @@
+* django-admin.py startproject _projectname_
+* ./manage.py startapp _appname_
+* python manage.py runserver
+
+=== 翻訳 ===
+  * テンプレートに{% trans "Title" %}
+  * python側で、ugettext(str)
+  * JavaScript: javascript_catalogを使う
+==== メッセージファイルの作成 ===
+  * (appの場所で)
+  * django-admin.py makemessages [-l ja|-a]		-a:すべての言語で更新
+  * poファイルを編集
+  * django-admin.py compilemessages
+

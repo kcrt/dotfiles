@@ -1,0 +1,6 @@
+python3 -m venv NEW_ENVIRONMENT_NAME
+cd NEW_ENVIRONMENT_NAME
+source NEW_ENVIRONMENT_NAME/bin/activate
+...
+deactivate
+

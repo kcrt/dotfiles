@@ -1,0 +1,37 @@
+find . -name "*.jpg" -print
+
+-name
+-size +100k		100KB以上
+-size -100k		100KB未満
+-size 1234c		ちょうど1234byte
+-atime: アクセス日, -mtime: 更新日, -ctime: 作成日
+	-atime -3	3日前より最近にアクセス
+	-atime +3	3日前より最近にアクセスなし
+-type f			ファイル
+-type d			ディレクトリ
+-empty			空ディレクトリ
+-o または -or	OR
+	find / \( -name "*.jpg" -o -size +100k \) -print
+
+-print
+-exec COMMAND {} \;
+-exec COMMAND {} \+	xargsのようにできるだけいっぺんに実行する
+-ok COMMAND {} \;	-execと同じだが確認を取る
+-delete				削除
+-ls
+-printf format
+	\n, \t, \0, \\
+	%a - last access time
+	%b - block
+	%f - filename without path
+	%g, %u - group, user
+	%h - directory
+	%i - inode
+	%k - diskspace in kb
+	%l - symbolic link reference to
+	%p - filename
+	%s - filesize in byte
+	%t - last modified time
+
+
+find . \( -name ".AppleDouble" -o -name ".DS_Store" \) -exec rm -rv "{}" \;

@@ -1,0 +1,195 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/array_list.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.pythonRainbow_lv0_o1 { color: #3a5fcd; }
+.pythonRainbow_lv0_p1 { color: #3a5fcd; }
+.pythonRainbow_lv1_o1 { color: #cd6600; }
+.pythonRainbow_lv1_p1 { color: #cd6600; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Identifier { color: #008b8b; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+.pythonRainbow_lv0_o0 { color: #3a5fcd; }
+.pythonRainbow_lv0_p0 { color: #3a5fcd; }
+.pythonRainbow_lv1_o0 { color: #cd6600; }
+.pythonRainbow_lv1_p0 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># 配列に相当する物は、List, Tuple, Arrayの3種類がある。</span>
+
+<span class="PreProc">from</span> array <span class="PreProc">import</span> array
+<span class="PreProc">from</span> functools <span class="PreProc">import</span> <span class="Identifier">reduce</span>
+<span class="PreProc">from</span> operator <span class="PreProc">import</span> mul
+
+<span class="Comment"># === List ===</span>
+<span class="Comment"># 最もよく使用される</span>
+l = <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">'</span><span class="Constant">a</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">b</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">c</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">d</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">e</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">1</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">2</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv0_p1">]</span>  <span class="Comment"># 同じ型でなくても良い</span>
+l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">0</span><span class="pythonRainbow_lv0_p1">]</span>                <span class="Comment"># =&gt; a : 0番目の要素にアクセス</span>
+l<span class="pythonRainbow_lv0_p1">[</span>-<span class="Constant">1</span><span class="pythonRainbow_lv0_p1">]</span>               <span class="Comment"># =&gt; 3 : 最後の要素</span>
+l<span class="pythonRainbow_lv0_p1">[</span>-<span class="Constant">2</span><span class="pythonRainbow_lv0_p1">]</span>               <span class="Comment"># =&gt; 3 後ろから2番目の要素</span>
+l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">1</span>:<span class="Constant">3</span><span class="pythonRainbow_lv0_p1">]</span>              <span class="Comment"># =&gt; ['b', 'c'] : スライス l[1], l[2]からなる新しいリスト</span>
+l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">3</span>:<span class="pythonRainbow_lv0_p1">]</span>               <span class="Comment"># l[3]から最後まで</span>
+l<span class="pythonRainbow_lv0_p1">[</span>:<span class="pythonRainbow_lv0_p1">]</span>                <span class="Comment"># 全部のコピー</span>
+
+<span class="pythonRainbow_lv0_p1">[]</span>                  <span class="Comment"># 空のリスト</span>
+<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">'</span><span class="Constant">A</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">B</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">C</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p1">]</span> * <span class="Constant">5</span>  <span class="Comment"># =&gt; ['A', 'B', 'C', 'A', 'B' ...]</span>
+
+l2 = l              <span class="Comment"># l2はlと同じ物をさす。コピーではない！[[注意]]</span>
+l2<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">0</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">'</span><span class="Constant">x</span><span class="Constant">'</span>         <span class="Comment"># l2を変更したつもりでも…</span>
+l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">0</span><span class="pythonRainbow_lv0_p1">]</span>                <span class="Comment"># =&gt; x : lも変更されてしまう！</span>
+
+<span class="Comment"># 要素のコピー</span>
+new_l = l<span class="pythonRainbow_lv0_p1">[</span>:<span class="pythonRainbow_lv0_p1">]</span>           <span class="Comment"># スライスか、l.copy()を使って新しいListを得る</span>
+new_l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="pythonRainbow_lv0_p1">]</span> = <span class="Constant">'</span><span class="Constant">z</span><span class="Constant">'</span>
+l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="pythonRainbow_lv0_p1">]</span>                <span class="Comment"># =&gt; b : これならlは変更されない</span>
+
+<span class="Comment"># 要素数</span>
+<span class="Identifier">len</span><span class="pythonRainbow_lv0_p0">(</span>l<span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 一致の検索</span>
+l.count<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">d</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>        <span class="Comment"># 'd'の数を数える</span>
+
+l.index<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">d</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>        <span class="Comment"># =&gt; 3 : 最初の'd'の場所、見つからなければ[[ERROR]] ValueError</span>
+
+<span class="Statement">if</span> <span class="Constant">'</span><span class="Constant">d</span><span class="Constant">'</span> <span class="Statement">in</span> l:
+    <span class="Statement">pass</span>            <span class="Comment"># in で存在確認</span>
+<span class="Statement">elif</span> <span class="Constant">'</span><span class="Constant">d</span><span class="Constant">'</span> <span class="Statement">not</span> <span class="Statement">in</span> l:
+    <span class="Statement">pass</span>
+
+<span class="Comment"># 要素の追加: appendとextendがある</span>
+a1 = <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">'</span><span class="Constant">A</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">B</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">C</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p1">]</span>
+a2 = <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">'</span><span class="Constant">A</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">B</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">C</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p1">]</span>
+a1.append<span class="pythonRainbow_lv0_p0">(</span><span class="pythonRainbow_lv1_p1">[</span><span class="Constant">'</span><span class="Constant">X</span><span class="Constant">'</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">'</span><span class="Constant">Y</span><span class="Constant">'</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># ['A', 'B', 'C', ['X', 'Y']]</span>
+a2.extend<span class="pythonRainbow_lv0_p0">(</span><span class="pythonRainbow_lv1_p1">[</span><span class="Constant">'</span><span class="Constant">X</span><span class="Constant">'</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">'</span><span class="Constant">Y</span><span class="Constant">'</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># ['A', 'B', 'C', 'X', 'Y']</span>
+
+l.append<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">A</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>           <span class="Comment"># 配列でなければappendを使用する</span>
+l += <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">'</span><span class="Constant">B</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">'</span><span class="Constant">C</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p1">]</span>         <span class="Comment"># += は extendと同じ</span>
+
+
+<span class="Comment"># 先頭/任意の場所への追加</span>
+l.insert<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">0</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">'</span><span class="Constant">Z</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>        <span class="Comment"># 要素を追加 (0で先頭)</span>
+
+<span class="Comment"># 削除</span>
+s = l.pop<span class="pythonRainbow_lv0_p0">()</span>             <span class="Comment"># **最後**の要素を取り出して削除</span>
+s = l.pop<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">0</span><span class="pythonRainbow_lv0_p0">)</span>            <span class="Comment"># 0 (= 最初)の要素を取り出して削除</span>
+l.remove<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">A</span><span class="Constant">'</span><span class="pythonRainbow_lv0_p0">)</span>           <span class="Comment"># 最初の'A'を見つけて消去 ないとValueError[[ERROR]]</span>
+<span class="Statement">del</span> l<span class="pythonRainbow_lv0_p1">[</span><span class="Constant">3</span>:<span class="Constant">5</span><span class="pythonRainbow_lv0_p1">]</span>              <span class="Comment"># 要素3, 4を消去</span>
+l.clear<span class="pythonRainbow_lv0_p0">()</span>               <span class="Comment"># 全消去</span>
+
+l = <span class="Identifier">list</span><span class="pythonRainbow_lv0_p0">(</span><span class="Identifier">range</span><span class="pythonRainbow_lv1_p0">(</span><span class="Constant">10</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>     <span class="Comment"># [0, 1, 2, ..., 8, 9]</span>
+<span class="Comment"># range()</span>
+
+<span class="Comment"># ソート: PythonはStableソート</span>
+ll = <span class="Identifier">sorted</span><span class="pythonRainbow_lv0_p0">(</span>l<span class="pythonRainbow_lv0_p0">)</span>          <span class="Comment"># ソートされたもの取得</span>
+l.sort<span class="pythonRainbow_lv0_p0">()</span>                <span class="Comment"># そのものをソート</span>
+l.sort<span class="pythonRainbow_lv0_p0">(</span>reverse=<span class="Identifier">True</span><span class="pythonRainbow_lv0_p0">)</span>    <span class="Comment"># 降順にするにはreverse=True</span>
+<span class="Comment"># カスタムソートは see: <a href="https://docs.python.org/ja/3/howto/sorting.html#sortinghowto">https://docs.python.org/ja/3/howto/sorting.html#sortinghowto</a></span>
+
+<span class="Comment"># 逆順</span>
+ll = <span class="Identifier">reversed</span><span class="pythonRainbow_lv0_p0">(</span>l<span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>ll<span class="pythonRainbow_lv0_p0">)</span>               <span class="Comment"># sortedと違い、イテレータを返す</span>
+ll = <span class="Identifier">list</span><span class="pythonRainbow_lv0_p0">(</span>ll<span class="pythonRainbow_lv0_p0">)</span>           <span class="Comment"># これで、通常のリストになる。</span>
+l.reverse<span class="pythonRainbow_lv0_p0">()</span>             <span class="Comment"># そのものを逆順に</span>
+
+
+<span class="Comment"># 走査</span>
+<span class="Statement">for</span> val <span class="Statement">in</span> l:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>val<span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Statement">for</span> i, v <span class="Statement">in</span> <span class="Identifier">enumerate</span><span class="pythonRainbow_lv0_p0">(</span>l<span class="pythonRainbow_lv0_p0">)</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>i<span class="pythonRainbow_lv0_o0">,</span> val<span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</span>
+
+<span class="Comment"># map (function applied array)</span>
+l2 = <span class="Identifier">map</span><span class="pythonRainbow_lv0_p0">(</span><span class="Statement">lambda</span> x: x * x<span class="pythonRainbow_lv0_o0">,</span> l<span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># l2[2]      # [[ERROR]] Mapオブジェクトなので要素でのアクセスは出来ない</span>
+l2 = <span class="Identifier">list</span><span class="pythonRainbow_lv0_p0">(</span>l2<span class="pythonRainbow_lv0_p0">)</span>       <span class="Comment"># Listに変換</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>l2<span class="pythonRainbow_lv1_p1">[</span><span class="Constant">2</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>
+
+
+<span class="Comment"># filter</span>
+l2 = <span class="Identifier">filter</span><span class="pythonRainbow_lv0_p0">(</span><span class="Statement">lambda</span> x: x &gt; <span class="Constant">5</span><span class="pythonRainbow_lv0_o0">,</span> l<span class="pythonRainbow_lv0_p0">)</span>
+l2 = <span class="Identifier">list</span><span class="pythonRainbow_lv0_p0">(</span>l2<span class="pythonRainbow_lv0_p0">)</span>       <span class="Comment"># Map同様にListに変換</span>
+
+<span class="Comment"># reduce</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">reduce</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>l2<span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span><span class="Identifier">reduce</span><span class="pythonRainbow_lv1_p0">(</span>mul<span class="pythonRainbow_lv1_o0">,</span> l2<span class="pythonRainbow_lv1_o0">,</span> <span class="Constant">1</span><span class="pythonRainbow_lv1_p0">)</span><span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># 最大・最小</span>
+ll = <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">1</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">2</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">4</span><span class="pythonRainbow_lv0_p1">]</span>
+<span class="Identifier">max</span><span class="pythonRainbow_lv0_p0">(</span>ll<span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; 4</span>
+<span class="Identifier">min</span><span class="pythonRainbow_lv0_p0">(</span>ll<span class="pythonRainbow_lv0_p0">)</span>  <span class="Comment"># =&gt; 1</span>
+
+
+<span class="Comment"># リスト内包表記</span>
+<span class="Comment"># Pythonの強力な機能 [[重要]]</span>
+<span class="Comment"># mapにもfilterにもなる</span>
+l2 = <span class="pythonRainbow_lv0_p1">[</span>x * x <span class="Statement">for</span> x <span class="Statement">in</span> l <span class="Statement">if</span> x &gt; <span class="Constant">5</span><span class="pythonRainbow_lv0_p1">]</span>
+<span class="Comment"># [ 計算式 for 仮引数 in 対象のリスト if 条件 ] (if 条件は省略可)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>l2<span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># []の代わりに () だと generator (必要時に計算)</span>
+l3 = <span class="pythonRainbow_lv0_p0">(</span>x * x <span class="Statement">for</span> x <span class="Statement">in</span> l <span class="Statement">if</span> x &gt; <span class="Constant">5</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>l3<span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># all</span>
+ll = <span class="pythonRainbow_lv0_p1">[</span><span class="Constant">20</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">20</span><span class="pythonRainbow_lv0_o1">,</span> <span class="Constant">30</span><span class="pythonRainbow_lv0_p1">]</span>
+<span class="Statement">if</span> <span class="Identifier">all</span><span class="pythonRainbow_lv0_p0">(</span>x &gt; <span class="Constant">10</span> <span class="Statement">for</span> x <span class="Statement">in</span> ll<span class="pythonRainbow_lv0_p0">)</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">all &gt; 10</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># any</span>
+<span class="Statement">if</span> <span class="Identifier">any</span><span class="pythonRainbow_lv0_p0">(</span>x == <span class="Constant">20</span> <span class="Statement">for</span> x <span class="Statement">in</span> ll<span class="pythonRainbow_lv0_p0">)</span>:
+    <span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">There is 20.</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># === Tuple ===</span>
+<span class="Comment"># イミュータブル(immutable; 変更を許してくれない)なリスト</span>
+t = <span class="pythonRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">2</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">4</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">5</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>t<span class="pythonRainbow_lv1_p1">[</span><span class="Constant">4</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>     <span class="Comment"># リスト同様に使用できるが、</span>
+<span class="Comment"># t[1] = 10     # [[ERROR]] 変更が必要になる動作は</span>
+<span class="Comment"># t.sort()      # [[ERROR]] 行うことが出来ない</span>
+ll = <span class="Identifier">list</span><span class="pythonRainbow_lv0_p0">(</span>t<span class="pythonRainbow_lv0_p0">)</span>    <span class="Comment"># 変更したい場合はリストに変換すれば良い</span>
+ll.sort<span class="pythonRainbow_lv0_p0">()</span>
+t = <span class="Identifier">tuple</span><span class="pythonRainbow_lv0_p0">(</span>ll<span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># listからtupleへ</span>
+
+<span class="Comment"># タプルは代入にも便利</span>
+<span class="pythonRainbow_lv0_p0">(</span>a<span class="pythonRainbow_lv0_o0">,</span> b<span class="pythonRainbow_lv0_o0">,</span> c<span class="pythonRainbow_lv0_p0">)</span> = <span class="pythonRainbow_lv0_p0">(</span><span class="Constant">1</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">3.2</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">Hello</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+
+<span class="Comment"># === array ===</span>
+<span class="Comment"># 大量の数値を格納するときなどに使う。</span>
+<span class="Comment"># おそらくほとんどのケースで、numpyを使う方がよいので、そちらを参照されたし。</span>
+arr = array<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">i</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o0">,</span> <span class="pythonRainbow_lv1_p1">[</span><span class="Constant">1</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">2</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">3</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">4</span><span class="pythonRainbow_lv1_o1">,</span> <span class="Constant">5</span><span class="pythonRainbow_lv1_p1">]</span><span class="pythonRainbow_lv0_p0">)</span>
+arr2 = array<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">'</span><span class="Constant">u</span><span class="Constant">'</span><span class="pythonRainbow_lv0_o0">,</span> <span class="Constant">&quot;</span><span class="Constant">Hello</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>
+<span class="Comment"># 'b'/'B': singed/unsigned char, 'u': Py_UNICODE</span>
+<span class="Comment"># 'h'/'H': signed/unsigned short, 'i'/'I': signed/unsigned int</span>
+<span class="Comment"># 'l'/'L': signed/unsigned long, 'q'/'Q': signed/unsigned long long</span>
+<span class="Comment"># 'f': float, 'd': double</span>
+<span class="Identifier">print</span><span class="pythonRainbow_lv0_p0">(</span>arr.itemsize<span class="pythonRainbow_lv0_p0">)</span>     <span class="Comment"># sizeof(signed int)</span>
+arr.append<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">6</span><span class="pythonRainbow_lv0_p0">)</span>, arr.count<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">3</span><span class="pythonRainbow_lv0_p0">)</span>     <span class="Comment"># Listと同様にいろいろ使用できる</span>
+arr.byteswap<span class="pythonRainbow_lv0_p0">()</span>          <span class="Comment"># リトルエンディアンとビックエンディアンの変換</span>
+
+arr2.fromunicode<span class="pythonRainbow_lv0_p0">(</span><span class="Constant">&quot;</span><span class="Constant">Hello</span><span class="Constant">&quot;</span><span class="pythonRainbow_lv0_p0">)</span>   <span class="Comment"># こんな名前だが、動作はextend</span>
+
+<span class="Comment"># array.fromfile(fileobject, n) / array.tofile(fileobject)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

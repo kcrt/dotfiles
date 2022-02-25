@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/conversion.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># str -&gt; int</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">132</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; 132</span>
+
+<span class="Comment"># int, float -&gt; str</span>
+<span class="Identifier">str</span><span class="pythonRainbow_p0">(</span><span class="Constant">132</span><span class="pythonRainbow_p0">)</span>        <span class="Comment"># =&gt; &quot;132&quot;</span>
+<span class="Identifier">str</span><span class="pythonRainbow_p0">(</span><span class="Constant">132</span>.<span class="Constant">5</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; &quot;132.5&quot;</span>
+
+<span class="Comment"># str -&gt; float</span>
+<span class="Identifier">float</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">132.5</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>  <span class="Comment"># 132.5</span>
+
+<span class="Comment"># float -&gt; int</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="Constant">132</span>.<span class="Constant">5</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; 132</span>
+<span class="Constant">132.5</span> // <span class="Constant">1</span>      <span class="Comment"># =&gt; 132.0 (float)</span>
+
+<span class="Comment"># int -&gt; float</span>
+<span class="Identifier">float</span><span class="pythonRainbow_p0">(</span><span class="Constant">132</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; 132.0</span>
+<span class="Constant">132</span> * <span class="Constant">1.0</span>       <span class="Comment"># =&gt; 132.0</span>
+
+<span class="Comment"># int -&gt; hex string</span>
+<span class="Identifier">hex</span><span class="pythonRainbow_p0">(</span><span class="Constant">1024</span><span class="pythonRainbow_p0">)</span>       <span class="Comment"># =&gt; 0x400</span>
+
+<span class="Comment"># float -&gt; hex string</span>
+<span class="Constant">3.5</span>.hex<span class="pythonRainbow_p0">()</span>       <span class="Comment"># =&gt; '0x1.c000000000000p+1'</span>
+
+<span class="Comment"># hex string -&gt; int</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">400</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="Constant">16</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># =&gt; 1024</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">0x400</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="Constant">16</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># 0xはつけてもつけなくても良い</span>
+
+<span class="Comment"># hex string -&gt; float</span>
+<span class="Identifier">float</span>.fromhex<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">0x11.11</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>    <span class="Comment"># =&gt; 17.06640625</span>
+
+<span class="Comment"># int -&gt; bin string</span>
+<span class="Identifier">bin</span><span class="pythonRainbow_p0">(</span><span class="Constant">1024</span><span class="pythonRainbow_p0">)</span>                   <span class="Comment"># =&gt; '0b10000000000'</span>
+
+<span class="Comment"># bin string -&gt; int</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">10000000000</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="Constant">2</span><span class="pythonRainbow_p0">)</span>       <span class="Comment"># =&gt; 1024</span>
+<span class="Identifier">int</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">0b10000000000</span><span class="String">&quot;</span><span class="pythonRainbow_o0">,</span> <span class="Constant">2</span><span class="pythonRainbow_p0">)</span>     <span class="Comment"># =&gt; 1024 (0bはなくても大丈夫)</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

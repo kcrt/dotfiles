@@ -1,0 +1,42 @@
+ADD DEST, SRC	DEST += SRC
+ADC DEST, SRC	DEST += SRC + CF
+SUB DEST, SRC	DEST -= SRC
+AND/OR/XOR DEST, SRC	DEST = DEST AND/OR/XOR(bitwise) SRC
+NOT rm	rm = NOT rm
+CALL address
+RET
+
+CLC	CF = 0
+MOV DEST, SRC	DEST = SRC
+XCHG A, B	A <-> B
+CMOVcc DEST, SRC if(cc) DEST = SRC
+	CMOVA - if above(CF=0 and ZF=0)
+	CMOVAE  - if above or equal (CF=0)
+	CMOVB - if bellow(CF=1)
+	CMOVBE  - if bellow or equal (CF=1 or ZF=1)
+	CMOVC - if carry (CF=1)
+	CMOVNC - if not carry (CF=0)
+	CMOVE - if equal  (ZF=1)
+	CMOVNE - if not equal (ZF=0)
+	他、CMOVG(greater), CMOVEGE(greater or equal), CMOVL (less), CMOVLE(less or equal), CMOVP(parity), CMOVPO(parity odd), CMOVO(overflow), CMOVNO(not overflow), CMOVS (sign), CMOVNS(not sign)
+CMP SRC1, SRC2	temp = SRC1 - SRC2
+TEST SRC1, SRC2		temp = SRC1 AND(bitwise) SRC2
+CPUID	EAXの値によって様々なデータを返す
+DEC DEST	DEST—
+INC DEST	DEST++
+MUL VALUE	AX/DX:AX/EDX:EAX/RDX:RAX = AL/AX/EAX/RAX * VALUE (符号なし)
+IMUL rm	AX/DX:AX/EDX:EAX/RDX:RAX = AL/AX/EAX/RAX * VALUE
+IMUL reg, rm	REG *=  VALUE
+IMUL reg, rm, imm		REG = VALUE * IMM
+DIV 割る数(8/16/32/64bit)		割られる数=AX/DX:AX/EDX:EAX/RDX:RAX, AL/AX/EAX/RAX = 商, AH/DX/EDX/RDX = 余
+IDIV	符号付き
+NEG rm	rm = -rm (符号付き)
+NOP
+INT 3	breakpoint
+INT imm	割り込み
+JMP address
+Jcc address	jump if
+	JA(if above), JAE(if above or equal), JB (if below), JBE (if below or equal), JC (if carry), JCXZ/JECXZ/JRCXZ (if CX/ECX/RCX is 0), JE(if equal), JG (if greater), JGE (if greater or equal), JL (if less), JLE (if less or equal), JNA (if not above), JNAE (if not above or equal), JNB (if not below), JNC(not carry), JNE(not equal), JO(overflow), JP(parity), JPO(parity odd)など
+LEA REG, MEM	REG = addressof(MEM)
+FADD, FCOMP, FCOS, FSQRTなど	浮動小数点命令
+

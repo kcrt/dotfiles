@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/class.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.String { color: #4a708b; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+.Statement { color: #b03060; font-weight: bold; }
+.PreProc { color: #1874cd; }
+.Type { color: #008b00; font-weight: bold; }
+.pythonRainbow_o1 { color: #cd6600; }
+.pythonRainbow_p1 { color: #cd6600; }
+.pythonRainbow_p2 { color: #43cd80; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># クラス名は&quot;MyClass&quot;という形式でつける。</span>
+
+
+<span class="Statement">class</span> <span class="Identifier">Animal</span>:
+    <span class="String">&quot;&quot;&quot;</span><span class="String"> Class for living animals </span><span class="String">&quot;&quot;&quot;</span>
+    class_variable = <span class="String">&quot;</span><span class="String">クラス変数</span><span class="String">&quot;</span>
+    __private_class_variable = <span class="String">&quot;</span><span class="String">「__」で始まるとプライベート変数</span><span class="String">&quot;</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__init__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> scientific_name: <span class="Identifier">str</span> = <span class="String">&quot;&quot;</span><span class="pythonRainbow_p0">)</span>:
+        self.scientific_name = scientific_name      <span class="Comment"># インスタンス変数</span>
+        self.__is_living = <span class="Identifier">True</span>                     <span class="Comment"># 「__」で始まるとプライベート変数</span>
+
+    <span class="Statement">def</span> <span class="Identifier">eat</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> food: <span class="Identifier">str</span><span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">{0} is eating {1}.</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p1">(</span>self.scientific_name<span class="pythonRainbow_o1">,</span> food<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__str__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_p0">)</span>:                              <span class="Comment"># 「str」のオーバーロード</span>
+        <span class="Statement">return</span> <span class="String">&quot;</span><span class="String">Animal ({0})</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p0">(</span>self.scientific_name<span class="pythonRainbow_p0">)</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__lshift__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> food: <span class="Identifier">str</span><span class="pythonRainbow_p0">)</span>:                     <span class="Comment"># 「&lt;&lt;」のオーバーロード</span>
+        self.eat<span class="pythonRainbow_p0">(</span>food<span class="pythonRainbow_p0">)</span>
+        <span class="Statement">return</span> <span class="Identifier">None</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__del__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_p0">)</span>:
+        <span class="Comment"># デストラクタ (終了時に必ず呼び出されるとは保証されていない)</span>
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">{0} is dying.</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p1">(</span>self.scientific_name<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+
+
+<span class="Statement">class</span> <span class="Identifier">HumanBeing</span><span class="pythonRainbow_p0">(</span>Animal<span class="pythonRainbow_p0">)</span>:       <span class="Comment"># 継承</span>
+    <span class="Statement">def</span> <span class="Identifier">__init__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> nickname: <span class="Identifier">str</span><span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">super</span><span class="pythonRainbow_p0">()</span>.__init__<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Homo sapiens</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+        <span class="Comment"># もしくは Animal.__init__(self, &quot;Homo sapiens&quot;)</span>
+        self.__nickname = nickname
+
+    <span class="Statement">def</span> <span class="Identifier">eat</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> food: <span class="Identifier">str</span><span class="pythonRainbow_p0">)</span>:                       <span class="Comment"># オーバーライド</span>
+        <span class="Identifier">super</span><span class="pythonRainbow_p0">()</span>.eat<span class="pythonRainbow_p0">(</span>food + <span class="String">&quot;</span><span class="String"> with fork</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+        <span class="Comment"># もしくは Animal.eat(self, ...) や self.__class__.__bases__[0].eat(...)</span>
+
+
+<span class="Comment"># 多重継承は可能であるが、ここでは触れない。</span>
+
+dog = Animal<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Canis lupus familiaris</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>      <span class="Comment"># インスタンスの作成</span>
+dog.eat<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">dog food</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+dog &lt;&lt; <span class="String">&quot;</span><span class="String">meat pie</span><span class="String">&quot;</span>                           <span class="Comment"># オーバーロード済み演算子</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="Identifier">str</span><span class="pythonRainbow_p1">(</span>dog<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>     <span class="Comment"># =&gt; Animal (Canis lupus familiaris)</span>
+
+
+human = HumanBeing<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">John</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+human.eat<span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">sandwich</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+human &lt;&lt; <span class="String">&quot;</span><span class="String">meat pie</span><span class="String">&quot;</span>                         <span class="Comment"># これでもHumanBeingのeatが呼ばれる</span>
+
+
+<span class="Comment"># オペレーターオーバーロードに使用するメソッド名 see: <a href="https://docs.python.jp/3/reference/datamodel.html#special-method-names">https://docs.python.jp/3/reference/datamodel.html#special-method-names</a></span>
+<span class="Comment"># __OPERATOR__の形 (例: __repr__, __eq__)で使用する</span>
+<span class="Comment"># 比較: lt(&lt;), le(&lt;=), eq(==), ne(!=), gt(&gt;), ge(&lt;=); @functools.total_orderinを使用すれば、例えばltとeqを定義するのみですべての比較に対応できる。</span>
+<span class="Comment"># 演算: add, sub, mul, matmul (@), truediv (//), floordiv(/), mod(%), divmod, pow (**), lshift(&lt;&lt;), rshift(&gt;&gt;), and (&amp;), xor(^), or(|)</span>
+<span class="Comment"># 被演算: radd, rsub, ...; A + BはB.radd(A)</span>
+<span class="Comment"># 累算代入: iadd (+=), isub (+=) ...; 定義されてなければA += BはA = A + Bとして計算される</span>
+<span class="Comment"># 単項: neg (-), pos(+), abs, invert(~)</span>
+<span class="Comment"># hash: set, dictなどで使用、整数を返す</span>
+<span class="Comment"># bool, len, contains(in演算子に対応), dir, slots, complex, int, float, round, trunc, floor, ceil, repr, str, bytes, format</span>
+<span class="Comment"># enter, exit (with文で使用)</span>
+<span class="Comment"># copy, deepcopy, getstate, reduce, init, del... (説明省略)</span>
+
+
+<span class="Comment"># 特殊なオペレーター</span>
+<span class="Comment"># __getattr__(self, name), __setattr__(self, name, value), __delattr__(self, name)  =&gt; dog.attrnameといった形でアクセス</span>
+<span class="Comment"># getattribute はすべての呼び出しで、getattrは未定義アイテムのみで呼び出される</span>
+<span class="Comment"># __getitem__(self, key), __setitem__(self, key, value), __delitem__(self, key), __missing(key) =&gt; dog[&quot;itemkey&quot;]といった形でアクセス</span>
+<span class="Comment"># __dict__ アトリビュートへのアクセス</span>
+<span class="Comment"># __call__ =&gt; インスタンスをdog()の要に関数のように呼び出すとき</span>
+<span class="Comment"># property</span>
+
+
+<span class="Statement">class</span> <span class="Identifier">Degree</span>:
+    T0 = <span class="Constant">273.15</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__init__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_p0">)</span>:
+        self.degree = <span class="Constant">0</span>
+        self._message = <span class="String">&quot;</span><span class="String">{0:.2f} K</span><span class="String">&quot;</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__getattr__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> name<span class="pythonRainbow_p0">)</span>:
+        key = name.lower<span class="pythonRainbow_p0">()</span>
+        <span class="Statement">if</span> key == <span class="String">&quot;</span><span class="String">kelvin</span><span class="String">&quot;</span>:
+            <span class="Statement">return</span> self.degree
+        <span class="Statement">elif</span> key == <span class="String">&quot;</span><span class="String">celsius</span><span class="String">&quot;</span>:
+            <span class="Statement">return</span> self.degree - self.T0
+        <span class="Statement">elif</span> key == <span class="String">&quot;</span><span class="String">fahrenheit</span><span class="String">&quot;</span>:
+            <span class="Statement">return</span> self.degree * <span class="Constant">9.0</span> / <span class="Constant">5.0</span> - <span class="Constant">459.67</span>
+        <span class="Statement">else</span>:
+            <span class="Statement">raise</span> <span class="Type">AttributeError</span>
+
+    <span class="Statement">def</span> <span class="Identifier">__setattr__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> name<span class="pythonRainbow_o0">,</span> value<span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">set to </span><span class="String">&quot;</span> + name<span class="pythonRainbow_p0">)</span>
+        key = name.lower<span class="pythonRainbow_p0">()</span>
+        <span class="Statement">if</span> key == <span class="String">&quot;</span><span class="String">kelvin</span><span class="String">&quot;</span>:
+            <span class="Statement">if</span> value &lt; <span class="Constant">0</span>:
+                <span class="Statement">raise</span> <span class="Type">ValueError</span>
+            self.degree = value
+        <span class="Statement">elif</span> key == <span class="String">&quot;</span><span class="String">celsius</span><span class="String">&quot;</span>:
+            self.degree = value + self.T0
+        <span class="Statement">elif</span> key == <span class="String">&quot;</span><span class="String">fahrenheit</span><span class="String">&quot;</span>:
+            self.degree = <span class="pythonRainbow_p0">(</span>value + <span class="Constant">459.67</span><span class="pythonRainbow_p0">)</span> * <span class="Constant">5.0</span> / <span class="Constant">9.0</span>
+        <span class="Statement">else</span>:
+            <span class="Statement">if</span> name <span class="Statement">in</span> self.__dict__:
+                <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="Identifier">type</span><span class="pythonRainbow_p1">(</span>self.__dict__<span class="pythonRainbow_p2">[</span>name<span class="pythonRainbow_p2">]</span><span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+            self.__dict__<span class="pythonRainbow_p0">[</span>name<span class="pythonRainbow_p0">]</span> = value
+
+    <span class="Statement">def</span> <span class="Identifier">__call__</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>self.message<span class="pythonRainbow_p0">)</span>
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span>self.message.format<span class="pythonRainbow_p1">(</span>self.kelvin<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+
+    <span class="Comment"># propertyを使用するのも便利</span>
+    <span class="PreProc">@</span><span class="Identifier">property</span>
+    <span class="Statement">def</span> <span class="Identifier">message</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">Yes</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+        <span class="Statement">return</span> self._message
+
+    <span class="PreProc">@</span><span class="Identifier">message.setter</span>
+    <span class="Statement">def</span> <span class="Identifier">message</span><span class="pythonRainbow_p0">(</span>self<span class="pythonRainbow_o0">,</span> value<span class="pythonRainbow_p0">)</span>:
+        <span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">set</span><span class="String">&quot;</span><span class="pythonRainbow_p0">)</span>
+        self._message = value
+
+
+temprature = Degree<span class="pythonRainbow_p0">()</span>
+temprature.celsius = <span class="Constant">36</span>
+<span class="Identifier">print</span><span class="pythonRainbow_p0">(</span><span class="String">&quot;</span><span class="String">{0.celsius:.2f} C = {0.kelvin:.2f} K = {0.fahrenheit:.2f} F</span><span class="String">&quot;</span>.format<span class="pythonRainbow_p1">(</span>temprature<span class="pythonRainbow_p1">)</span><span class="pythonRainbow_p0">)</span>
+temprature<span class="pythonRainbow_p0">()</span>
+temprature.message = <span class="String">&quot;</span><span class="String">It's {0} K!</span><span class="String">&quot;</span>
+temprature<span class="pythonRainbow_p0">()</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

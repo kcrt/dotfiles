@@ -1,0 +1,11 @@
+gpg --gen-key			# 鍵の作成
+gpg --list-keys
+gpg --list-secret-keys
+gpg --fingerprint [KEY]
+gpp [--armor] -o keyfile --export|--export-secret-keys KEY
+gpg --import keyfile
+gpg --delete-key KEY
+gpg -e [-a] -r [Key ID|mail address] filename [-o output]	# encrypt (-a: ascii output)
+gpp filename [-o filename]									# decrypt
+gpg --sign filename [-o filename]
+gpg --clearsign filename [-o filename]

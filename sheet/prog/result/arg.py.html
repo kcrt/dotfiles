@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/arg.py.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="python">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="macvim">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.PreProc { color: #1874cd; }
+.pythonRainbow_o0 { color: #3a5fcd; }
+.pythonRainbow_p0 { color: #3a5fcd; }
+.String { color: #4a708b; }
+.pythonRainbow_o1 { color: #cd6600; }
+.Comment { color: #0000ee; font-style: italic; }
+.Constant { color: #ff8c00; }
+.Identifier { color: #458b74; }
+.pythonRainbow_p1 { color: #cd6600; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Comment">#!/usr/bin/env python3</span>
+
+<span class="Comment"># 例: ./arg.py -a --hello --miso=soup aaa.txt</span>
+
+<span class="PreProc">import</span> sys
+<span class="PreProc">import</span> argparse
+
+
+<span class="Comment"># モジュールを使わない場合</span>
+sys.argv  <span class="Comment"># =&gt; ['./arg.py', '-a', '--hello', '--miso=soup', 'aaa.txt']</span>
+
+
+<span class="Comment"># 引数の解析には、C言語スタイルのgetoptと、より便利なargparseがある</span>
+<span class="Comment"># ここでは、argparseのみ記載する。</span>
+
+parser = argparse.ArgumentParser<span class="pythonRainbow_p0">(</span>description=<span class="String">'</span><span class="String">Awesome python program.</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">filename</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> metavar=<span class="String">'</span><span class="String">file</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="Identifier">type</span>=<span class="Identifier">str</span><span class="pythonRainbow_o0">,</span>
+                    nargs=<span class="String">'</span><span class="String">+</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="Identifier">help</span>=<span class="String">'</span><span class="String">Your file to process.</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">-a</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="String">'</span><span class="String">--apple</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> action=<span class="String">'</span><span class="String">store_true</span><span class="String">'</span><span class="pythonRainbow_o0">,</span>
+                    <span class="Identifier">help</span>=<span class="String">'</span><span class="String">If you like an apple.</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">-b</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> <span class="String">'</span><span class="String">--banana</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> action=<span class="String">'</span><span class="String">store_true</span><span class="String">'</span><span class="pythonRainbow_o0">,</span>
+                    <span class="Identifier">help</span>=<span class="String">'</span><span class="String">If you like a banana.</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">--hello</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> action=<span class="String">'</span><span class="String">store_true</span><span class="String">'</span><span class="pythonRainbow_o0">,</span>
+                    <span class="Identifier">help</span>=<span class="String">'</span><span class="String">Specify this if you want to say hello to others.</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">--miso</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> nargs=<span class="Constant">1</span><span class="pythonRainbow_o0">,</span> required=<span class="Identifier">True</span><span class="pythonRainbow_o0">,</span>
+                    choices=<span class="pythonRainbow_p1">[</span><span class="String">'</span><span class="String">soup</span><span class="String">'</span><span class="pythonRainbow_o1">,</span> <span class="String">'</span><span class="String">grill</span><span class="String">'</span><span class="pythonRainbow_p1">]</span><span class="pythonRainbow_o0">,</span> <span class="Identifier">help</span>=<span class="String">'</span><span class="String">Your favorite miso dish</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+parser.add_argument<span class="pythonRainbow_p0">(</span><span class="String">'</span><span class="String">--version</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> action=<span class="String">'</span><span class="String">version</span><span class="String">'</span><span class="pythonRainbow_o0">,</span> version=<span class="String">'</span><span class="String">%(prog)s v.0.1</span><span class="String">'</span><span class="pythonRainbow_p0">)</span>
+<span class="Comment"># %(prog)sでargv[0]を参照できる</span>
+
+args = parser.parse_args<span class="pythonRainbow_p0">()</span>
+
+args.apple  <span class="Comment"># =&gt; True</span>
+args.filename   <span class="Comment"># =&gt; ['aaa.txt']</span>
+
+<span class="Comment"># action (抜粋)</span>
+<span class="Comment">#  store (省略可): 入力を格納</span>
+<span class="Comment">#  store_true, store_false: 指定されていたらTrue(またはFalse)を格納</span>
+<span class="Comment">#  append: リストに追加 (複数回指定する引数など)</span>
+<span class="Comment">#  count: 数を数える(--verboseを意味する-vなど。-vvvで3。)</span>
+<span class="Comment">#  help: ヘルプ表示</span>
+<span class="Comment">#  version: バージョン表示</span>
+<span class="Comment">#   例：parser.add_argument('--version', action='version', version='%(prog)s')</span>
+
+<span class="Comment"># nargs: 必要な引数の数, * - 何個でも, + - 最低1個、何個でも</span>
+<span class="Comment"># choices: 選択肢から選ぶ場合</span>
+
+<span class="Comment"># helpも自動で表示してくれる</span>
+<span class="Comment"># 例: ./arg.py --help</span>
+
+<span class="Comment"># see: <a href="https://docs.python.org/ja/3.8/library/argparse.html">https://docs.python.org/ja/3.8/library/argparse.html</a></span>
+<span class="Comment"># see: <a href="https://docs.python.org/ja/3.8/library/getopt.html">https://docs.python.org/ja/3.8/library/getopt.html</a></span>
+
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

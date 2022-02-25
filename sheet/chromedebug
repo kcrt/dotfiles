@@ -1,0 +1,4 @@
+console.assert(true, "message")
+console.log(obj)  or  console.dir(obj) # more descriptive
+
+

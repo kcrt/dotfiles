@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/etc/sheet/prog/bigint.go.html</title>
+<meta name="Generator" content="Vim/8.1">
+<meta name="plugin-version" content="vim8.1_v1">
+<meta name="syntax" content="go">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,expand_tabs,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Comment { color: #0000ff; }
+.goRainbow_lv0_o2 { color: #3a5fcd; }
+.goRainbow_lv0_p2 { color: #3a5fcd; }
+.goRainbow_lv0_p0 { color: #3a5fcd; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.goRainbow_lv1_o0 { color: #cd6600; }
+.goRainbow_lv1_p0 { color: #cd6600; }
+.Statement { color: #a52a2a; font-weight: bold; }
+-->
+</style>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="Statement">package</span> main
+
+<span class="Statement">import</span> <span class="Constant">&quot;fmt&quot;</span>
+<span class="Statement">import</span> <span class="Constant">&quot;math/big&quot;</span>
+
+<span class="Statement">func</span> main<span class="goRainbow_lv0_p0">()</span> <span class="goRainbow_lv0_p2">{</span>
+
+    a<span class="goRainbow_lv0_o2">,</span> ok := <span class="Statement">new</span><span class="goRainbow_lv1_p0">(</span>big.Int<span class="goRainbow_lv1_p0">)</span>.SetString<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;12345678901234567890&quot;</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// 10進</span>
+    b := big.NewInt<span class="goRainbow_lv1_p0">(</span><span class="Constant">5</span><span class="goRainbow_lv1_p0">)</span>
+    a.Add<span class="goRainbow_lv1_p0">(</span>a<span class="goRainbow_lv1_o0">,</span> b<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// a = a + b</span>
+    a.Exp<span class="goRainbow_lv1_p0">(</span>a<span class="goRainbow_lv1_o0">,</span> b<span class="goRainbow_lv1_o0">,</span> <span class="Statement">nil</span><span class="goRainbow_lv1_p0">)</span> <span class="Comment">// a = a ^ b (mod x)</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>a<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Comment">// 制度設定</span>
+    x<span class="goRainbow_lv0_o2">,</span> _<span class="goRainbow_lv0_o2">,</span> err := big.ParseFloat<span class="goRainbow_lv1_p0">(</span><span class="Constant">&quot;1.234567890123456&quot;</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">10</span><span class="goRainbow_lv1_o0">,</span> <span class="Constant">100</span><span class="goRainbow_lv1_o0">,</span> big.ToZero<span class="goRainbow_lv1_p0">)</span><span class="Comment">// 10進100bit</span>
+    y := big.NewFloat<span class="goRainbow_lv1_p0">(</span><span class="Constant">10.5</span><span class="goRainbow_lv1_p0">)</span>
+    x.Mul<span class="goRainbow_lv1_p0">(</span>x<span class="goRainbow_lv1_o0">,</span> y<span class="goRainbow_lv1_p0">)</span> <span class="Comment">// x = x * y</span>
+    fmt.Println<span class="goRainbow_lv1_p0">(</span>x<span class="goRainbow_lv1_p0">)</span>
+
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>ok<span class="goRainbow_lv1_p0">)</span>
+    <span class="Statement">println</span><span class="goRainbow_lv1_p0">(</span>err<span class="goRainbow_lv1_p0">)</span>
+
+<span class="goRainbow_lv0_p2">}</span>
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->
