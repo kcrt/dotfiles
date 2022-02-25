@@ -13,7 +13,9 @@
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
-source ${DOTFILES}/no_git/secrets.sh
+if [ -f ${DOTFILES}/no_git/secrets.sh ]; then
+	source ${DOTFILES}/no_git/secrets.sh
+fi
 
 # ----- 環境変数
 export LANG=ja_JP.UTF-8
@@ -754,8 +756,10 @@ else
 fi
 
 # ----- 開発関係
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-export PATH="$(pyenv root)/shims:$PATH"
+if which pyenv > /dev/null; then
+	eval "$(pyenv init -)"
+	export PATH="$(pyenv root)/shims:$PATH"
+fi
 if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
 
 if [[ -x `which screen` ]]; then
