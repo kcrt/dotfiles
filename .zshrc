@@ -10,17 +10,17 @@
 #		http://www.clear-code.com/blog/2011/9/5.html
 #		https://github.com/zplug/zplug/blob/master/doc/guide/ja/README.md
 
-source ~/dotfiles/script/OSNotify.sh
-source ~/dotfiles/script/echo_color.sh
-source ~/dotfiles/script/miscs.sh
-source ~/dotfiles/no_git/secrets.sh
+source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/echo_color.sh
+source ${DOTFILES}/script/miscs.sh
+source ${DOTFILES}/no_git/secrets.sh
 
 # ----- 環境変数
 export LANG=ja_JP.UTF-8
 export EDITOR="vim"				# やっぱりvimだね
 export COLOR="tty"
 export GPG_TTY=$(tty)
-export PYTHONSTARTUP=~/dotfiles/pythonrc.py
+export PYTHONSTARTUP=${DOTFILES}/pythonrc.py
 export GOOGLE_APPLICATION_CREDENTIALS="`echo ~/secrets/kcrtjp-google-serviceaccount.json`"
 stty stop undef					# ^Sとかを無効にする
 
@@ -346,7 +346,7 @@ alias mv='nocorrect mv'
 alias cp='nocorrect cp'
 alias mkdir='nocorrect mkdir'
 alias w3m=' noglob _w3m'
-alias exstrings='~/dotfiles/script/exstrings.sh'
+alias exstrings='${DOTFILES}/script/exstrings.sh'
 alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 alias mutt='neomutt'
 if [[ -x `which thefuck` ]]; then
@@ -465,8 +465,8 @@ alias docker_alpine_mount_here="docker run -it --rm -v `pwd`:/root alpine"
 alias docker_ubuntu="docker run -it --rm ubuntu"
 alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
 alias docker_ubuntu_mount_here="docker run -it --rm -v `pwd`:/root ubuntu"
-alias docker_mykali='docker build --tag mykali ~/dotfiles/docker/mykali/; docker run -it --rm --hostname="mykali" --name="mykali" -v ~/.ssh/:/home/$USER/.ssh/:ro -v ~/dotfiles/:/home/$USER/dotfiles:ro mykali'
-alias docker_myubuntu='docker build --tag myubuntu ~/dotfiles/docker/myubuntu/; docker run -it --rm --hostname="myubuntu" --name="myubuntu" -v ~/.ssh/:/home/$USER/.ssh/:ro -v ~/dotfiles/:/home/$USER/dotfiles:ro myubuntu'
+alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
+alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro myubuntu"
 alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
 alias oj_test_python="oj test -c './main.py' -d tests"
 
@@ -479,7 +479,7 @@ alias serve_http_here='python3 -m http.server'
 alias -g N='; OSNotify "shell" "operation finished"'
 
 # 思い出し用
-for f in ~/dotfiles/sheet/*; do
+for f in ${DOTFILES}/sheet/*; do
 	if [[ -d "$f" ]]; then
 		# skip
 	elif [[ `cat $f | wc -l` -ge 10 ]]; then
@@ -490,7 +490,7 @@ for f in ~/dotfiles/sheet/*; do
 done
 
 # scriptフォルダ
-for f in ~/dotfiles/script/*; do
+for f in ${DOTFILES}/script/*; do
 	alias ${f:t:r}="$f"
 done
 
@@ -523,7 +523,7 @@ if [[ $USER != 'root' ]] ; then
 	alias updatedb="sudo updatedb; beep"
 fi
 
-alias :package_update="~/dotfiles/maintain.sh"
+alias :package_update="${DOTFILES}/maintain.sh"
 
 if [[ -x /usr/bin/yum ]] ; then
 	alias :package_update="sudo yum update"

@@ -9,7 +9,7 @@
 #
 #===============================================================================
 
-source ~/dotfiles/script/OSNotify.sh
+source ${DOTFILES}/script/OSNotify.sh
 autoload zmv
 
 case $HOST in
@@ -31,7 +31,7 @@ case $HOST in
 		brew upgrade
 		brew cleanup
 		brew cleanup -s
-		brew bundle dump -f --file ~/dotfiles/Brewfile
+		brew bundle dump -f --file ${DOTFILES}/Brewfile
 
 		OSNotify "Anti-virus database updating..."
 		freshclam

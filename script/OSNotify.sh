@@ -11,7 +11,7 @@
 #
 #===============================================================================
 
-source ~/dotfiles/script/echo_color.sh
+source ${DOTFILES}/script/echo_color.sh
 
 function OSNotify(){
 	if [[ -x `which growlnotify` ]]; then
