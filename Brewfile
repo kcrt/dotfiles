@@ -68,7 +68,6 @@ brew "figlet"
 brew "fortune"
 brew "fzf"
 brew "fzy"
-brew "gem-narou"
 brew "git"
 brew "gnupg"
 brew "go"
@@ -238,7 +237,9 @@ mas "Affinity Photo", id: 824183456
 mas "Affinity Publisher", id: 881418622
 mas "App Language Chooser", id: 451732904
 mas "CotEditor", id: 1024640650
+mas "Developer", id: 640199958
 mas "Display Menu", id: 549083868
+mas "EdgeView", id: 1580323719
 mas "EdgeView 2", id: 1206246482
 mas "Final Cut Pro", id: 424389933
 mas "GarageBand", id: 682658836
@@ -260,12 +261,14 @@ mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Remote Desktop", id: 1295203466
 mas "Microsoft Word", id: 462054704
 mas "Motion", id: 434290957
+mas "Native SQLite Manager", id: 1416282836
 mas "Noizio", id: 928871589
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
 mas "PDF Squeezer 3", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "PopClip", id: 445189367
+mas "Prime Video", id: 545519333
 mas "The Unarchiver", id: 425424353
 mas "TinyStopwatch", id: 1447754003
 mas "uBlacklist for Safari", id: 1547912640

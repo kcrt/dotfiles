@@ -257,7 +257,7 @@ augroup END
 " ----- Vundle -----------------------------------
 if !isdirectory(expand("~/.vim/bundle/Vundle.vim/"))
 	echo "You need to install Vundle!"
-	echo "Please execute 'git clone https://github.com/Vindle/vundle.git ~/.vim/bundle/Vundle.vim'"
+	echo "Please execute 'git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim'"
 	command -nargs=* Plugin echo
 endif
 set rtp+=~/.vim/bundle/Vundle.vim/
