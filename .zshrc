@@ -85,8 +85,11 @@ export CLICOLOR=true
 
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
-autoload -U compinit
-compinit -u
+autoload -U +X bashcompinit && bashcompinit
+if type brew &>/dev/null; then
+	FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+fi
+autoload -Uz compinit && compinit
 autoload zmv
 autoload zargs
 autoload zsh/files
@@ -756,11 +759,14 @@ else
 fi
 
 # ----- 開発関係
-if which pyenv > /dev/null; then
-	eval "$(pyenv init -)"
-	export PATH="$(pyenv root)/shims:$PATH"
+# if which pyenv > /dev/null; then
+# 	eval "$(pyenv init -)"
+#	export PATH="$(pyenv root)/shims:$PATH"
+#fi
+#if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
+if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
+	source /opt/homebrew/opt/asdf/libexec/asdf.sh
 fi
-if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
 
 if [[ -x `which screen` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
@@ -788,7 +794,6 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 #	export PATH="$VOLTA_HOME/bin:$PATH"
 # fi
 
-autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/mc mc
 
 # finally, execute fortune.

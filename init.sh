@@ -251,31 +251,16 @@ echo_aqua "( add to keydir, and commit push to the repository )"
 echo_aqua "push Enter to proceed."
 read pause
 
+cd ~
 git clone https://github.com/kcrt/dotfiles.git
-[ -f .vimrc ] && mv ~/.vimrc ~/.vimrc.init
-ln -s ~/dotfiles/vimrc ~/.vimrc
-[ -f .gvimrc ] && mv ~/.gvimrc ~/.gvimrc.init
-ln -s ~/dotfiles/gvimrc ~/.gvimrc
-[ -f .zshrc ] && mv ~/.zshrc ~/.zshrc.init
-ln -s ~/dotfiles/zshrc ~/.zshrc
-[ -f .screenrc ] && mv ~/.screenrc ~/.screenrc.init
-ln -s ~/dotfiles/screenrc ~/.screenrc
-[ -f .nethackrc ] && mv ~/.nethackrc ~/.nethackrc.init
-ln -s ~/dotfiles/nethackrc ~/.nethackrc
-[ -f .muttrc ] && mv ~/.muttrc ~/.muttrc.init
-ln -s ~/dotfiles/muttrc ~/.muttrc
-[ -f .mailcap ] && mv ~/.mailcap ~/.mailcap.init
-ln -s ~/dotfiles/mailcap ~/.mailcap
-[ -f .signature ] && mv ~/.signature ~/.signature.init
-ln -s ~/dotfiles/signature ~/.signature
-[ -f .gitconfig ] && mv ~/.gitconfig ~/.gitconfig.init
-ln -s ~/dotfiles/gitconfig ~/.gitconfig
-[ -f .gitattributes ] && mv ~/.gitattributes ~/.gitattributes.init
-ln -s ~/dotfiles/gitattributes ~/.gitattributes
-[ -f .Rprofile ] && mv ~/.Rprofile ~/.Rprofile.init
-ln -s ~/dotfiles/Rprofile ~/.Rprofile
-[ -f .tmux.conf ] && mv ~/.tmux.conf ~/.tmux.init
-ln -s ~/dotfiles/tmux.conf ~/.tmux.conf
+echo "Linking dotfiles..."
+for file in ~/dotfiles/.*; do
+	if [ -f $file ] ; then
+		[ -f ~/$file:t ] && mv ~/$file:t ~/${file:t}.init
+		ln -s $file ~/$file:t
+	fi
+done
+
 # neovim
 mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
 ln -s ~/.vim $XDG_CONFIG_HOME/nvim
