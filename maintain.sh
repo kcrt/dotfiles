@@ -56,7 +56,7 @@ case $HOST in
 		fi
 
 		OSNotify "diskimage -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/diskimages/ gs://backup.kcrt.net/manual/diskimages
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://backup.kcrt.net/manual/diskimages
 
 		if [[ -d /Volumes/Private/diskimages/ ]]; then
 			OSNotify "diskimage -> Drobo"
