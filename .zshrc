@@ -85,9 +85,9 @@ export CLICOLOR=true
 
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
-autoload -U +X bashcompinit && bashcompinit
-if type brew &>/dev/null; then
-	FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+# autoload -U +X bashcompinit && bashcompinit
+if [ -x `which /opt/homebrew/bin/brew` ]; then
+	FPATH="$(/opt/homebrew/bin/brew --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 autoload -Uz compinit && compinit
 autoload zmv
@@ -566,9 +566,10 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 		export HOMEBREW_NO_AUTO_UPDATE=1
 	fi
-	export LDFLAGS="-L/usr/local/opt/llvm/lib -L/usr/local/opt/zlib/lib"
-	export CFLAGS="-I/usr/local/opt/llvm/include -I/usr/local/opt/zlin/include"
-	export CPPFLAGS="-I/usr/local/opt/llvm/include -I/usr/local/opt/zlin/include"
+	for libname in readline zlib openssl; do
+		export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
+		export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
+	done
 	if [[ -x /usr/bin/xcrun ]]; then
 		export SDKPATH=`xcrun --show-sdk-path`/usr/include
 		# alias pyenv="SDKROOT=$(xcrun --show-sdk-path) pyenv"
@@ -766,6 +767,7 @@ fi
 #if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
 if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
 	source /opt/homebrew/opt/asdf/libexec/asdf.sh
+	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 fi
 
 if [[ -x `which screen` ]]; then
@@ -794,7 +796,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 #	export PATH="$VOLTA_HOME/bin:$PATH"
 # fi
 
-complete -o nospace -C /usr/local/bin/mc mc
+# complete -o nospace -C /usr/local/bin/mc mc
 
 # finally, execute fortune.
 if [[ -x `which fortune` ]]; then
