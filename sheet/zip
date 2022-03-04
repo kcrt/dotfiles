@@ -1,0 +1,5 @@
+zip -r zipfile.zip file_or_dir
+	-e / -P password: Encrypted
+	-x filename1 filename2...: Exclude these files
+
+
