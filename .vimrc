@@ -192,11 +192,11 @@ endif
 " ----- テンプレート -----------------------------
 augroup LoadTemplate
 	autocmd!
-	let templatefiles = split(glob('~/etc/template/*'), '\n')
+	let templatefiles = split(glob('~/dotfiles/template/*'), '\n')
 	for filename in templatefiles
 		let f = matchlist(filename, '.*\.\(.*\)')
 		let ext = f[1]
-		execute 'autocmd BufNewFile *.' . ext . ' 0r ~/etc/template/template.' . ext
+		execute 'autocmd BufNewFile *.' . ext . ' 0r ~/dotfiles/template/template.' . ext
 	endfor
 augroup END
 
@@ -435,15 +435,15 @@ if executable('julia')
 		\ })
 endif
 	
-augroup Check_LSP
-	autocmd!
-	function! s:pyls_check()
-		if !executable('pyls')
-			echo "pyls not found: pip install python-language-server "
-		endif
-	endfunction
-	autocmd FileType python call s:pyls_check()
-augroup END
+" augroup Check_LSP
+" 	autocmd!
+" 	function! s:pyls_check()
+" 		if !executable('pyls')
+" 			echo "pyls not found: pip install python-language-server "
+" 		endif
+" 	endfunction
+" 	autocmd FileType python call s:pyls_check()
+" augroup END
 
 " ----- NERDTree ---------------------------------
 let NERDTreeShowHidden = 1
@@ -566,7 +566,7 @@ set t_ZR=[23m
 
 
 " ===== スペルチェッ==============================
-set spellfile=~/etc/vimspell_en.utf-8.add 
+set spellfile=~/dotfiles/vimspell_en.utf-8.add 
 
 " ===== 以下、関数 ===============================
 " ----- タブライン -------------------------------

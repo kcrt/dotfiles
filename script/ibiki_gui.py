@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+# require pyaudio, numpy, pychalk
+
 import time
 import pyaudio
-import wave
 import numpy as np
 import os
 import datetime
@@ -33,7 +34,6 @@ while True:
     # ndarrayに変換
     x = np.frombuffer(data, dtype="int16") / 32768.0
 
-    # 閾値以上の場合はファイルに保存
     xmax = x.max()
     if xmax < 0.01:
         print(chalk.green("*"), end="", flush=True)

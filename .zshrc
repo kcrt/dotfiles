@@ -29,8 +29,8 @@ stty stop undef					# ^Sとかを無効にする
 # ----- ホスト毎にプロンプト色の変更
 typeset -A hostcolors
 typeset -A hostblacks
-hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue)
-hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011)
+hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue beryllium.local yellow)
+hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 beryllium 001111)
 if [[ "$hostcolors[$HOST]" == "" ]]; then
 	hostcolor=magenda
 	hostblack="000000"
@@ -389,6 +389,7 @@ alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
+alias youtube-dl='yt-dlp'
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
 }
@@ -566,7 +567,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 		export HOMEBREW_NO_AUTO_UPDATE=1
 	fi
-	for libname in readline zlib openssl; do
+	for libname in readline zlib openssl portaudio; do
 		export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
 		export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
 	done
@@ -801,7 +802,7 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 # finally, execute fortune.
 if [[ -x `which fortune` ]]; then
 	echo ""
-	echo -n "[36m"
+	echo -n "[3;$color[$hostcolor]m"
 	fortune
 	echo -n "[0m"
 	echo ""
