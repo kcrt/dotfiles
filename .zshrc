@@ -29,8 +29,8 @@ stty stop undef					# ^Sとかを無効にする
 # ----- ホスト毎にプロンプト色の変更
 typeset -A hostcolors
 typeset -A hostblacks
-hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue beryllium.local yellow)
-hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 beryllium 001111)
+hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue aluminum blue beryllium.local yellow)
+hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 aluminum 000011 beryllium 001111)
 if [[ "$hostcolors[$HOST]" == "" ]]; then
 	hostcolor=magenda
 	hostblack="000000"
@@ -160,6 +160,29 @@ function print_test(){
 	echo "Color: " -n
 	for i in {16..21} {21..16} ; do echo -en "\e[38;5;${i}m#\e[0m" ; done ; echo
 }
+
+# ----- zplug
+if [[ -r ~/.zplug/init.zsh ]]; then
+	source ~/.zplug/init.zsh
+	zplug "zsh-users/zsh-syntax-highlighting", defer:2
+	zplug "zsh-users/zsh-history-substring-search"
+	zplug "zsh-users/zsh-completions"
+	zplug "plugins/brew", from:oh-my-zsh, if:"which brew"
+	zplug "rupa/z", use:z.sh
+	zplug "b4b4r07/enhancd", use:init.sh
+	zplug "momo-lab/zsh-abbrev-alias"
+	export ENHANCED_FILTER=fzy:fzf:peco
+	if ! zplug check; then
+		zplug check --verbose
+		printf "Install? [y/N]: "
+		if read -q; then
+			echo; zplug install
+		fi
+	fi
+	zplug load
+else
+	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh' to install zplug"
+fi
 
 # ----- Version Control(svn, git)のブランチなどを表示
 RPROMPT=""
@@ -341,23 +364,23 @@ function python_update() {
 
 # ----- エイリアス
 # コマンド置き換え
-alias vi='vim -p'
-alias vimtree='vim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
-alias gvimtree='gvim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
-alias vimrc='vim ~/.vimrc'
-alias zshrc='vim ~/.zshrc'
-alias rm='trash'
-alias mv='nocorrect mv'
-alias cp='nocorrect cp'
-alias mkdir='nocorrect mkdir'
-alias w3m=' noglob _w3m'
-alias exstrings='${DOTFILES}/script/exstrings.sh'
-alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
-alias mutt='neomutt'
+abbrev-alias vi='vim -p'
+abbrev-alias vimtree='vim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
+abbrev-alias gvimtree='gvim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
+abbrev-alias vimrc='vim ~/.vimrc'
+abbrev-alias zshrc='vim ~/.zshrc'
+abbrev-alias rm='trash'
+abbrev-alias mv='nocorrect mv'
+abbrev-alias cp='nocorrect cp'
+abbrev-alias mkdir='nocorrect mkdir'
+abbrev-alias w3m=' noglob _w3m'
+abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
+abbrev-alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
+abbrev-alias mutt='neomutt'
 if [[ -x `which thefuck` ]]; then
 	eval "$(thefuck --alias)"
 fi
-alias ssh-sign="ssh-keygen -Y sign -f ~/.ssh/kcrt-ssh-ed25519.pem -n file"
+abbrev-alias ssh-sign="ssh-keygen -Y sign -f ~/.ssh/kcrt-ssh-ed25519.pem -n file"
 # 引数
 if [[ "$OSTYPE" = darwin* || $OSTYPE = freebs* ]]; then
 	alias ls='ls -FG'
@@ -382,14 +405,14 @@ alias zmv='noglob zmv'
 alias zcp='noglob zmv -C'
 alias zln='noglob zmv -L'
 alias history='history -E 1'
-alias wget='noglob wget'
-alias ping='ping -a -c4'
+abbrev-alias wget='noglob wget'
+abbrev-alias ping='ping -a -c4'
 alias sudo='sudo -E '	#スペースを付けておくとsudo llなどが使える
 alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
-alias youtube-dl='yt-dlp'
+abbrev-alias youtube-dl='yt-dlp'
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
 }
@@ -441,46 +464,45 @@ function mcd(){
 	fi
 }
 # 省略とか
-alias hist='history'
-alias :q='exit'
-alias su='su -s =zsh'
-alias hexdump='od -Ax -tx1 -c'
-alias hex2bin="xxd -r -p"
-alias beep='print "\a"'
-alias cls='clear'
-alias ...='cd ../..'
-alias ....='cd ../../..'
-alias .....='cd ../../../..'
+abbrev-alias hist='history'
+abbrev-alias :q='exit'
+abbrev-alias su='su -s =zsh'
+abbrev-alias hexdump='od -Ax -tx1 -c'
+abbrev-alias hex2bin="xxd -r -p"
+abbrev-alias beep='print "\a"'
+abbrev-alias cls='clear'
+abbrev-alias ...='cd ../..'
+abbrev-alias ....='cd ../../..'
+abbrev-alias .....='cd ../../../..'
 function vimman(){
 	vim -c "Man $1" -c "only"
 }
-alias man='vimman'
-alias clang++11='clang++ -O --std=c++11 -Wall --pedantic-errors --stdlib=libc++'
-alias clang++14='clang++ -O --std=c++14 -Wall --pedantic-errors --stdlib=libc++'
-alias clang++17='clang++ -O --std=c++17 -Wall --pedantic-errors --stdlib=libc++'
-alias clang++20='clang++ -O --std=c++20 -Wall --pedantic-errors --stdlib=libc++'
-alias icat='icat --mode h'
-alias eee='noglob zmv -v "([a-e|s|g])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
-alias pdb="`which env` python -m pdb"
-alias docker_busybox="docker run -it --rm busybox"
-alias docker_busybox_mount_here="docker run -it --rm -v `pwd`:/root busybox"
-alias docker_alpine="docker run -it --rm alpine"
-alias docker_alpine_mount_here="docker run -it --rm -v `pwd`:/root alpine"
-alias docker_ubuntu="docker run -it --rm ubuntu"
-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
-alias docker_ubuntu_mount_here="docker run -it --rm -v `pwd`:/root ubuntu"
-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro myubuntu"
-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
-alias oj_test_python="oj test -c './main.py' -d tests"
-
+abbrev-alias man='vimman'
+abbrev-alias clang++11='clang++ -O --std=c++11 -Wall --pedantic-errors --stdlib=libc++'
+abbrev-alias clang++14='clang++ -O --std=c++14 -Wall --pedantic-errors --stdlib=libc++'
+abbrev-alias clang++17='clang++ -O --std=c++17 -Wall --pedantic-errors --stdlib=libc++'
+abbrev-alias clang++20='clang++ -O --std=c++20 -Wall --pedantic-errors --stdlib=libc++'
+abbrev-alias icat='icat --mode h'
+abbrev-alias eee='noglob zmv -v "([a-e|s|g])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
+abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
+abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
+abbrev-alias pdb="`which env` python -m pdb"
+abbrev-alias docker_busybox="docker run -it --rm busybox"
+abbrev-alias docker_busybox_mount_here="docker run -it --rm -v `pwd`:/root busybox"
+abbrev-alias docker_alpine="docker run -it --rm alpine"
+abbrev-alias docker_alpine_mount_here="docker run -it --rm -v `pwd`:/root alpine"
+abbrev-alias docker_ubuntu="docker run -it --rm ubuntu"
+abbrev-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
+abbrev-alias docker_ubuntu_mount_here="docker run -it --rm -v `pwd`:/root ubuntu"
+abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
+abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro myubuntu"
+abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
+abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastChangeRevision LastChangeBy HeadURL Rev Date Author"'
-alias :checkjpeg='find . -name "*.jpg" -or -name "*.JPG" -exec jpeginfo -c {} \;'
-alias :howmanyfiles='find . -print | wc -l'
-alias serve_http_here='python3 -m http.server'
+abbrev-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastChangeRevision LastChangeBy HeadURL Rev Date Author"'
+abbrev-alias :checkjpeg='find . -name "*.jpg" -or -name "*.JPG" -exec jpeginfo -c {} \;'
+abbrev-alias :howmanyfiles='find . -print | wc -l'
+abbrev-alias serve_http_here='python3 -m http.server'
 # global alias
 alias -g N='; OSNotify "shell" "operation finished"'
 
@@ -501,11 +523,11 @@ for f in ${DOTFILES}/script/*; do
 done
 
 # 便利コマンド
-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum += \$1; }; END { print sum }'"
-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
-alias nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
-alias nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
-alias verynice="nice -n 20"
+abbrev-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum += \$1; }; END { print sum }'"
+abbrev-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
+abbrev-alias nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
+abbrev-alias nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
+abbrev-alias verynice="nice -n 20"
 
 # ----- suffix alias (関連づけ)
 alias -s exe='wine'
@@ -738,27 +760,6 @@ add-zsh-hook preexec ShowTitle_preexec
 add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
 
-# ----- zplug
-if [[ -r ~/.zplug/init.zsh ]]; then
-	source ~/.zplug/init.zsh
-	zplug "zsh-users/zsh-syntax-highlighting", defer:2
-	zplug "zsh-users/zsh-history-substring-search"
-	zplug "zsh-users/zsh-completions"
-	zplug "plugins/brew", from:oh-my-zsh, if:"which brew"
-	zplug "rupa/z", use:z.sh
-	zplug "b4b4r07/enhancd", use:init.sh
-	export ENHANCED_FILTER=fzy:fzf:peco
-	if ! zplug check; then
-		zplug check --verbose
-		printf "Install? [y/N]: "
-		if read -q; then
-			echo; zplug install
-		fi
-	fi
-	zplug load
-else
-	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh' to install zplug"
-fi
 
 # ----- 開発関係
 # if which pyenv > /dev/null; then

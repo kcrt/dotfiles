@@ -219,11 +219,13 @@ function CheckAirPodsBattery()
 		if string.find(val.name, "AirPods") ~= nil then
 			if val.batteryPercentCase == "0" then
 				info = "Battery: " .. val.batteryPercentLeft .. "%(L) / " .. val.batteryPercentRight .. "%(R)"
+				valCase = "100"
 			else
 				info = "Battery: " .. val.batteryPercentLeft .. "%(L) / " .. val.batteryPercentRight .. "%(R), Case:" .. val.batteryPercentCase .. "%"
+				valCase = val.batteryPercentCase
 			end
 
-			if tonumber(val.batteryPercentLeft) < 20 or tonumber(val.batteryPercentRight) < 20 then
+			if tonumber(val.batteryPercentLeft) < 20 or tonumber(val.batteryPercentRight) < 20 or tonumber(valCase) < 40 then
 				warn_alert(info)
 			else
 				normal_alert(info)
@@ -256,7 +258,7 @@ function audioEventCallback(arg)
 		end
 		local balance = outdev:balance()
 		if balance ~= nil and balance ~= 0.5 then
-			warn_alert("Unbalanced output of stereo device")
+			warn_alert("Unbalanced output of stereo device " .. (balance * 1000 // 10 / 100))
 		end
 		if outdev:name() == "kcrt's AirPods Pro" or outdev:name() == "Imitation of AirPods Pro" then
 			outdev:setMuted(false)
@@ -359,8 +361,14 @@ function drawEarthquakeHypocenter(lat, lon, distance, scale)
 end
 
 lastUserQuakeEvaluation = nil
-function openShindo()
-	hs.urlevent.openURL("http://www.kmoni.bosai.go.jp")
+function openShindo(title)
+	-- hs.urlevent.openURL("http://www.kmoni.bosai.go.jp")
+	frame = hs.screen.primaryScreen():frame()
+	w = 450
+	h = 650
+	x = frame["_x"] + (frame["_w"] - w) / 2
+	y = frame["_y"] + (frame["_h"] - h) / 2
+	hs.webview.newBrowser(hs.geometry.rect(x, y, w, h)):windowTitle(title):url("http://www.kmoni.bosai.go.jp"):closeOnEscape(true):show():bringToFront(true):behavior(hs.drawing.windowBehaviors.canJoinAllSpaces)
 end
 function handleP2peewItem(info)
 	local P2peewStyle = {}
@@ -413,11 +421,11 @@ function handleP2peewItem(info)
 		elseif code == 552 then
 			-- JMATsunami
 			warn_alert("津波予報発令")
-			hs.sound.getByName("Sosumi"):play()
+			hs.sound.getByName("Submarine"):play()
 		elseif code == 554 then
 			-- EEWDetection
 			warn_alert("緊急地震速報を検知")
-			openShindo()
+			openShindo("緊急地震速報")
 			hs.sound.getByName("Sosumi"):play()
 		elseif code == 561 then
 			-- Userquake
@@ -452,12 +460,13 @@ function handleP2peewItem(info)
 			end
 		elseif code == 9611 then
 			-- UserquakeEvaluation
-			if info.confidence > 0.9 then
+			if info.confidence > 0.97 then	-- > Lv.3
 				if info.started_at ~= lastUserQuakeEvaluation then
 					logger.i("地震感知情報" .. dump(info))
-					hs.notify.new(openShindo, {title="地震感知情報があります。", informativeText=info.started_at .. " 発生。\n情報を確認しますか？", actionButtonTitle="確認", hasActionButton=true, withdrawAfter=30}):send()
+					openShindo("地震感知情報")
+					-- hs.notify.new(openShindo, {title="地震感知情報があります。", informativeText=info.started_at .. " 発生。\n情報を確認しますか？", actionButtonTitle="確認", hasActionButton=true, withdrawAfter=30}):send()
 					lastUserQuakeEvaluation = info.started_at
-					hs.sound.getByName("Sosumi"):play()
+					hs.sound.getByName("Submerge"):play()
 				end
 			end
 		elseif code == 555 then
@@ -577,8 +586,8 @@ end
 -- iot every 10 minutes
 
 function onIoTSended(status, body, headers)
-	logger.i("[onIoT send] " .. status)
 	if status ~= 200 then
+		logger.i("[onIoT send] " .. status)
 		logger.i(body)
 	end
 end
@@ -601,3 +610,37 @@ end
 iotsender = hs.timer.new(60 * 10, IoTSend, true):start()
 IoTSend()
 -- TODO: hs.battery.capacity()がバッテリー使用時にどうなっているか？
+
+
+lastVNCDetected = 0
+function ChangeResolutionTo43()
+	hs.execute("/opt/homebrew/bin/cscreen -i 2 -x 1280 -y 960 -r 30")
+end
+function checkVNC()
+	output, status, type_, rc = hs.execute('ps aux | grep "/System/Library/CoreServices/RemoteManagement/screensharingd.bundle/Contents/MacOS/screensharingd" | grep -v "grep"')
+	if rc == 0 then
+		if os.time() - lastVNCDetected > 19 then
+			hs.notify.new(ChangeResolutionTo43, {title="VNC Connected", informativeText="Do you want to use 4:3?", actionButtonTitle="Yes!", hasActionButton=true, withdrawAfter=60}):send()
+		end
+		lastVNCDetected = os.time()
+	end
+end
+checkVNCTimer = hs.timer.new(10, checkVNC, true):start()
+
+function onApplicationWatch(appname, eventtype, app)
+	logger.i("[App] " .. eventtype .. " " .. appname)
+end
+-- appwatcher = hs.application.watcher.new(onApplicationWatch)
+-- appwatcher:start()
+
+function onNotification(name, object, userInfo)
+	logger.i("[Notification] " .. string.format("name: %s\nobject: %s\nuserInfo: %s\n", name, object, hs.inspect(userInfo)))
+end
+notification_watch = hs.distributednotifications.new(onNotification)
+notification_watch:start()
+
+function onNetworkConfig(store, key)
+	logger.i("[NetConf] " .. key)
+end
+hs.network.configuration.open():setCallback(onNetworkConfig):start()
+
