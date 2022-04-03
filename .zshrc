@@ -86,7 +86,7 @@ export CLICOLOR=true
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
 # autoload -U +X bashcompinit && bashcompinit
-if [ -x `which /opt/homebrew/bin/brew` ]; then
+if [ -x "`which /opt/homebrew/bin/brew`" ]; then
 	FPATH="$(/opt/homebrew/bin/brew --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 autoload -Uz compinit && compinit
