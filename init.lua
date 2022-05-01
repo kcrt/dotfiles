@@ -361,14 +361,22 @@ function drawEarthquakeHypocenter(lat, lon, distance, scale)
 end
 
 lastUserQuakeEvaluation = nil
+lastOpenShindo = 0
+shindoBrowser = nil
 function openShindo(title)
+	if os.time() - lastOpenShindo < 30 then
+		-- 頻繁な通知を無視
+		return false
+	end
+	lastOpenShindo = os.time()
 	-- hs.urlevent.openURL("http://www.kmoni.bosai.go.jp")
 	frame = hs.screen.primaryScreen():frame()
 	w = 450
 	h = 650
 	x = frame["_x"] + (frame["_w"] - w) / 2
 	y = frame["_y"] + (frame["_h"] - h) / 2
-	hs.webview.newBrowser(hs.geometry.rect(x, y, w, h)):windowTitle(title):url("http://www.kmoni.bosai.go.jp"):closeOnEscape(true):show():bringToFront(true):behavior(hs.drawing.windowBehaviors.canJoinAllSpaces)
+	shindoBrowser = hs.webview.newBrowser(hs.geometry.rect(x, y, w, h))
+	shindoBrowser:windowTitle(title):url("http://www.kmoni.bosai.go.jp"):closeOnEscape(true):show():bringToFront(true):behavior(hs.drawing.windowBehaviors.canJoinAllSpaces):deleteOnClose(true)
 end
 function handleP2peewItem(info)
 	local P2peewStyle = {}

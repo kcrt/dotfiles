@@ -49,10 +49,10 @@ case $HOST in
 
 		echo_info "==== Data back up and sync ===="
 		OSNotify "Medical -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x ".*site-packages.*|\.git|\.DS_Store" -d -r ~/Documents/医療 gs://backup.kcrt.net/manual/document_medical
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x ".*site-packages.*|\.git|\.DS_Store|\.tmp\.driveupload" -d -r ~/Documents/医療 gs://backup.kcrt.net/manual/document_medical
 		if [[ -d /Volumes/Main/shelter/ ]]; then
 			OSNotify "Medical -> Drobo"
-			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude="packrat/" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/医療 /Volumes/Main/shelter/medical
+			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude="packrat/" --exclude=".tmp.driveupload" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/医療 /Volumes/Main/shelter/medical
 		fi
 
 		OSNotify "diskimage -> Google Cloud"

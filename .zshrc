@@ -717,7 +717,7 @@ function ShowTitle_preexec(){
 				Title="*$cmd[2]*"
 			fi
 			;;
-		ssh|ftp|telnet|mosh)
+		ssh|ftp|telnet|mosh|mosh-client)
 			Title="$cmd[1]:$cmd[2]";
 			;;
 		*)
