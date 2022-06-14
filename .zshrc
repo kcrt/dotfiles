@@ -412,7 +412,7 @@ alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
-abbrev-alias youtube-dl='yt-dlp'
+abbrev-alias youtube-dl='nogrob yt-dlp'
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
 }
@@ -786,7 +786,7 @@ if [ ! -f ~/zshrc.zwc -o ~/.zshrc -nt ~/.zshrc.zwc ]; then
     zcompile ~/.zshrc
 fi
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # export NVM_DIR="$HOME/.nvm"
 # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
