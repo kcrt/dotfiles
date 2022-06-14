@@ -29,8 +29,8 @@ stty stop undef					# ^Sとかを無効にする
 # ----- ホスト毎にプロンプト色の変更
 typeset -A hostcolors
 typeset -A hostblacks
-hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue aluminum blue beryllium.local yellow)
-hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 aluminum 000011 beryllium 001111)
+hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue aluminum blue beryllium yellow beryllium.local yellow)
+hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 aluminum 000011 beryllium 001111 beryllium 001111)
 if [[ "$hostcolors[$HOST]" == "" ]]; then
 	hostcolor=magenda
 	hostblack="000000"
