@@ -8,23 +8,28 @@ tap "homebrew/core"
 tap "homebrew/services"
 tap "theseal/ssh-askpass"
 tap "wader/tap"
+brew "freetype"
+brew "fontconfig"
+brew "gettext"
+brew "glib"
+brew "xz"
+brew "python@3.9"
+brew "cairo"
+brew "fribidi"
+brew "icu4c"
+brew "harfbuzz"
 brew "afio"
 brew "webp"
+brew "jpeg-xl"
 brew "arping"
-brew "icu4c"
 brew "boost"
 brew "docbook"
-brew "sqlite"
-brew "xz"
 brew "asciidoc"
 brew "autoconf"
 brew "automake"
 brew "gmp"
 brew "coreutils"
 brew "asdf"
-brew "gettext"
-brew "python@3.9"
-brew "glib"
 brew "atomicparsley"
 brew "atool"
 brew "azure-cli"
@@ -33,12 +38,12 @@ brew "binaryen"
 brew "blueutil"
 brew "brew-gem"
 brew "cabextract"
-brew "freetype"
-brew "fontconfig"
-brew "cairo"
 brew "gcc"
 brew "openblas"
+brew "tbb"
 brew "cgdb"
+brew "circleci"
+brew "protobuf-c"
 brew "clamav"
 brew "cmake"
 brew "cmigemo"
@@ -46,6 +51,7 @@ brew "cowsay"
 brew "croc"
 brew "cscope"
 brew "ctags"
+brew "little-cms2"
 brew "ddrescue"
 brew "deno"
 brew "dfc"
@@ -58,12 +64,12 @@ brew "emscripten"
 brew "exiftool"
 brew "exiv2"
 brew "fcrackzip"
-brew "fribidi"
+brew "fdupes"
 brew "p11-kit"
 brew "gnutls"
-brew "harfbuzz"
 brew "lame"
 brew "openjpeg"
+brew "leptonica"
 brew "x264"
 brew "x265"
 brew "xvid"
@@ -72,10 +78,14 @@ brew "figlet"
 brew "fortune"
 brew "fzf"
 brew "fzy"
+brew "ghostscript"
 brew "git"
 brew "gnupg"
 brew "go"
+brew "gpredict"
 brew "graphviz"
+brew "gsl"
+brew "gsmartcontrol"
 brew "handbrake", link: false
 brew "hashcat"
 brew "hdf5"
@@ -83,6 +93,8 @@ brew "lua"
 brew "highlight"
 brew "htop"
 brew "icoutils"
+brew "libheif"
+brew "libraw"
 brew "imagemagick"
 brew "john-jumbo"
 brew "jq"
@@ -91,6 +103,7 @@ brew "leveldb"
 brew "lha"
 brew "libdvdcss"
 brew "libgit2"
+brew "libmng"
 brew "librtlsdr"
 brew "lima"
 brew "llvm"
@@ -110,11 +123,13 @@ brew "nginx"
 brew "nkf"
 brew "nmap"
 brew "numpy"
+brew "qt@5"
 brew "opencv"
 brew "p7zip"
 brew "pandoc"
 brew "parallel"
 brew "pdfcrack"
+brew "pdftk-java"
 brew "peco"
 brew "poppler"
 brew "portaudio"
@@ -150,7 +165,6 @@ cask "aldente"
 cask "android-studio"
 cask "appcleaner"
 cask "arduino"
-cask "arduino-ide-beta"
 cask "atok"
 cask "audacity"
 cask "bartender"
@@ -163,6 +177,7 @@ cask "boxofsnoo-fairmount"
 cask "burn"
 cask "caffeine"
 cask "calibre"
+cask "chromedriver"
 cask "clipy"
 cask "color-oracle"
 cask "cscreen"
@@ -234,54 +249,14 @@ cask "tomighty"
 cask "touch-bar-simulator"
 cask "transmission"
 cask "tripmode"
+cask "ultimaker-cura"
 cask "unofficial-wineskin"
 cask "utm"
 cask "visual-studio-code"
 cask "vlc"
+cask "warp"
 cask "wine-crossover"
+cask "wireshark"
 cask "xld"
 cask "xquartz"
 cask "zoom"
-mas "Affinity Designer", id: 824171161
-mas "Affinity Photo", id: 824183456
-mas "Affinity Publisher", id: 881418622
-mas "App Language Chooser", id: 451732904
-mas "CotEditor", id: 1024640650
-mas "Developer", id: 640199958
-mas "Display Menu", id: 549083868
-mas "EdgeView", id: 1580323719
-mas "EdgeView 2", id: 1206246482
-mas "Final Cut Pro", id: 424389933
-mas "GarageBand", id: 682658836
-mas "GoodNotes", id: 1444383602
-mas "Hex Fiend", id: 1342896380
-mas "iMovie", id: 408981434
-mas "isHUD", id: 484757536
-mas "Keepa - Price Tracker", id: 1533805339
-mas "Keynote", id: 409183694
-mas "Kindle", id: 405399194
-mas "LadioCast", id: 411213048
-mas "LibreOffice Vanilla", id: 921923693
-mas "LINE", id: 539883307
-mas "Logic Pro", id: 634148309
-mas "Magnet", id: 441258766
-mas "MainStage", id: 634159523
-mas "Microsoft Excel", id: 462058435
-mas "Microsoft PowerPoint", id: 462062816
-mas "Microsoft Remote Desktop", id: 1295203466
-mas "Microsoft Word", id: 462054704
-mas "Motion", id: 434290957
-mas "Native SQLite Manager", id: 1416282836
-mas "Noizio", id: 928871589
-mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
-mas "PDF Squeezer 3", id: 504700302
-mas "PDFOutliner", id: 420874236
-mas "PopClip", id: 445189367
-mas "Prime Video", id: 545519333
-mas "The Unarchiver", id: 425424353
-mas "TinyStopwatch", id: 1447754003
-mas "uBlacklist for Safari", id: 1547912640
-mas "WiFi Signal", id: 525912054
-mas "WinArchiver Lite", id: 414855915
-mas "Xcode", id: 497799835

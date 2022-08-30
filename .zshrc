@@ -412,7 +412,8 @@ alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
-abbrev-alias youtube-dl='nogrob yt-dlp'
+abbrev-alias youtube-dl='noglob yt-dlp'
+alias bench-zsh='time zsh -i -c exit'
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
 }
@@ -488,12 +489,12 @@ abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tec
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
 abbrev-alias docker_busybox="docker run -it --rm busybox"
-abbrev-alias docker_busybox_mount_here="docker run -it --rm -v `pwd`:/root busybox"
+abbrev-alias docker_busybox_mount_home="docker run -it --rm -v $HOME:/root busybox"
 abbrev-alias docker_alpine="docker run -it --rm alpine"
-abbrev-alias docker_alpine_mount_here="docker run -it --rm -v `pwd`:/root alpine"
+abbrev-alias docker_alpine_mount_home="docker run -it --rm -v $HOME:/root alpine"
 abbrev-alias docker_ubuntu="docker run -it --rm ubuntu"
 abbrev-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
-abbrev-alias docker_ubuntu_mount_here="docker run -it --rm -v `pwd`:/root ubuntu"
+abbrev-alias docker_ubuntu_mount_home="docker run -it --rm -v $HOME:/root ubuntu"
 abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
 abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro myubuntu"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"

@@ -60,7 +60,7 @@ case $HOST in
 
 		if [[ -d /Volumes/Private/diskimages/ ]]; then
 			OSNotify "diskimage -> Drobo"
-			rsync -ahv --progress --delete ~/diskimages /Volumes/Private/diskimages/
+			rsync -ahv --progress --delete ~/diskimages/ /Volumes/Private/diskimages/
 		fi
 		
 		if [[ -d /Volumes/Main/books/ ]]; then

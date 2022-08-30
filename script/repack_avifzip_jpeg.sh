@@ -28,7 +28,9 @@ do
 done
 
 echo "Repacking..."
-mv "$fullname" "${fullname}.org"
+# mv "$fullname" "${fullname}.org"
+fullname=`echo "$fullname" | sed s/AVIF/JPEG/`
+echo $fullname
 zip -j -r "$fullname" /tmp/repack/REPACK_AVIF
 rm -r /tmp/repack
 
