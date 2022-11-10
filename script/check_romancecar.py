@@ -9,6 +9,7 @@ import datetime
 
 # to install driver, run:
 #   brew install chromedriver (for Mac)
+#   sudo apt install python3-selenium (for Ubuntu)
 
 
 USER_ID = os.environ.get("ODAKYU_USER_ID")
@@ -16,7 +17,9 @@ USER_PASS = os.environ.get("ODAKYU_USER_PASS")
 
 
 def main():
-    driver = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(options=options)
     driver.implicitly_wait(10)
     driver.get("https://www.web-odakyu.com/")
     time.sleep(5)

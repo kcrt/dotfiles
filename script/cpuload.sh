@@ -27,4 +27,6 @@ elif [[ "$1" == "tmux" ]]; then
 	else
 		echo "$result"
 	fi
+else
+	echo $result
 fi
