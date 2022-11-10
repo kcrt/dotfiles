@@ -20,10 +20,13 @@ unzip "$fullname" -d /tmp/repack/REPACK_JPEG_HALF
 
 setopt GLOBSTARSHORT
 echo "Shrinking..."
-for i in $(find /tmp/repack -name "*.jpg"); do
-	echo "$i"
-	mogrify -resize 50% "$i"
-done
+#for i in $(find /tmp/repack -name "*.jpg"); do
+#	echo "$i"
+#	mogrify -resize 50% "$i"
+#done
+
+find /tmp/repack -name "*.jpg" | parallel --progress -j 4 mogrify -resize 50% "{}"
+
 echo "Converting... (png->jpg)"
 for i in $(find /tmp/repack -name "*.png"); do
 	echo "$i"

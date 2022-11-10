@@ -10,6 +10,8 @@
 #		http://www.clear-code.com/blog/2011/9/5.html
 #		https://github.com/zplug/zplug/blob/master/doc/guide/ja/README.md
 
+
+# ${DOTFILES} are defined in .zshenv
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
@@ -19,7 +21,7 @@ fi
 
 # ----- 環境変数
 export LANG=ja_JP.UTF-8
-export EDITOR="vim"				# やっぱりvimだね
+export EDITOR="vim"
 export COLOR="tty"
 export GPG_TTY=$(tty)
 export PYTHONSTARTUP=${DOTFILES}/pythonrc.py
@@ -27,52 +29,72 @@ export GOOGLE_APPLICATION_CREDENTIALS="`echo ~/secrets/kcrtjp-google-serviceacco
 stty stop undef					# ^Sとかを無効にする
 
 # ----- ホスト毎にプロンプト色の変更
+# not all terminals support this
 typeset -A hostcolors
 typeset -A hostblacks
-hostcolors=(kcrt.net cyan rctstudy.jp cyan nitrogen.local blue oxygen.local blue neon yellow lithium yellow aluminum.local blue aluminum blue beryllium yellow beryllium.local yellow)
-hostblacks=(kcrt.net 001111 rctstudy.jp 001111 nitrogen.local 000011 oxygen.local 000011 neon 001111 lithium 001111 aluminum.local 000011 aluminum 000011 beryllium 001111 beryllium 001111)
-if [[ "$hostcolors[$HOST]" == "" ]]; then
-	hostcolor=magenda
+# Remote server: cyan, cloud machine: yellow,
+# Local main machine: blue, Local sub machine: yellow
+hostcolors=(
+	kcrt.net cyan
+	rctstudy.jp cyan
+	lithium yellow
+	aluminum blue aluminum.local blue
+	beryllium yellow beryllium.local yellow
+)
+hostblacks=(
+	kcrt.net 001111
+	rctstudy.jp 001111
+	lithium 001111
+	aluminum 000011 aluminum.local 000011
+	beryllium 001111 beryllium.local 001111
+)
+if (( ${hostcolor[(i)${HOST}]} )); then
+	# Not found: Default color
+	hostcolor="magenda"
 	hostblack="000000"
 else
 	hostcolor=$hostcolors[$HOST]
 	hostblack=$hostblacks[$HOST]
 fi
 if [[ "$TERM" == (screen*|xterm*) && "$SSH_CONNECTION" == "" ]]; then
-	echo -n "]R"				# first, reset the palette
-	echo -n "]P0$hostblack"	# black
-	echo -n "]P1FF0000"		# red
-	echo -n "]P200CC00"		# green
-	echo -n "]P3CCCC00"		# yellow
-	echo -n "]P45555FF"		# blue
-	echo -n "]P5FF00FF"		# magenta
-	echo -n "]P600FFFF"		# cyan
-	echo -n "]P7CCCCCC"		# white
-	echo -n "]P8888888"		# BLACK
-	echo -n "]P9FFAAAA"		# RED
-	echo -n "]PA88FF88"		# GREEN
-	echo -n "]PBFFFFAA"		# YELLOW
-	echo -n "]PC7777FF"		# BLUE
-	echo -n "]PDFFCCFF"		# MAGENTA
-	echo -n "]PE88FFFF"		# CYAN
-	echo -n "]PFFFFFFF"		# WHITE
+	# Set palette color
+	# ␛](OSC) P n rr gg bb ␛\(ST)
+	echo -n "\e]R\e\\"				# first, reset the palette
+	echo -n "\e]P0${hostblack}\e\\"	# black
+	echo -n "\e]P1FF0000\e\\"		# red
+	echo -n "\e]P200CC00\e\\"		# green
+	echo -n "\e]P3CCCC00\e\\"		# yellow
+	echo -n "\e]P461A1E5\e\\"		# blue
+	echo -n "\e]P5FF00FF\e\\"		# magenta
+	echo -n "\e]P600FFFF\e\\"		# cyan
+	echo -n "\e]P7CCCCCC\e\\"		# white
+	echo -n "\e]P8676767\e\\"		# BLACK
+	echo -n "\e]P9FFAAAA\e\\"		# RED
+	echo -n "\e]PA88FF88\e\\"		# GREEN
+	echo -n "\e]PBFFFFAA\e\\"		# YELLOW
+	echo -n "\e]PC7777FF\e\\"		# BLUE
+	echo -n "\e]PDFFCCFF\e\\"		# MAGENTA
+	echo -n "\e]PE88FFFF\e\\"		# CYAN
+	echo -n "\e]PFFFFFFF\e\\"		# WHITE
 fi
 
 # ----- タイトルバーの文字列
+# ␛](OSC) 0; _title_ ␛\(ST)
+local title
 if [[ "$SSH_CONNECTION" != "" ]]; then
 	# ssh接続
-	local title="`echo -n $SSH_CONNECTION | sed -e 's/\(.*\) .* \(.*\) .*/\1 --> \2/g'`"
-	echo "]2;$HOST($title, ssh)\a"
+	title="$HOST (`echo -n $SSH_CONNECTION | sed -e 's/\(.*\) .* \(.*\) .*/\1 --> \2/g'`, ssh)"
 elif [[ "$REMOTEHOST" != "" ]]; then
 	# おそらくtelnet
-	echo -n "]2;$REMOTEHOST --> $HOST\a";
+	title="$REMOTEHOST --> $HOST";
 elif [[ "$OSTYPE" == "cygwin" ]]; then
 	# cygwin
-	echo -n "]2;$HOST (cygwin)\a";
+	title="$HOST (cygwin)";
 else
 	# 普通のローカル
-	echo -n "]2;$HOST (local)\a"
+	title="$HOST (local)";
 fi
+echo -n "\e]2;${title}\e\\"
 
 # ----- 色関係
 autoload colors					# $color[red]とかが使えるようになる。
@@ -238,10 +260,12 @@ function ShowStatus(){
 	StrLength=$(echo -n $1 | wc -m)
 	Cursor_X=$[COLUMNS-$StrLength]	# 場所はお好みで
 	Cursor_Y=1
-	echo -n "[s"			# push pos
-	echo -n "[$[$Cursor_Y];$[$Cursor_X]H"	# set pos
-	echo -n "[07;37m$1[m" # print
-	echo -n "[u"			# pop pos
+	echo -n "\e7"				# Save cursor position
+	# CSI echo -n "[s"			# push pos
+	echo -n "\e[$[$Cursor_Y];$[$Cursor_X]H"	# set pos
+	echo -n "\e[07;37m$1\e[m" # print
+	# CSI echo -n "[u"			# pop pos
+	echo -n "\e8"				# Restore cursor position
 
 }
 # viins <-> vicmd {{{
@@ -391,8 +415,8 @@ else
 	alias la='ls -F -a --color=auto'
 	alias ll='ls -F -la -t -r --human-readable --color=auto'
 fi
-alias du='du -hcs *'
-alias df='df -H'
+abbrev-alias du='du -hcs *'
+abbrev-alias df='df -H'
 if [ -f /usr/share/vim/vimcurrent/macros/less.sh ]; then
 	alias less=/usr/share/vim/vimcurrent/macros/less.sh
 elif [ -f /usr/share/vim/vim*/macros/less.sh ]; then
@@ -407,6 +431,7 @@ alias zln='noglob zmv -L'
 alias history='history -E 1'
 abbrev-alias wget='noglob wget'
 abbrev-alias ping='ping -a -c4'
+abbrev-alias ping6='ping6 -a -c4'
 alias sudo='sudo -E '	#スペースを付けておくとsudo llなどが使える
 alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
@@ -414,11 +439,22 @@ alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
 alias bench-zsh='time zsh -i -c exit'
+abbrev-alias whisper-jp="whisper --language Japanese --model medium"
+abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
 }
 function ffmpeg_deinterlaced_mp4(){
 	ffmpeg -i "$1" -vf "yadif=0:-1" -pix_fmt yuv420p "${1:t:r}.mp4"
+}
+function ffmpeg_480p_16:9_h264(){
+	ffmpeg -i "$1" -vf scale=854:480 -c:v libx264 "${1:t:r} [480p h264].mp4"
+}
+function ffmpeg_480p_16:9_hevc(){
+	ffmpeg -i "$1" -vf scale=854:480 -c:v libx265 "${1:t:r} [480p hevc].mp4"
+}
+function ffmpeg_480p_16:9_hevc_anime(){
+	ffmpeg -i "$1" -vf scale=854:480 -c:v libx265 -tune animation "${1:t:r} [480p hevc].mp4"
 }
 function ffmpeg_720p_h264(){
 	ffmpeg -i "$1" -vf scale=-1:720 -c:v libx264 "${1:t:r} [720p h264].mp4"
@@ -446,10 +482,10 @@ function ffmpeg_maximize(){
 	ffmpeg -i "$1" -af volume=${MAXVOL}dB "${1:t:r}_maximized.${1:e}"
 }
 
-
 function mcd(){
+	# Change directory with migemo
 	if [ $# -eq 0 ]; then
-		echo "example: mcd iryou" 
+		echo "example: `mcd iryou` will execute `cd 医療`"
 	elif [ $# -eq 1 ]; then
 		migemolist=`cmigemo -d /opt/homebrew/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
 		dirname=`ls | grep --color=never -E $migemolist`
@@ -632,47 +668,6 @@ if [[ $OSTYPE = *darwin* ]] ; then
 
 fi
 
-# ----- screen 使うことにしたよ
-function :title(){
-	# 1 : 普通の起動
-	# 2 : screen上	->	TERM = "screen"
-	# 3 : ssh または screen上でのssh	->	SSH_CLIENTが空でない
-	# 4 : ssh上でのscreen	->	SSH_CLIENTが空でない かつ STYが空でない
-
-	local Title=$1
-	if [[ $USER == "root" ]]; then
-		# rootの場合**を付ける
-		Title="*$Title*"
-	fi
-	if [[ "$Title" == "screen" ]]; then
-		# screen と表示され続けることを避ける
-		Title="$HOST"
-	fi
-
-	if [[ -n $SSH_CLIENT ]]; then
-		if [[ -n $STY ]]; then
-			# 4 : ssh上でのscreen
-			echo -n "k$Title\\"
-		else
-			# 3 : ssh または screen上でのssh
-			# マシン名を付け加える
-			if [[ $Title != "$HOST" ]]; then
-				Title="$HOST:$Title"
-			fi
-			echo -n "]2;$Title\a"
-		fi
-	elif [[ "$TERM" == "screen" || "$TERM" == "screen-bce" || "$TERM" == "screen-256color" || "$TERM" == "screen-256color-bce" ]]; then
-		# 2 : screen上	->	TERM = "screen"
-		echo -n "k$Title\\"
-	else
-		# 1 : 普通の起動
-		 echo -n "]2;$Title"
-	fi
-
-}
-
-alias :split='screen -X split'
-alias :only='screen -X only'
 alias :tailf_syslog='sudo tail -f /var/log/syslog | ccze'
 alias :tailf_message='sudo tail -f /var/log/messages | ccze'
 if [ -e /var/log/apache2/access_log ] ; then
@@ -684,8 +679,32 @@ else
 	alias :tailf_apacheerrorlog='sudo tail -f /var/log/apache2/error.log | ccze'
 	alias :tailf_apachelog='sudo tail -f /var/log/apache2/error.log /var/log/apache2/access.log | ccze'
 fi
-alias :top='screen -t top top'
-alias :displays='screen -X displays'
+
+
+# ----- Hooks
+function :title(){
+
+	local Title=$1
+	if [[ $USER == "root" ]]; then
+		# rootの場合**を付ける
+		Title="*$Title*"
+	fi
+
+	if [[ $Title = "tmux" ]]; then
+		# "tmux"と延々と表示されるのを防ぐ
+		Title="$HOST"
+	fi
+
+	if [[ "$TERM_PROGRAM" == "tmux" ]]; then
+		tmux rename-window "$Title"
+	elif [[ -n $SSH_CLIENT ]]; then
+		# via ssh
+		echo -n "\e]2;$HOST:$Title\a"
+	else
+		echo -n "\e]0;$Title\e\\"
+	fi
+
+}
 
 function ShowTitle_preexec(){
 
@@ -728,7 +747,6 @@ function ShowTitle_preexec(){
 	:title $Title
 
 }
-
 local COMMAND=""
 local COMMAND_TIME="0"
 function CheckCommandTime_preexec(){
@@ -761,7 +779,6 @@ add-zsh-hook preexec ShowTitle_preexec
 add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
 
-
 # ----- 開発関係
 # if which pyenv > /dev/null; then
 # 	eval "$(pyenv init -)"
@@ -786,20 +803,6 @@ if [ ! -f ~/zshrc.zwc -o ~/.zshrc -nt ~/.zshrc.zwc ]; then
 	# compile if modified
     zcompile ~/.zshrc
 fi
-
-# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
-
-# export NVM_DIR="$HOME/.nvm"
-# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# --- volta
-# if [ -d "$HOME/.volta" ]; then
-#	export VOLTA_HOME="$HOME/.volta"
-#	export PATH="$VOLTA_HOME/bin:$PATH"
-# fi
-
-# complete -o nospace -C /usr/local/bin/mc mc
 
 # finally, execute fortune.
 if [[ -x `which fortune` ]]; then

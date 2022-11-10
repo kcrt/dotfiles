@@ -1,4 +1,8 @@
 ls * | echo {}
-ls * | parallel -j 4 --dry-run echo {}
+ls * | parallel --progress -j 4 --dry-run echo {}
 ls *.png | parallel -j 4 --dry-run convert {} {.}.jpg
+parallel -a "filelist.txt" echo {}
+
+{}: 入力, {/}: basename, {//}: dirname, {.}: 拡張子なし, {/.}: basename拡張子なし, {#}: 番号
+--progress, --bar
 

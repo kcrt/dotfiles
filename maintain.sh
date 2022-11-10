@@ -73,10 +73,26 @@ case $HOST in
 			rsync -ahv --iconv=UTF-8,UTF-8-MAC --progress --delete /Volumes/eee/comics /Volumes/Private/comic/eee/
 		fi
 
-		OSNotify "Pictures -> drobo"
-		rsync -ahv --progress --delete ~/Pictures /Volumes/Private/pictures
-		OSNotify "Pictures -> Google cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures gs://backup.kcrt.net/manual/pictures
+		if [[ -d /Volumes/Private/ ]]; then
+			OSNotify "Pictures -> drobo"
+			rsync -ahv --progress --delete ~/Pictures /Volumes/Private/pictures
+			OSNotify "Pictures -> Google Cloud"
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures gs://backup.kcrt.net/manual/pictures
+		fi
+
+		if [[ -d /Volumes/Main/ ]]; then
+			OSNotify "Calibre -> drobo"
+			rsync -ahv --progress --delete ~/Calibre\ Library /Volumes/Private/Calibre\ Library
+			OSNotify "Calibre -> Google Cloud"
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library gs://backup.kcrt.net/manual/calibre
+		fi
+
+		if [[ -d /Volumes/Main/ ]]; then
+			OSNotify "Zotero -> drobo"
+			rsync -ahv --progress --delete ~/Zotero /Volumes/Private/Zotero
+			OSNotify "Zotero -> Google Cloud"
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero gs://backup.kcrt.net/manual/zotero
+		fi
 
 		if [[ -e /Volumes/HomeVideo/ ]]; then
 			OSNotify "HomeVideo(Drobo) -> Google Cloud"
