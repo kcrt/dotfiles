@@ -488,10 +488,10 @@ function mcd(){
 	elif [ $# -eq 1 ]; then
 		if [ "$(uname)" = "Darwin" ]; then
 			migemolist=`cmigemo -d /opt/homebrew/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
-			dirname=`find . -type d -maxdepth 1 -mindepth 1 | iconv -f UTF-8-MAC -t UTF-8 | grep --color=never -E $migemolist`
+			dirname=`find . -maxdepth 1 -mindepth 1 -type d | iconv -f UTF-8-MAC -t UTF-8 | grep --color=never -E $migemolist`
 		else
 			migemolist=`cmigemo -d /usr/share/cmigemo/utf-8/migemo-dict -w "$1"`
-			dirname=`find . -type d -maxdepth 1 -mindepth 1 | grep --color=never -E $migemolist`
+			dirname=`find . -maxdepth 1 -mindepth 1 -type d | grep --color=never -E $migemolist`
 		fi
 		ndir=`echo "$dirname" | wc -l`
 		if [ "$dirname" = "" ]; then
@@ -548,7 +548,7 @@ abbrev-alias serve_http_here='python3 -m http.server'
 alias -g N='; OSNotify "shell" "operation finished"'
 
 # 思い出し用
-for f in `find ${DOTFILES}/sheet -type f -maxdepth 1 -maxdepth 1`; do
+for f in `find ${DOTFILES}/sheet -maxdepth 1 -mindepth 1 -type f`; do
 	alias :howto${f:t}="cat `realpath $f`"
 done
 
