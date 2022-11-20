@@ -19,3 +19,36 @@ function need_app(){
 	fi
 
 }
+
+# usage:
+# bench-start
+# (heavy work)
+# bench-checkpoint "heavy work done"
+# (another heavy work)
+# bench-end
+
+BENCH_START=0
+BENCH_CHECKPOINTSTART=0
+function current-milliseconds() {
+	if [ "$(uname)" = "Darwin" ]; then
+		gdate +%s%3N
+	else
+		date +%s%3N
+	fi
+}
+function bench-start(){
+	echo "--- Benchmark start ---"
+	BENCH_START=`current-milliseconds`
+	BENCH_CHECKPOINTSTART=BENCH_START
+}
+function bench-checkpoint(){
+	BENCH_END=`current-milliseconds`
+	BENCH_DIFF=$(( $BENCH_END - $BENCH_CHECKPOINTSTART ))
+	echo "--- Check point $1: $BENCH_DIFF [msec.] ---"
+	BENCH_CHECKPOINTSTART=`current-milliseconds`
+}
+function bench-end(){
+	BENCH_END=`current-milliseconds`
+	BENCH_DIFF=$(( $BENCH_END - $BENCH_START ))
+	echo "--- Benchmark finished: $BENCH_DIFF [msec.] ---"
+}

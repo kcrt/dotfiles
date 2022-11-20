@@ -10,7 +10,6 @@
 #		http://www.clear-code.com/blog/2011/9/5.html
 #		https://github.com/zplug/zplug/blob/master/doc/guide/ja/README.md
 
-
 # ${DOTFILES} are defined in .zshenv
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
@@ -187,12 +186,12 @@ function print_test(){
 if [[ -r ~/.zplug/init.zsh ]]; then
 	source ~/.zplug/init.zsh
 	zplug "zsh-users/zsh-syntax-highlighting", defer:2
-	zplug "zsh-users/zsh-history-substring-search"
-	zplug "zsh-users/zsh-completions"
-	zplug "plugins/brew", from:oh-my-zsh, if:"which brew"
-	zplug "rupa/z", use:z.sh
-	zplug "b4b4r07/enhancd", use:init.sh
-	zplug "momo-lab/zsh-abbrev-alias"
+	zplug "zsh-users/zsh-history-substring-search", defer:2
+	zplug "zsh-users/zsh-completions", defer:2
+	zplug "plugins/brew", from:oh-my-zsh, if:"which brew", defer:2
+	zplug "rupa/z", use:z.sh, defer:2
+	zplug "b4b4r07/enhancd", use:init.sh, defer:2
+	zplug "momo-lab/zsh-abbrev-alias", defer:2
 	export ENHANCED_FILTER=fzy:fzf:peco
 	if ! zplug check; then
 		zplug check --verbose
@@ -438,7 +437,7 @@ alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --e
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
-alias bench-zsh='time zsh -i -c exit'
+abbrev-alias bench-zsh='time BENCHMARK_ZSHRC=1 zsh -i -c exit'
 abbrev-alias whisper-jp="whisper --language Japanese --model medium"
 abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
@@ -487,8 +486,13 @@ function mcd(){
 	if [ $# -eq 0 ]; then
 		echo "example: `mcd iryou` will execute `cd 医療`"
 	elif [ $# -eq 1 ]; then
-		migemolist=`cmigemo -d /opt/homebrew/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
-		dirname=`ls | grep --color=never -E $migemolist`
+		if [ "$(uname)" = "Darwin" ]; then
+			migemolist=`cmigemo -d /opt/homebrew/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
+			dirname=`find . -type d -maxdepth 1 -mindepth 1 | iconv -f UTF-8-MAC -t UTF-8 | grep --color=never -E $migemolist`
+		else
+			migemolist=`cmigemo -d /usr/share/cmigemo/utf-8/migemo-dict -w "$1"`
+			dirname=`find . -type d -maxdepth 1 -mindepth 1 | grep --color=never -E $migemolist`
+		fi
 		ndir=`echo "$dirname" | wc -l`
 		if [ "$dirname" = "" ]; then
 			echo "no such a directory."
@@ -544,14 +548,8 @@ abbrev-alias serve_http_here='python3 -m http.server'
 alias -g N='; OSNotify "shell" "operation finished"'
 
 # 思い出し用
-for f in ${DOTFILES}/sheet/*; do
-	if [[ -d "$f" ]]; then
-		# skip
-	elif [[ `cat $f | wc -l` -ge 10 ]]; then
-		alias :howto${f:t}="less $f"
-	else
-		alias :howto${f:t}="cat $f"
-	fi
+for f in `find ${DOTFILES}/sheet -type f -maxdepth 1 -maxdepth 1`; do
+	alias :howto${f:t}="cat `realpath $f`"
 done
 
 # scriptフォルダ
@@ -626,7 +624,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 		export HOMEBREW_NO_AUTO_UPDATE=1
 	fi
-	for libname in readline zlib openssl portaudio; do
+	for libname in readline zlib openssl@3 portaudio; do
 		export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
 		export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
 	done
@@ -665,7 +663,6 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 	fi
-
 fi
 
 alias :tailf_syslog='sudo tail -f /var/log/syslog | ccze'
@@ -811,4 +808,8 @@ if [[ -x `which fortune` ]]; then
 	fortune
 	echo -n "[0m"
 	echo ""
+fi
+
+if (which zprof > /dev/null 2>&1); then
+	zprof
 fi

@@ -1,9 +1,7 @@
 #!/bin/sh
 
 
-for i in *; do
-	if [[ -d $i ]]; then
-		echo "===== $i ====="
-		zip -r "$i".zip "$i"
-	fi
-done
+# zip each folder in the current directory parallelly
+# usage: zipeachfolder.sh
+
+find . -maxdepth 1 -type d -print0 | parallel --progress --bar -0 zip -q -r {}.zip {}

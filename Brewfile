@@ -267,6 +267,7 @@ cask "steam"
 cask "suspicious-package"
 cask "tigervnc-viewer"
 cask "tomighty"
+cask "tor-browser"
 cask "touch-bar-simulator"
 cask "transmission"
 cask "tripmode"
@@ -305,7 +306,6 @@ mas "Kindle", id: 405399194
 mas "LadioCast", id: 411213048
 mas "LibreOffice", id: 1630474372
 mas "LibreOffice Vanilla", id: 921923693
-mas "LINE", id: 539883307
 mas "LINE WORKS", id: 1029784963
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
