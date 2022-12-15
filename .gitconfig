@@ -35,6 +35,7 @@
 	mergevim = mergetool --tool=vimdiff
 	mergemeld = mergetool --tool=meld
 	edit-history = rebase -i HEAD~10
+	commit-without-sign = commit --no-gpg-sign
 [diff "exstrings"]
 	textconv = ~/dotfiles/script/exstrings.sh
 [difftool "sourcetree"]

@@ -314,7 +314,7 @@ bindkey "^Q" self-insert
 
 
 # ----- パス
-export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin
+export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin:/snap/bin
 
 # ----- 関数
 function _w3m(){
