@@ -1,0 +1,2 @@
+curl -L https://profile.kcrt.net/kcrt.png --output kcrt.png
+	-L: 3xxの場合、リダイレクト先を再取得する

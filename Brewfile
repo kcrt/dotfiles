@@ -146,6 +146,7 @@ brew "parallel"
 brew "pdfcrack"
 brew "pdftk-java"
 brew "peco"
+brew "pigz"
 brew "poppler"
 brew "portaudio"
 brew "progress"
@@ -185,6 +186,7 @@ cask "appcleaner"
 cask "arduino"
 cask "atok"
 cask "audacity"
+cask "background-music"
 cask "bartender"
 cask "bathyscaphe"
 cask "betterzip"
@@ -205,6 +207,8 @@ cask "deepl"
 cask "docker"
 cask "duet"
 cask "firefox"
+cask "font-biz-udgothic"
+cask "font-biz-udpgothic"
 cask "font-fira-code"
 cask "font-ipaexfont"
 cask "forklift"
@@ -238,7 +242,6 @@ cask "mactex"
 cask "makemkv"
 cask "mark-text"
 cask "meld"
-cask "mendeley"
 cask "menumeters"
 cask "microsoft-auto-update"
 cask "microsoft-edge"
@@ -306,6 +309,7 @@ mas "Kindle", id: 405399194
 mas "LadioCast", id: 411213048
 mas "LibreOffice", id: 1630474372
 mas "LibreOffice Vanilla", id: 921923693
+mas "LINE", id: 539883307
 mas "LINE WORKS", id: 1029784963
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766

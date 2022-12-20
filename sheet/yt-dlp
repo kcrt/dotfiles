@@ -1,0 +1,7 @@
+yt-dlp "3YMWx0V2I7I"
+
+-F, --list-formats
+-f, --format FORMAT
+
+-x, --extract-audio
+

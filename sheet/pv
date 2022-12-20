@@ -1,0 +1,13 @@
+pv -pterabT -i 0.3 -c -N NAME
+
+-p: progress				-r: rate counter
+-t: timer (elapsed time)	-a: avg. rate
+-e: eta						-b: byte counter
+-I: show eta as time		-T: buffer percent
+
+-i SEC: update sec
+-N Name: prefix name
+-c: use cursor esc sequence instead of CR
+
+-L RATE: limit transfer rate
+-B BUFFERSIZE: set buffer size

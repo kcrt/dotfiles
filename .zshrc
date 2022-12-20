@@ -194,15 +194,14 @@ if [[ -r ~/.zplug/init.zsh ]]; then
 	zplug "momo-lab/zsh-abbrev-alias", defer:2
 	export ENHANCED_FILTER=fzy:fzf:peco
 	if ! zplug check; then
-		zplug check --verbose
-		printf "Install? [y/N]: "
-		if read -q; then
-			echo; zplug install
-		fi
+		zplug install
 	fi
 	zplug load
 else
 	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh' to install zplug"
+	function abbrev-alias(){
+		# skip this command
+	}
 fi
 
 # ----- Version Control(svn, git)のブランチなどを表示
@@ -400,6 +399,7 @@ abbrev-alias w3m=' noglob _w3m'
 abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 abbrev-alias mutt='neomutt'
+abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
 if [[ -x `which thefuck` ]]; then
 	eval "$(thefuck --alias)"
 fi
@@ -536,7 +536,7 @@ abbrev-alias docker_ubuntu="docker run -it --rm ubuntu"
 abbrev-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
 abbrev-alias docker_ubuntu_mount_home="docker run -it --rm -v $HOME:/root ubuntu"
 abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
-abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro myubuntu"
+abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
@@ -642,15 +642,16 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	alias SetInProgress="xattr -w com.apple.metadata:_kMDItemUserTags 'InProgress' "
 	alias GetDeletable="mdfind 'kMDItemUserTags==Deletable'"
 	alias SetDeletable="xattr -w com.apple.metadata:_kMDItemUserTags 'Deletable' "
-	alias sayen="say -v Alex"
-	alias sayuk="say -v Daniel"
-	alias sayjp="say -v Kyoko"
-	alias saych="say -v Ting-Ting"
+	abbrev-alias sayen="say -v 'Ava (Premium)'"
+	abbrev-alias sayuk="say -v Daniel"
+	abbrev-alias sayjp="say -v 'Kyoko (Enhanced)'"
+	abbrev-alias saych="say -v Ting-Ting"
 	alias QuickLook="qlmanage -p"
 	alias :TimeMachineLog="log stream --style syslog --predicate 'senderImagePath contains[cd] \"TimeMachine\"' --info"
 	alias HeySiri="open -a Siri"
 	alias objdump="objdump --x86-asm-syntax=intel"
 	alias zsh_on_rosetta="arch -x86_64 /bin/zsh"
+	
 	
 	# ctags=`echo /usr/local/Cellar/ctags/*/bin/ctags`
 	# alias ctags=$ctags
@@ -739,6 +740,10 @@ function ShowTitle_preexec(){
 			;;
 		*)
 			Title=$cmd[1];
+			# trunc for long command
+			if [[ ${#Title} -gt 15 ]]; then
+				Title="...${Title: -15:15}"
+			fi
 			;;
 	esac
 	:title $Title

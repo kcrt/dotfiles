@@ -32,7 +32,7 @@ BENCH_CHECKPOINTSTART=0
 function current-milliseconds() {
 	if [ "$(uname)" = "Darwin" ]; then
 		gdate +%s%3N
-	else
+	els
 		date +%s%3N
 	fi
 }

@@ -258,7 +258,7 @@ function audioEventCallback(arg)
 		end
 		local balance = outdev:balance()
 		if balance ~= nil and math.abs(balance - 0.5) > 0.01 then
-			warn_alert("Unbalanced output of stereo device " .. (balance * 1000 // 10 / 100))
+			warn_alert("Unbalanced output of stereo device [" .. outdev:name() .. "] " .. (balance * 1000 // 10 / 100))
 		end
 		if outdev:name() == "kcrt's AirPods Pro" or outdev:name() == "Imitation of AirPods Pro" then
 			outdev:setMuted(false)
