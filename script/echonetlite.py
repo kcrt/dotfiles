@@ -41,7 +41,11 @@ import argparse
 # 8.0
 
 
+""" acquire IPv4 address from MAC address """
+
+
 def MAC2IPv4(mac):
+
     ret = subprocess.run(
         f"arp -an | grep {mac} | head -n1", shell=True, capture_output=True)
     output = ret.stdout.decode()
@@ -49,6 +53,7 @@ def MAC2IPv4(mac):
     if match:
         return match.group()
     else:
+        print("Cannot acquire IPv4.")
         exit(-1)
 
 
@@ -60,6 +65,8 @@ def echonet(targetIP, command):
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     send_sock.sendto(bytes.fromhex(command), (targetIP, 3610))
 
+    # receive response with timeout 5 sec
+    recv_sock.settimeout(5)
     data, addr = recv_sock.recvfrom(1024)
     send_sock.close()
     recv_sock.close()
@@ -68,7 +75,7 @@ def echonet(targetIP, command):
 
 
 def decode_1byte(ret):
-    if(ret[10] == 0x72 and ret[11] == 0x1):
+    if (ret[10] == 0x72 and ret[11] == 0x1):
         return ret[14]
     else:
         return None
@@ -77,7 +84,7 @@ def decode_1byte(ret):
 def uint8_to_int8(val):
     # 0 - 127 -> 0 - 127
     # 255 -> -1, 254 -> -2, ..., 128 -> -128
-    if(val > 128):
+    if (val > 128):
         return val - 256
     else:
         return val
@@ -86,7 +93,7 @@ def uint8_to_int8(val):
 def uint16_to_int16(val):
     # 0 - 32767 -> 0 - 32767
     # 65535 -> -1, 65534 -> -2, ..., 32768 -> -32768
-    if(val > 32768):
+    if (val > 32768):
         return val - 65536
     else:
         return val
