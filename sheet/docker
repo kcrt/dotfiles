@@ -26,5 +26,7 @@ docker image save
 docker image tag
 docker inspect CONTAINER|IMAGE
 
+--platform linux/amd64
+
 screen ~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/tty
 	# access to docker container

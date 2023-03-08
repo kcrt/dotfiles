@@ -269,6 +269,7 @@ Plugin 'tpope/vim-surround'				" Enable additional text-object like s(
 " --- color scheme
 Plugin 'w0ng/vim-hybrid'				" Good color scheme based on Solarized
 Plugin 'vim-scripts/AnsiEsc.vim'		" apply escape sequense like: [36mHello[0m , :AnsiEsc
+Plugin 'chrisbra/Colorizer'				" :ColorHighLight
 " --- development
 " Plugin 'vim-syntastic/syntastic'		" file syntax error check
 Plugin 'thinca/vim-quickrun'

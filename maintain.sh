@@ -49,14 +49,14 @@ case $HOST in
 
 		echo_info "==== Data back up and sync ===="
 		OSNotify "Medical -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x ".*site-packages.*|\.git|\.DS_Store|\.tmp\.driveupload" -d -r ~/Documents/医療 gs://backup.kcrt.net/manual/document_medical
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x ".*site-packages.*|\.git|\.DS_Store|\.tmp\.driveupload" -d -r ~/Documents/医療 gs://backup.kcrt.net/auto/document_medical
 		if [[ -d /Volumes/Main/shelter/ ]]; then
 			OSNotify "Medical -> Drobo"
 			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude="packrat/" --exclude=".tmp.driveupload" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/医療 /Volumes/Main/shelter/medical
 		fi
 
 		OSNotify "diskimage -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://backup.kcrt.net/manual/diskimages
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://backup.kcrt.net/auto/diskimages
 
 		if [[ -d /Volumes/Private/diskimages/ ]]; then
 			OSNotify "diskimage -> Drobo"
@@ -65,7 +65,7 @@ case $HOST in
 		
 		if [[ -d /Volumes/Main/books/ ]]; then
 			OSNotify "books(Drobo) -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -r /Volumes/Main/books gs://backup.kcrt.net/manual/books
+			LANG=ja_JP.UTF-8 gsutil -m rsync -r /Volumes/Main/books gs://backup.kcrt.net/auto/books
 		fi
 
 		if [[ -d /Volumes/eee/ && -d /Volumes/Private/comic/eee/ ]]; then
@@ -77,27 +77,27 @@ case $HOST in
 			OSNotify "Pictures -> drobo"
 			rsync -ahv --progress --delete ~/Pictures /Volumes/Private/pictures
 			OSNotify "Pictures -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures gs://backup.kcrt.net/manual/pictures
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures gs://backup.kcrt.net/auto/pictures
 		fi
 
 		if [[ -d /Volumes/Main/ ]]; then
 			OSNotify "Calibre -> drobo"
 			rsync -ahv --progress --delete ~/Calibre\ Library /Volumes/Private/Calibre\ Library
 			OSNotify "Calibre -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library gs://backup.kcrt.net/manual/calibre
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library gs://backup.kcrt.net/auto/calibre
 		fi
 
 		if [[ -d /Volumes/Main/ ]]; then
 			OSNotify "Zotero -> drobo"
 			rsync -ahv --progress --delete ~/Zotero /Volumes/Private/Zotero
 			OSNotify "Zotero -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero gs://backup.kcrt.net/manual/zotero
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero gs://backup.kcrt.net/auto/zotero
 		fi
 
 		if [[ -e /Volumes/HomeVideo/ ]]; then
 			OSNotify "HomeVideo(Drobo) -> Google Cloud"
-			gsutil -m rsync -d -r /Volumes/HomeVideo/Converted gs://backup.kcrt.net/manual/convertedvideos
-			gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM gs://backup.kcrt.net/manual/videos
+			gsutil -m rsync -d -r /Volumes/HomeVideo/Converted gs://backup.kcrt.net/auto/convertedvideos
+			gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM gs://backup.kcrt.net/auto/videos
 		fi
 
 		echo_info "==== recording (if available) ===="
@@ -111,16 +111,21 @@ case $HOST in
 			echo "There are $n m4a file(s)."
 			if [[ "$n" -ge 1 ]]; then
 				for m4afile in ~/nosync/RecordingToSend/*.m4a; do
-					RECORDINGDATE=`ffprobe -loglevel quiet -of json -show_entries stream "$m4afile" | jq -r '.streams[0].tags.creation_time' | cut -c 1-19`
+					RECORDINGDATE=`ffprobe -loglevel quiet -of json -show_entries stream "$m4afile" | jq -r '.streams[0].tags.creation_time' | cut -c 1-19 | sed 's/:/-/g'`
 					mv -v "$m4afile" "/Volumes/Private/Recording/VoiceMemo/${RECORDINGDATE}_${m4afile:t}"
 				done
 			fi
+			for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
+				if [ ! -e ${i:r}.txt ]; then
+					/Users/kcrt/.asdf/shims/whisper --language Japanese --model large "$i" | tee "${i:r}.txt"
+				fi
+			done
 		fi
 		
 		echo_info "==== keepass ===="
 		cp ~/passwords.kdbx ~/others/passwords.kdbx
 		cp ~/passwords.kdbx "/Users/kcrt/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx"
-		gsutil cp ~/passwords.kdbx gs://backup.kcrt.net/manual/passwords.kdbx
+		gsutil cp ~/passwords.kdbx gs://backup.kcrt.net/auto/passwords.kdbx
 		if [[ -e /Volumes/Main/ ]]; then
 			cp ~/passwords.kdbx /Volumes/Main/shelter/passwords.kdbx
 		fi
@@ -148,7 +153,7 @@ vim -c "PluginInstall!" -c "qall"
 echo_info "R update"
 R --vanilla << R_UPDATE
 options(repos=c(CRAN="http://cran.r-project.org"))
-packages_to_need = c("tidyverse", "gdata", "agricolae", "car", "extrafont", "ggplot2", "coin", "Epi", "irr", "minerva", "coefplot", "pROC", "Cairo", "samr", "inline", "Rcpp", "readxl", "MatchIt", "epiDisplay", "psych", "rstan")
+packages_to_need = c("tidyverse")
 packages_installed = rownames(installed.packages())
 packages_to_install = packages_to_need[!is.element(packages_to_need, packages_installed)]
 install.packages(packages_to_install, dependencies=TRUE)

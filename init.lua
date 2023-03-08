@@ -292,7 +292,7 @@ hConnectP2p = nil
 p2peewWs = nil
 function connectP2peew()
 	logger.i("p2peew: connecting...")
-	p2peewWs = hs.websocket.new("wss://api.p2pquake.net/v2/ws", p2peewCallback)
+	-- suppress p2peewWs = hs.websocket.new("wss://api.p2pquake.net/v2/ws", p2peewCallback)
 end
 function deg2rad(degree)
 	return degree * 2 * math.pi / 360

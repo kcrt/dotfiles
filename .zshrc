@@ -396,6 +396,7 @@ abbrev-alias mv='nocorrect mv'
 abbrev-alias cp='nocorrect cp'
 abbrev-alias mkdir='nocorrect mkdir'
 abbrev-alias w3m=' noglob _w3m'
+abbrev-alias carbonyl='docker run -ti fathyb/carbonyl --rm '
 abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 abbrev-alias mutt='neomutt'
@@ -435,7 +436,7 @@ alias sudo='sudo -E '	#スペースを付けておくとsudo llなどが使え�
 alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
+abbrev-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
 abbrev-alias bench-zsh='time BENCHMARK_ZSHRC=1 zsh -i -c exit'
 abbrev-alias whisper-jp="whisper --language Japanese --model medium"
@@ -528,6 +529,7 @@ abbrev-alias eee='noglob zmv -v "([a-e|s|g])(*\(*\) \[*\]*).zip" "/Volumes/eee/c
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
+
 abbrev-alias docker_busybox="docker run -it --rm busybox"
 abbrev-alias docker_busybox_mount_home="docker run -it --rm -v $HOME:/root busybox"
 abbrev-alias docker_alpine="docker run -it --rm alpine"
@@ -537,6 +539,8 @@ abbrev-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubunt
 abbrev-alias docker_ubuntu_mount_home="docker run -it --rm -v $HOME:/root ubuntu"
 abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
 abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
+abbrev-alias docker_secretlint='docker run -v `pwd`:`pwd` -w `pwd` --rm -it secretlint/secretlint secretlint "**/*"'
+
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
@@ -544,6 +548,10 @@ abbrev-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastCha
 abbrev-alias :checkjpeg='find . -name "*.jpg" -or -name "*.JPG" -exec jpeginfo -c {} \;'
 abbrev-alias :howmanyfiles='find . -print | wc -l'
 abbrev-alias serve_http_here='python3 -m http.server'
+
+abbrev-alias openai_image='openai api image.create -n 1 -p ""'
+abbrev-alias openai_chatgpt='openai api chat_completions.create -m gpt-3.5-turbo -g user ""'
+
 # global alias
 alias -g N='; OSNotify "shell" "operation finished"'
 
@@ -574,6 +582,8 @@ function viewxls(){
 }
 alias -s png='icat'
 alias -s jpg='icat'
+alias -s md='glow -p'
+alias -s json='jq -C .'
 
 # ----- コマンドライン引数
 #export GREP_OPTIONS='--color=auto --binary-file=without-match --line-number --exclude-dir=.git --exclude-dir=.svn'

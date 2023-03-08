@@ -5,6 +5,7 @@ cat main.json | jq ".items[] | .name"
 cat main.json | jq ".items[] | {name: .name, price: .price}"
 cat main.json | jq "[.items[].price] | add"
 cat main.json | jq '.["@items"]'
+cat main.json | jq '.items[] | select(.name == "kcrt")'
 	@csv: csvへ
 引数
 	-r: "" ダブルクオーテーションなし

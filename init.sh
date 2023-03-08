@@ -182,6 +182,7 @@ elif [ -x /usr/bin/apt ]; then
 	sudo apt -y install unattended-upgrades
 	sudo dpkg-reconfigure -plow unattended-upgrades
 	echo_aqua "Please set e-mail address for information of unattended upgrades."
+	echo_aqua "And set Automatic-Reboot to true if required."
 	read ans
 	sudo vim /etc/apt/apt.conf.d/50unattended-upgrades
 	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "

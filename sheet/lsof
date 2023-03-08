@@ -11,3 +11,4 @@ lsof [対象ファイル名] [-a] [条件]
 lsof /var/log/*
 lsof -D /var/log
 lsof -a -c zoom -i  # zoomの開いているファイル(ネットワークを含む)を表示
+lsof -i:8080		# Port 8080を開いているプロセスを表示
