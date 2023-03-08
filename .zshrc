@@ -802,7 +802,11 @@ if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
 	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 fi
 
-if [[ -x `which screen` ]]; then
+if [[ -x `which tmux` ]]; then
+	if [[ `expr $TERM : screen` -eq 0 ]]; then
+		tmux a
+	fi
+elif [[ -x `which screen` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
 		# sleep 1
 		screen -r

@@ -17,5 +17,7 @@ telnet
 	(-eは最近は有効になっていないことが多い)
 	mkfifo /tmp/f;cat /tmp/f | /bin/sh -i 2>&1 | nc -l -p 7777 > /tmp/f
 
+ポート転送
+	mkfifo /tmp/f; nc -l 8080 < /tmp/f | nc localhost 80 > /tmp/f
 Portscan
 	nc -z SERVER 10-1000
