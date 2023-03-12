@@ -67,10 +67,13 @@ def echonet(targetIP, command):
 
     # receive response with timeout 5 sec
     recv_sock.settimeout(5)
-    data, addr = recv_sock.recvfrom(1024)
+    try:
+        data, addr = recv_sock.recvfrom(1024)
+    except socket.timeout:
+        return ""
+
     send_sock.close()
     recv_sock.close()
-
     return data
 
 
@@ -100,6 +103,9 @@ def uint16_to_int16(val):
 
 
 def convert_edc(hex, mode):
+    if hex == "":
+        return None
+
     if mode == 'raw':
         return hex
     elif mode == 'uint8':
@@ -153,7 +159,10 @@ def main():
         print(f"[info] targetIP={targetIP} message={message}")
 
     ret = echonet(targetIP, message)
-    retstr = str(binascii.hexlify(ret), "utf-8")
+    if ret == "":
+        retstr = ""
+    else:
+        retstr = str(binascii.hexlify(ret), "utf-8")
 
     if args.verbose:
         retstrinfo = re.sub(
