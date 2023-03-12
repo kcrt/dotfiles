@@ -804,7 +804,8 @@ fi
 
 if [[ -x `which tmux` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
-		tmux a
+		echo "tmux"
+		tmux ls
 	fi
 elif [[ -x `which screen` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
