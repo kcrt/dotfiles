@@ -77,13 +77,6 @@ def echonet(targetIP, command):
     return data
 
 
-def decode_1byte(ret):
-    if (ret[10] == 0x72 and ret[11] == 0x1):
-        return ret[14]
-    else:
-        return None
-
-
 def uint8_to_int8(val):
     # 0 - 127 -> 0 - 127
     # 255 -> -1, 254 -> -2, ..., 128 -> -128
