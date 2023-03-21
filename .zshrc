@@ -549,8 +549,12 @@ abbrev-alias :checkjpeg='find . -name "*.jpg" -or -name "*.JPG" -exec jpeginfo -
 abbrev-alias :howmanyfiles='find . -print | wc -l'
 abbrev-alias serve_http_here='python3 -m http.server'
 
-abbrev-alias openai_image='openai api image.create -n 1 -p ""'
-abbrev-alias openai_chatgpt='openai api chat_completions.create -m gpt-3.5-turbo -g user ""'
+abbrev-alias openai_image='openai api image.create -n 1 -p'
+abbrev-alias openai_chatgpt='openai api chat_completions.create -m gpt-3.5-turbo --max-tokens 3500 -g user'
+function openai_whatisthisfile(){
+	openai api chat_completions.create -m gpt-3.5-turbo --max-tokens 1000 -g user "$(cat <(echo "下記のファイルの内容を説明してください。"; echo '```'; cat "$1"; echo '```'; ))"
+}
+
 
 # global alias
 alias -g N='; OSNotify "shell" "operation finished"'
