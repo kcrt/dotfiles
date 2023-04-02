@@ -6,16 +6,6 @@
 #
 #         USAGE:  source echo_color.sh
 #
-#   DESCRIPTION:
-#
-#       OPTIONS:  ---
-#  REQUIREMENTS:  ---
-#          BUGS:  ---
-#         NOTES:  ---
-#        AUTHOR:  kcrt <kcrt@kcrt.net>
-#       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
-#      REVISION:  $Id$
-#
 #===============================================================================
 
 function echo_color(){

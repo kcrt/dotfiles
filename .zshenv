@@ -1,3 +1,4 @@
+
 if [ $BENCHMARK_ZSHRC ]; then
 	zmodload zsh/zprof && zprof
 fi
@@ -10,4 +11,3 @@ else
 fi
 
 export GOPATH="$HOME/go"
-

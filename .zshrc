@@ -313,6 +313,7 @@ bindkey "^Q" self-insert
 
 
 # ----- パス
+typeset -U path PATH
 export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin:/snap/bin
 
 # ----- 関数
@@ -335,27 +336,6 @@ function :svnwhatsnew(){
 }
 fucntion :svnwhatchanged(){
 	vimdiff $1 =(svn cat --revision HEAD $1)
-}
-function trash(){
-
-    if [ $# = 0 ]; then
-		command rm
-        return 1
-    fi
-
-    if [ ! -d ~/.trash ]; then
-        echo "ERROR : ~/.trash not found!"
-        return 1
-    fi
-
-    mv $@ ~/.trash || return
-
-    if [ $# = 1 ]; then
-        echo "'$1' was moved into trash!"
-    else
-        echo "$# files were moved into trash!"
-    fi
-
 }
 function testarchive(){
 	if [[ ${1:e} = "zip" ]]; then
@@ -391,7 +371,7 @@ abbrev-alias vimtree='vim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
 abbrev-alias gvimtree='gvim -c "let g:nerdtree_tabs_open_on_console_startup = 1"'
 abbrev-alias vimrc='vim ~/.vimrc'
 abbrev-alias zshrc='vim ~/.zshrc'
-abbrev-alias rm='trash'
+# abbrev-alias rm='trash'
 abbrev-alias mv='nocorrect mv'
 abbrev-alias cp='nocorrect cp'
 abbrev-alias mkdir='nocorrect mkdir'
@@ -572,11 +552,11 @@ done
 # 便利コマンド
 abbrev-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum += \$1; }; END { print sum }'"
 abbrev-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
-abbrev-alias nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
-abbrev-alias nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
+abbrev-alias iconv-nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
+abbrev-alias iconv-nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
 abbrev-alias verynice="nice -n 20"
 
-# ----- suffix alias (関連づけ)
+# ----- suffix alias ()
 alias -s exe='wine'
 alias -s txt='less'
 alias -s log='tail -f -n20'
@@ -806,6 +786,10 @@ if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
 	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 fi
 
+# check if github-copilot-cli is installed
+if command -v github-copilot-cli > /dev/null 2>&1 ; then
+	eval "$(github-copilot-cli alias -- "$0")"
+fi
 if [[ -x `which tmux` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
 		echo "tmux"

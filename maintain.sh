@@ -35,10 +35,14 @@ case $HOST in
 
 		OSNotify "Anti-virus database updating..."
 		freshclam
-		# OSNotify "Scanning system..."
-		# clamd &
-		# sleep 5
-		# clamdscan -m ~
+		OSNotify "Scanning system. This may take a while..."
+		clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+
+		# if command fails, pause and wait for user to press enter
+		if [[ $? -ne 0 ]]; then
+			OSError "!!! Virus found !!!"
+			read -p "Please check message. Press [Enter] key to continue..."
+		fi
 
 		if [[ -e /Volumes/Main/ ]]; then
 			OSNotify "/Volumes/Main/ mounted, refreshing VolumesMain.txt..."
@@ -48,56 +52,64 @@ case $HOST in
 		fi
 
 		echo_info "==== Data back up and sync ===="
-		OSNotify "Medical -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x ".*site-packages.*|\.git|\.DS_Store|\.tmp\.driveupload" -d -r ~/Documents/医療 gs://backup.kcrt.net/auto/document_medical
+
+		OSNotify "prog -> Google Cloud"
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
 		if [[ -d /Volumes/Main/shelter/ ]]; then
-			OSNotify "Medical -> Drobo"
-			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude="packrat/" --exclude=".tmp.driveupload" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/医療 /Volumes/Main/shelter/medical
+			OSNotify "prog -> Drobo"
+			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/prog/ /Volumes/Main/shelter/backup/prog
+		fi
+
+		OSNotify "Documents -> Google Cloud"
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/Documents gs://auto.backup.kcrt.net/auto/documents
+		if [[ -d /Volumes/Main/shelter/ ]]; then
+			OSNotify "Documents -> Drobo"
+			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/ /Volumes/Main/shelter/backup/documents
 		fi
 
 		OSNotify "diskimage -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://backup.kcrt.net/auto/diskimages
-
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://auto.backup.kcrt.net/auto/diskimages
 		if [[ -d /Volumes/Private/diskimages/ ]]; then
-			OSNotify "diskimage -> Drobo"
-			rsync -ahv --progress --delete ~/diskimages/ /Volumes/Private/diskimages/
+			OSNotify "diskimage -> Drobo (Private)"
+			rsync -ahv --progress --delete ~/diskimages/ /Volumes/Private/backup/diskimages
 		fi
-		
+		V
+
 		if [[ -d /Volumes/Main/books/ ]]; then
 			OSNotify "books(Drobo) -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -r /Volumes/Main/books gs://backup.kcrt.net/auto/books
+			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r /Volumes/Main/books/ gs://auto.backup.kcrt.net/auto/books
+		fi
+
+		OSNotify "Calibre -> Google Cloud"
+		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library/ gs://auto.backup.kcrt.net/auto/calibre
+		if [[ -d /Volumes/Main/ ]]; then
+			OSNotify "Calibre -> drobo"
+			rsync -ahv --progress --delete ~/Calibre\ Library/ /Volumes/Private/backup/Calibre\ Library
 		fi
 
 		if [[ -d /Volumes/eee/ && -d /Volumes/Private/comic/eee/ ]]; then
 			OSNotify "eee (mounted) -> Drobo"
-			rsync -ahv --iconv=UTF-8,UTF-8-MAC --progress --delete /Volumes/eee/comics /Volumes/Private/comic/eee/
+			rsync -ahv --iconv=UTF-8,UTF-8-MAC --progress --delete /Volumes/eee/comics/ /Volumes/Private/backup/eee/
 		fi
 
+		OSNotify "Pictures -> Google Cloud"
+		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures/ gs://auto.backup.kcrt.net/auto/pictures
 		if [[ -d /Volumes/Private/ ]]; then
 			OSNotify "Pictures -> drobo"
-			rsync -ahv --progress --delete ~/Pictures /Volumes/Private/pictures
-			OSNotify "Pictures -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures gs://backup.kcrt.net/auto/pictures
+			rsync -ahv --progress --delete ~/Pictures/ /Volumes/Private/backup/pictures
 		fi
 
-		if [[ -d /Volumes/Main/ ]]; then
-			OSNotify "Calibre -> drobo"
-			rsync -ahv --progress --delete ~/Calibre\ Library /Volumes/Private/Calibre\ Library
-			OSNotify "Calibre -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library gs://backup.kcrt.net/auto/calibre
-		fi
-
+		OSNotify "Zotero -> Google Cloud"
+		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero/ gs://auto.backup.kcrt.net/auto/zotero
 		if [[ -d /Volumes/Main/ ]]; then
 			OSNotify "Zotero -> drobo"
-			rsync -ahv --progress --delete ~/Zotero /Volumes/Private/Zotero
-			OSNotify "Zotero -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero gs://backup.kcrt.net/auto/zotero
+			rsync -ahv --progress --delete ~/Zotero/ /Volumes/Main/shelter/backup/Zotero
 		fi
 
 		if [[ -e /Volumes/HomeVideo/ ]]; then
 			OSNotify "HomeVideo(Drobo) -> Google Cloud"
-			gsutil -m rsync -d -r /Volumes/HomeVideo/Converted gs://backup.kcrt.net/auto/convertedvideos
-			gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM gs://backup.kcrt.net/auto/videos
+			gsutil -m rsync -d -r /Volumes/HomeVideo/Converted/ gs://auto.backup.kcrt.net/auto/convertedvideos
+			gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM/ gs://auto.backup.kcrt.net/auto/videos
 		fi
 
 		echo_info "==== recording (if available) ===="
@@ -164,6 +176,7 @@ echo_info "Google cloud command update"
 if [ -x `which gcloud` ]; then
 	yes | gcloud components update
 fi
+pip3 install -U crcmod	# for gsutil rsync
 
 echo_info "google key"
 wget "https://pki.goog/roots.pem" -O ~/secrets/google-roots.pem

@@ -18,6 +18,8 @@ while true; do
     fi
 done
 
+outputfile="${filename%.*}.txt"
+
 curl --request POST \
   --url https://api.openai.com/v1/audio/transcriptions \
   --header "Authorization: Bearer $OPENAI_API_KEY" \
@@ -26,5 +28,3 @@ curl --request POST \
   --form model=whisper-1 \
   --form language=$lang \
   --form response_format=text | tee "$outputfile"
-
-rm "$tmpfile"
