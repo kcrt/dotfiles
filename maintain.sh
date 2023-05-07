@@ -73,7 +73,6 @@ case $HOST in
 			OSNotify "diskimage -> Drobo (Private)"
 			rsync -ahv --progress --delete ~/diskimages/ /Volumes/Private/backup/diskimages
 		fi
-		V
 
 		if [[ -d /Volumes/Main/books/ ]]; then
 			OSNotify "books(Drobo) -> Google Cloud"
@@ -129,17 +128,18 @@ case $HOST in
 			fi
 			for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
 				if [ ! -e ${i:r}.txt ]; then
-					/Users/kcrt/.asdf/shims/whisper --language Japanese --model large "$i" | tee "${i:r}.txt"
+					whisper --language Japanese --model large --device mps "$i"
 				fi
 			done
 		fi
 		
 		echo_info "==== keepass ===="
-		cp ~/passwords.kdbx ~/others/passwords.kdbx
-		cp ~/passwords.kdbx "/Users/kcrt/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx"
-		gsutil cp ~/passwords.kdbx gs://backup.kcrt.net/auto/passwords.kdbx
+		cp ~/Documents/passwords.kdbx ~/others/passwords.kdbx
+		cp ~/Documents/passwords.kdbx "/Users/kcrt/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx"
+		gsutil cp ~/Documents/passwords.kdbx gs://auto.backup.kcrt.net/auto/passwords.kdbx
 		if [[ -e /Volumes/Main/ ]]; then
-			cp ~/passwords.kdbx /Volumes/Main/shelter/passwords.kdbx
+			DATE=`date +%Y%m%d`
+			cp ~/Documents/passwords.kdbx /Volumes/Main/shelter/passwords/passwords-$DATE.kdbx
 		fi
 		
 		# echo_info "==== joplin ===="

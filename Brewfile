@@ -61,6 +61,9 @@ brew "ddcctl"
 brew "ddrescue"
 brew "deno"
 brew "dfc"
+brew "openjpeg"
+brew "poppler"
+brew "diff-pdf"
 brew "diff-so-fancy"
 brew "docker", link: false
 brew "dotnet"
@@ -75,7 +78,6 @@ brew "fdupes"
 brew "p11-kit"
 brew "gnutls"
 brew "lame"
-brew "openjpeg"
 brew "leptonica"
 brew "x264"
 brew "x265"
@@ -98,11 +100,6 @@ brew "graphviz"
 brew "gsl"
 brew "gsmartcontrol"
 brew "gstreamer"
-brew "gst-plugins-base"
-brew "gst-plugins-bad"
-brew "gst-plugins-good"
-brew "gst-plugins-ugly"
-brew "gst-rtsp-server"
 brew "handbrake", link: false
 brew "hashcat"
 brew "hdf5"
@@ -122,8 +119,6 @@ brew "libdvdcss"
 brew "libgit2"
 brew "libmng"
 brew "librtlsdr"
-brew "qemu"
-brew "lima"
 brew "llvm"
 brew "lsusb"
 brew "m-cli"
@@ -146,6 +141,8 @@ brew "nginx"
 brew "nkf"
 brew "nmap"
 brew "numpy"
+brew "pytorch"
+brew "openai-whisper"
 brew "qt@5"
 brew "opencv"
 brew "p7zip"
@@ -155,12 +152,12 @@ brew "pdfcrack"
 brew "pdftk-java"
 brew "peco"
 brew "pigz"
-brew "poppler"
 brew "portaudio"
 brew "progress"
 brew "pv"
 brew "tcl-tk"
 brew "python-tk@3.11"
+brew "qemu"
 brew "r"
 brew "ripgrep-all"
 brew "rrdtool"
@@ -168,9 +165,11 @@ brew "rsync"
 brew "rtl_433"
 brew "rustup-init"
 brew "sl"
+brew "terminalimageviewer"
 brew "testdisk"
 brew "the_silver_searcher"
 brew "thefuck"
+brew "timidity"
 brew "tmux"
 brew "transmission-cli"
 brew "tree"
@@ -255,12 +254,14 @@ cask "lyrics-master"
 cask "macdown"
 cask "macgdbp"
 cask "mactex"
+cask "macvim"
 cask "makemkv"
 cask "mark-text"
 cask "meld"
 cask "menumeters"
 cask "microsoft-auto-update"
 cask "microsoft-edge"
+cask "mkvtoolnix"
 cask "mongodb-compass"
 cask "monitorcontrol"
 cask "mountain-duck"
@@ -295,6 +296,7 @@ cask "touch-bar-simulator"
 cask "transmission"
 cask "tripmode"
 cask "ultimaker-cura"
+cask "unicodechecker"
 cask "unofficial-wineskin"
 cask "utm"
 cask "visual-studio-code"
@@ -313,10 +315,13 @@ mas "Affinity Photo 2", id: 1616822987
 mas "Affinity Publisher", id: 881418622
 mas "Affinity Publisher 2", id: 1606941598
 mas "App Language Chooser", id: 451732904
+mas "BlueSee", id: 1336679524
+mas "Boom 3D Netflix Extension", id: 6445882848
 mas "Cinebench", id: 1438772273
 mas "com.adriangranados.wifiexplorerlite", id: 1408727408
 mas "CotEditor", id: 1024640650
 mas "Developer", id: 640199958
+mas "Diffusers", id: 1666309574
 mas "Disk Speed Test", id: 425264550
 mas "Display Menu", id: 549083868
 mas "EdgeView", id: 1580323719
@@ -345,6 +350,8 @@ mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Remote Desktop", id: 1295203466
 mas "Microsoft Word", id: 462054704
+mas "MIDI Player Plus", id: 1612350258
+mas "MIDITrail", id: 421739418
 mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "Noizio", id: 928871589

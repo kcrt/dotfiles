@@ -419,7 +419,7 @@ alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 abbrev-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
 abbrev-alias bench-zsh='time BENCHMARK_ZSHRC=1 zsh -i -c exit'
-abbrev-alias whisper-jp="whisper --language Japanese --model medium"
+abbrev-alias whisper-jp="whisper --language Japanese --model large --device mps"
 abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
@@ -504,7 +504,6 @@ abbrev-alias clang++11='clang++ -O --std=c++11 -Wall --pedantic-errors --stdlib=
 abbrev-alias clang++14='clang++ -O --std=c++14 -Wall --pedantic-errors --stdlib=libc++'
 abbrev-alias clang++17='clang++ -O --std=c++17 -Wall --pedantic-errors --stdlib=libc++'
 abbrev-alias clang++20='clang++ -O --std=c++20 -Wall --pedantic-errors --stdlib=libc++'
-abbrev-alias icat='icat --mode h'
 abbrev-alias eee='noglob zmv -v "([a-e|s|g])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
@@ -716,7 +715,7 @@ function ShowTitle_preexec(){
 			# %1 = fg %1
 			Title=(`builtin jobs -l $cmd[1]`)
 			;;
-		ls)
+		ls|pwd)
 			Title=`dirs -p | sed -e"1p" -e"d"`
 			;;
 		cd|__enhancd::cd)
@@ -734,12 +733,12 @@ function ShowTitle_preexec(){
 			;;
 		*)
 			Title=$cmd[1];
-			# trunc for long command
-			if [[ ${#Title} -gt 15 ]]; then
-				Title="...${Title: -15:15}"
-			fi
 			;;
 	esac
+	# if length of Title is larger than 15 chars, truncate it in "AAA...ZZZ" format
+	if [[ ${#Title} -gt 15 ]]; then
+		Title="${Title: 0:5}...${Title: -5:5}"
+	fi
 	:title $Title
 
 }

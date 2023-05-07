@@ -652,3 +652,50 @@ function onNetworkConfig(store, key)
 end
 hs.network.configuration.open():setCallback(onNetworkConfig):start()
 
+
+
+-- mount network drives on startup
+function mountDrives()
+	-- mount network drives
+	hs.execute("mount -t smbfs //kcrt@Drobo5N2.local/HomeVideo /Volumes/HomeVideo")
+
+end
+
+-- startup check
+-- check if following condictions are met
+--   1) connected to wifi with SSID beginning with "nanonet"
+--   2) connected to wired network
+--   3) connected to AC power
+-- if all criteria are met, mount network drives
+function checkStartup()
+	-- check wifi
+	wifi = hs.wifi.currentNetwork()
+	if wifi == nil then
+		normal_alert("No WiFi")
+		return
+	end
+	if string.find(wifi, "nanonet") == nil then
+		normal_alert("Not connected to nanonet")
+		return
+	end
+
+	-- check wired
+	wired = hs.network.primaryInterfaces()
+	if wired == nil then
+		normal_alert("No wired network")
+		return
+	end
+	if wired["en0"] == nil then
+		normal_alert("Not connected to wired network")
+		return
+	end
+
+	-- check power
+	if hs.battery.powerSource() ~= "AC Power" then
+		normal_alert("Not connected to AC power")
+		return
+	end
+
+	-- ask to proceed
+	-- hs.notify.new(mountDrives, {title="Start up", informativeText="Do you want to mount network and local drives?", actionButtonTitle="Yes!", hasActionButton=true, withdrawAfter=60}):send()
+end
