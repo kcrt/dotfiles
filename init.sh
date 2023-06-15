@@ -1,8 +1,11 @@
-#/bin/bash
+#!/bin/bash
 
 # --------------------------------------------------------------
 #
-# Init script - set up my environment after OS clean install
+# Init script - set up my environment after OS clean installation
+#
+# To use:
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)"
 #
 # --------------------------------------------------------------
 
@@ -80,7 +83,7 @@ if [ -x /usr/bin/yum ] ; then
 	echo_aqua "Detected yum..."
 	sudo yum update
 	sudo yum -y install perl zsh yum-utils vim-common vim-enhanced screen rsync subversion w3m yafc rdiff-backup fastest-mirror mutt clamav
-elif [ -x `which brew` ]; then
+elif [ -x "`which brew`" ]; then
 	OSType=HomeBrew
 	echo_aqua "Detected Homebrew..."
 	# ---- Homebrew
