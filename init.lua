@@ -1,6 +1,6 @@
 
 -- Script for HammerSpoon
--- Place this script as ~/.hammerspoon/init.lua
+-- Place this script at ~/.hammerspoon/init.lua
 
 logger = hs.logger.new("kcrt", "debug")
 secrets = hs.json.read(os.getenv("HOME") .. "/dotfiles/no_git/secrets.json")
@@ -549,48 +549,6 @@ caffeinate = hs.caffeinate.watcher.new(onCaffeinate):start()
 
 hs.timer.doAfter(10, onSystemDidWake) -- 初回
 
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
---   TODO: タイマー・ストップウォッチ機能
--- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
---- Experiment
-numberIcons = {
-	[[ASCII:
-	.......a.......
-	...............
-	...............
-	.......2.......
-	...............
-	...............
-	.....1.........
-	a.............a
-	...............
-	...............
-	...............
-	.......3.......
-	...............
-	...............
-	.......a.......
-	]]
-}
--- local menuTimer = hs.menubar.new(true)
--- menuTimer:setTitle("Timer"):setIcon(numberIcons[1], true)
-
-
-
-
--- local foo = hs.distributednotifications.new(function(name, object, userInfo) logger.i(string.format("name: %s\nobject: %s\nuserInfo: %s\n", name, object, hs.inspect(userInfo))) end)
--- foo:start()
-
-function testP2pJson(filename)
-	a = hs.json.read(filename)
-	handleP2peewItem(a)
-end
--- logger.i(dump(hs.network.interfaceDetails()))
--- a = hs.json.read("/tmp/sample_sapporo.json")
--- handleP2peewItem(a)
-
-
 -- iot every 10 minutes
 
 function onIoTSended(status, body, headers)
@@ -668,6 +626,8 @@ end
 --   3) connected to AC power
 -- if all criteria are met, mount network drives
 function checkStartup()
+	logger.i("Checking startup conditions...")
+
 	-- check wifi
 	wifi = hs.wifi.currentNetwork()
 	if wifi == nil then

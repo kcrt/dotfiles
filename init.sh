@@ -172,17 +172,17 @@ elif [ -x /usr/bin/apt ]; then
 	# ----- Debian, Ubuntu --------------------------------
 	OSType=Debian
 	echo_aqua "Detected apt..."
-	sudo apt update
-	sudo apt -y upgrade
-	sudo apt -y install locales
+	sudo apt-get update
+	sudo apt-get upgrade
+	sudo apt-get  install locales
 	sudo dpkg-reconfigure locales
-	sudo apt -y install perl w3m zsh clamav screen less ntpdate rsync vim vim-common wget iputils-ping net-tools
-	sudo apt -y install cron-apt ntpdate locales manpages-ja nmap netcat tcpdump fping atool lsof
-	sudo apt -y install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
-	sudo apt -y install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
-	sudo apt -y install curl make nodejs make g++
-	sudo apt -y install ffmpeg
-	sudo apt -y install unattended-upgrades
+	sudo apt-get install perl w3m zsh clamav tmux less ntpdate rsync vim vim-common wget iputils-ping net-tools
+	sudo apt-get install cron-apt ntpdate locales manpages-ja nmap netcat tcpdump fping atool lsof
+	sudo apt-get install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
+	sudo apt-get install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
+	sudo apt-get install curl make nodejs make g++
+	sudo apt-get install ffmpeg
+	sudo apt-get install unattended-upgrades
 	sudo dpkg-reconfigure -plow unattended-upgrades
 	echo_aqua "Please set e-mail address for information of unattended upgrades."
 	echo_aqua "And set Automatic-Reboot to true if required."
@@ -191,7 +191,7 @@ elif [ -x /usr/bin/apt ]; then
 	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "
 	read ans
 	if [ "$ans" = "y" ] ; then
-		sudo aptitude -y install ssmpt
+		sudo apt-get install ssmpt
 		sudo vim /etc/ssmtp/ssmtp.conf
 		echo_aqua "Test mail? (Your address): "
 		read ans
@@ -212,11 +212,11 @@ EOF
 	echo_aqua "Do you want to install GUI applications? (y/N): "
 	read ans
 	if [ "$ans" = "y" ] ; then
-		sudo apt -y install adobe-flashplugin
-		sudo apt -y install vlc
-		sudo apt -y install ubuntu-restricted-extras
-		sudo apt -y install chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra
-		sudo apt -y install ibus-mozc
+		sudo apt-get install adobe-flashplugin
+		sudo apt-get install vlc
+		sudo apt-get install ubuntu-restricted-extras
+		sudo apt-get install chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra
+		sudo apt-get install ibus-mozc
 		if [ -d "~/ドキュメント" ] ; then
 			echo_aqua "renaming directory name into English..."
 			LANG=C; xdg-user-dirs-gtk-update
@@ -245,7 +245,7 @@ if [ -f ~/.ssh/id_rsa ]; then
 	echo_aqua "key found."
 else
 	echo_aqua "generation public/secret keys..."
-	ssh-keygen -t rsa
+	ssh-keygen -t ed25519
 fi
 echo_aqua "Please add this public key to gitolite of kcrt.net and github"
 echo_aqua "-----"

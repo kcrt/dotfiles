@@ -36,6 +36,7 @@
 	mergemeld = mergetool --tool=meld
 	edit-history = rebase -i HEAD~10
 	commit-without-sign = commit --no-gpg-sign
+	shallow-clone = clone --depth=1
 [diff "exstrings"]
 	textconv = ~/dotfiles/script/exstrings.sh
 [difftool "sourcetree"]

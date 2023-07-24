@@ -548,6 +548,11 @@ for f in ${DOTFILES}/script/*; do
 	alias ${f:t:r}="$f"
 done
 
+# bin
+if [ -x ~/bin/imgcat ]; then
+	alias imgcat="~/bin/imgcat"
+fi
+
 # 便利コマンド
 abbrev-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum += \$1; }; END { print sum }'"
 abbrev-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
@@ -563,8 +568,8 @@ alias -s html='w3m'
 function viewxls(){
 	w3m -T text/html =(xlhtml $1)
 }
-alias -s png='icat'
-alias -s jpg='icat'
+alias -s png='imgcat'
+alias -s jpg='imgcat'
 alias -s md='glow -p'
 alias -s json='jq -C .'
 
@@ -638,7 +643,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	abbrev-alias sayen="say -v 'Ava (Premium)'"
 	abbrev-alias sayuk="say -v Daniel"
 	abbrev-alias sayjp="say -v 'Kyoko (Enhanced)'"
-	abbrev-alias saych="say -v Ting-Ting"
+	abbrev-alias saych="say -v Tingting"
 	alias QuickLook="qlmanage -p"
 	alias :TimeMachineLog="log stream --style syslog --predicate 'senderImagePath contains[cd] \"TimeMachine\"' --info"
 	alias HeySiri="open -a Siri"
@@ -784,6 +789,8 @@ if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
 	source /opt/homebrew/opt/asdf/libexec/asdf.sh
 	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 fi
+
+export PERL5LIB=~/perl5/lib/perl5
 
 # check if github-copilot-cli is installed
 if command -v github-copilot-cli > /dev/null 2>&1 ; then
