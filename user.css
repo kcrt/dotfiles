@@ -84,3 +84,9 @@ div#gg-static-unit {
 div.fluct-pc-sticky-ad {
 	display: none !important;
 }
+
+/* news.yahoo.co.jp */
+div#overlayAd{
+	display: none !important;
+}
+

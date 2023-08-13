@@ -276,13 +276,6 @@ if [ "$ans" != "n" ] ; then
 	git clone https://github.com/gmarik/vundle.git ~/.vim/bundle/Vundle.git
 	vim -c ':PluginInstall' -c ':qall'
 fi
-echo_aqua "Do you need documents file like medical records and music sheets? (Y/n): "
-read ans
-if [ "$ans" != "n" ] ; then
-	git clone --depth=1 ssh://git@kcrt.net:3122/kcrt/templates.git
-	git clone --depth=1 ssh://git@kcrt.net:3122/kcrt/medical.git
-	git clone --depth=1 ssh://git@kcrt.net:3122/kcrt/musicsheet.git
-fi
 
 if [ `uname` = "Darwin" ]; then
 	echo_aqua "Mac OS X Setting..."

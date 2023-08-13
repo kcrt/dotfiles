@@ -131,9 +131,9 @@ case $HOST in
 					echo "Whisper: $i"
 					# Skip this temporary
 					# whisper --language Japanese --model large -f txt "$i"
+					zmv -W "/Volumes/Private/Recording/VoiceMemo/*.m4a.txt" "/Volumes/Private/Recording/VoiceMemo/*.txt"
 				fi
 			done
-			zmv -W "/Volumes/Private/Recording/VoiceMemo/*.m4a.txt" "/Volumes/Private/Recording/VoiceMemo/*.txt"
 		fi
 		
 		echo_info "==== keepass ===="
