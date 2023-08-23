@@ -131,6 +131,7 @@ brew "highlight"
 brew "htop"
 brew "icoutils"
 brew "john-jumbo"
+brew "joplin-cli"
 brew "jq"
 brew "kotlin"
 brew "leveldb"
@@ -222,6 +223,7 @@ cask "adobe-digital-editions"
 cask "aldente"
 cask "android-studio"
 cask "appcleaner"
+cask "applite"
 cask "arduino"
 cask "atok"
 cask "audacity"
@@ -356,11 +358,10 @@ mas "Diffusers", id: 1666309574
 mas "Disk Speed Test", id: 425264550
 mas "Display Menu", id: 549083868
 mas "EdgeView", id: 1580323719
-mas "EdgeView 2", id: 1206246482
 mas "Final Cut Pro", id: 424389933
 mas "GarageBand", id: 682658836
 mas "GM EPUB Reader", id: 1506541486
-mas "GoodNotes", id: 1444383602
+mas "Goodnotes", id: 1444383602
 mas "Hex Fiend", id: 1342896380
 mas "iMovie", id: 408981434
 mas "isHUD", id: 484757536
@@ -374,6 +375,7 @@ mas "LibreOffice", id: 1630474372
 mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
 mas "LINE WORKS", id: 1029784963
+mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523

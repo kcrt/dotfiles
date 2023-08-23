@@ -508,7 +508,7 @@ abbrev-alias clang++11='clang++ -O --std=c++11 -Wall --pedantic-errors --stdlib=
 abbrev-alias clang++14='clang++ -O --std=c++14 -Wall --pedantic-errors --stdlib=libc++'
 abbrev-alias clang++17='clang++ -O --std=c++17 -Wall --pedantic-errors --stdlib=libc++'
 abbrev-alias clang++20='clang++ -O --std=c++20 -Wall --pedantic-errors --stdlib=libc++'
-abbrev-alias eee='noglob zmv -v "([a-e|s|g])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
+abbrev-alias eee='noglob zmv -v "([a-e|s|g|x])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
