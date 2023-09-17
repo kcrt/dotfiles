@@ -1,4 +1,4 @@
-OPTION=pettype:dog,hilite_pet,catname:meowth,dogname:elizabeth,
+OPTION=pettype:dog,hilite_pet,catname:meowth,dogname:elizabeth
 OPTION=color,fruit:fig,lit_corridor,autopickup,pickup_types:$,autodig,msghistory:20,msg_window:conbination,timed_delay,cmdassist,suppress_alert:3.4.3,time,boulder:0,checkpoint,!null,menu_headings:inverse,!number_pad,standout,windowtype:tty,menucolors
 
 #+   Colors: black, red, green, brown, blue, magenta, cyan, gray, orange,
@@ -43,7 +43,7 @@ MENUCOLOR=" \(Dragonbane\|Fire Brand\|Frost Brand\|Ogresmasher\|Trollsbane\|Were
 MENUCOLOR=" \(Demonbane\|Excalibur\|Grayswandir\|Snickersnee\|Sunsword\)"=lightgreen
 MENUCOLOR=" \(Orb of Detection\|Sceptre of Might\|Magic Mirror of Merlin\|Mitre of Holiness\|Tsurugi of Muramasa\)"=lightgreen
 # neutral normal, quest
-MENUCOLOR=" \(Cleaver\|Giantslayer\|Magicbane\|Mjollnir\|Vorpal Blade\)"=lightgree
+MENUCOLOR=" \(Cleaver\|Giantslayer\|Magicbane\|Mjollnir\|Vorpal Blade\)"=lightgreen
 MENUCOLOR=" \(Heart of Ahriman\|Staff of Aesculapius\|Eyes of the Overworld\|Platinum Yendorian Express Card\|Orb of Fate\|Eye of the Aethiopica\)"=lightgreen
 # chaotic normal, quest
 MENUCOLOR=" \(Grimtooth\|Orcrist\|Sting\|Stormbringer\)"=lightgreen
@@ -51,7 +51,7 @@ MENUCOLOR=" \(Longbow of Diana\|Master Key of Thievery\)"=lightgreen
 #invocation items
 MENUCOLOR=" \(Bell of Opening\|silver bell\|Candelabrum of Invocation\|candelabrum\|Book of the Dead\|papyrus spellbook\)"=magenta&bold
 #raison d'etre
-MENUCOLOR=" Amulet of Yendor named"=magenta&bold&underline
+MENUCOLOR=" Amulet of Yendor named"=magenta&bold
 
 # bad items
 MENUCOLOR=" loadstone"=red&underline
@@ -70,4 +70,4 @@ MENUCOLOR=" wand .* cancellation"=blue&inverse
 MENUCOLOR=" wand .* vanish"=blue&inverse
 
 # unpaied
-MENUCOLOR=" (unpaid, [0-9]+ zorkmids?)"=inverse
+MENUCOLOR=" (unpaid, [0-9]+ zorkmids?)"=red&inverse

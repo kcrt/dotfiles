@@ -122,7 +122,7 @@ brew "graphviz"
 brew "gsl"
 brew "gsmartcontrol"
 brew "gtk4"
-brew "gstreamer"
+brew "gstreamer", link: false
 brew "handbrake", link: false
 brew "hashcat"
 brew "hdf5"
@@ -168,8 +168,6 @@ brew "nkf"
 brew "nmap"
 brew "pytorch"
 brew "openai-whisper"
-brew "qt@5"
-brew "pyqt@5"
 brew "vtk"
 brew "opencv"
 brew "openjdk@17"
@@ -184,6 +182,8 @@ brew "pigz"
 brew "postgresql@15"
 brew "progress"
 brew "pv"
+brew "qt@5"
+brew "pyqt@5"
 brew "python-tk@3.11"
 brew "qemu"
 brew "r"
@@ -369,7 +369,7 @@ mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
 mas "Key Codes", id: 414568915
 mas "Keynote", id: 409183694
-mas "Kindle", id: 405399194
+mas "Kindle Classic", id: 405399194
 mas "LadioCast", id: 411213048
 mas "LibreOffice", id: 1630474372
 mas "LibreOffice Vanilla", id: 921923693

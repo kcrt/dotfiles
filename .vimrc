@@ -329,6 +329,8 @@ Plugin 'sudar/vim-arduino-syntax'
 " --- Japanese
 Plugin 'haya14busa/vim-migemo'
 Plugin 'fuenor/JpFormat.vim'
+" --- Copilot
+Plugin 'https://github.com/github/copilot.vim'
 
 call vundle#end()
 
