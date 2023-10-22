@@ -229,7 +229,11 @@ if is-at-least 4.3.7; then
 fi
 
 # ----- プロンプト
-PROMPT='%{%(!.$fg[red].$fg[$hostcolor])%}[%n@%m]$(~/dotfiles/script/have_mail.sh) %# %{$reset_color%}'
+if [ -x ~/dotfiles/script/have_mail.sh ]; then
+	PROMPT='%{%(!.$fg[red].$fg[$hostcolor])%}[%n@%m]$(~/dotfiles/script/have_mail.sh) %# %{$reset_color%}'
+else
+	PROMPT='%{%(!.$fg[red].$fg[$hostcolor])%}[%n@%m] %# %{$reset_color%}'
+fi
 # 最後に実行したプログラムがエラーだと反転するよ。
 RPROMPT="$RPROMPT %{%(?.$fg[cyan].$bg[cyan]$fg[black])%} [%~] ($(uname -m)) %{$reset_color%}"
 
