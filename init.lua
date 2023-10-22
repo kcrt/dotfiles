@@ -22,8 +22,8 @@ function warn_alert(s)
 	style.fillColor = {red=0.8, alpha=0.8}
 	style.strokeColor = hs.drawing.color.definedCollections.hammerspoon.osx_yellow
 	style.strokeWidth = 10
-	style.fadeInDuration = 0.05
-	hs.alert.show(s, style, hs.screen.mainScreen(), 5)
+	style.fadeInDuration = 0.3
+	hs.alert.show(s, style, hs.screen.mainScreen(), 10)
 	logger.i(s)
 end
 
@@ -52,11 +52,11 @@ end
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 --   バッテリー
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-function batteryWatcherCallback()
-	
-end
-batteryWatcher = hs.battery.watcher.new(batteryWatcherCallback)
-batteryWatcher:start()
+-- function batteryWatcherCallback()
+--	
+-- end
+-- batteryWatcher = hs.battery.watcher.new(batteryWatcherCallback)
+-- batteryWatcher:start()
 
 
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -71,7 +71,7 @@ function onAmazonKindleNotify(data)
 	hs.application.open("/Volumes/Kindle/")
 end
 function oniPhoneConnectionNotify(data)
-	hs.application.open("/Applications/Photos.app")
+	hs.application.open("/System/Applications/Photos.app")
 end
 
 function usbDeviceCallback(data)
@@ -241,6 +241,7 @@ end
 hello_hanlde = nil
 airpodsbattery_handle = nil
 lastAudioDeviceChangeNotify = 0
+lastSettings = nil
 function audioEventCallback(arg)
 
 	local indev = hs.audiodevice.defaultInputDevice()
@@ -260,7 +261,7 @@ function audioEventCallback(arg)
 		if balance ~= nil and math.abs(balance - 0.5) > 0.01 then
 			warn_alert("Unbalanced output of stereo device [" .. outdev:name() .. "] " .. (balance * 1000 // 10 / 100))
 		end
-		if outdev:name() == "kcrt's AirPods Pro" or outdev:name() == "Imitation of AirPods Pro" then
+		if outdev:name() == "kcrt's AirPods Pro" then
 			outdev:setMuted(false)
 			hello_handle = hs.timer.doAfter(1, SayHello)
 			airpodsbattery_handle = hs.timer.doAfter(2, CheckAirPodsBattery)
@@ -270,8 +271,7 @@ function audioEventCallback(arg)
 	elseif arg ==  "dev#" then
 		local now_epoch = os.time()
 		if now_epoch - lastAudioDeviceChangeNotify > 5 then
-			normal_alert("Audio device configuration changed ")
-			logger.i(dump(hs.audiodevice.allDevices()))
+			normal_alert("Audio device configuration changed")
 		end
 		lastAudioDeviceChangeNotify = now_epoch
 	end
@@ -512,41 +512,44 @@ hConnectP2p = hs.timer.doAfter(5, connectP2peew)
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 --   ダウンロードフォルダ監視
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-function downloadsChanged(paths, flagTables)
-	logger.i("!!!")
-	logger.i(dump(paths))
-	logger.i(dump(flagTables))
-end
-pathWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/Downloads", downloadsChanged)
-pathWatcher:start()
--- this doesn't work well
+-- function downloadsChanged(paths, flagTables)
+	-- logger.i("!!!")
+	-- logger.i(dump(paths))
+	-- logger.i(dump(flagTables))
+-- end
+-- pathWatcher = hs.pathwatcher.new(os.getenv("HOME") .. "/Downloads", downloadsChanged)
+-- pathWatcher:start()
 
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 --   復帰時処理
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+function mountDrives()
+	logger.i("Mount drives")
+	-- mount diskimage of /Users/kcrt/diskimages/*.sparsebundle with upper case name
+end
 function onSystemDidWake()
-	CheckNetworkInterface()
-	-- batinfo = hs.battery.privateBluetoothBatteryInfo()
-	-- for i, val in pairs(batinfo) do
-	-- 	logger.i(val.name)
-	-- 	if string.find(val.name, "DEFT Pro TrackBall") ~= nil or string.find(val.name, "HHKB-Hybrid_1") ~= nil then
-	-- 		batval = val.batteryPercentSingle
-	-- 		info = val.name .. " Battery: " .. batval .. "%"
-	-- 		if tonumber(batval) < 20 then
-	-- 			warn_alert(info)
-	-- 		else
-	-- 			normal_alert(info)
-	-- 		end
-	-- 	end
-	-- end
+	logger.i("System did wake")
+
+	if hs.screen.find("PHL 279P1") ~= nil then
+		logger.i("Connected to the mother ship display")
+		hs.audiodevice.findOutputByName("PHL 279P1"):setDefaultOutputDevice()
+		-- check network (en8) is available
+		ipv4if, ipv6if = hs.network.primaryInterfaces()
+		ifdetail = hs.network.interfaceDetails(ipv4if)
+		if ipv4if ~= "en8" then
+			warn_alert("Wired connection is not available.")
+		end
+		-- ask to mount diskimage and network drives
+		-- hs.notify.new(mountDrives, {title="Connected to the mother ship display", informativeText="Do you want to mount drives?", actionButtonTitle="Mount", hasActionButton=true, withdrawAfter=60}):send()
+	end
 end
 function onCaffeinate(eventType)
 	if eventType == hs.caffeinate.watcher.systemDidWake then
 		hs.timer.doAfter(10, onSystemDidWake)
 	end
 end
-caffeinate = hs.caffeinate.watcher.new(onCaffeinate):start()
-
+caffeinateWatcher = hs.caffeinate.watcher.new(onCaffeinate)
+caffeinateWatcher:start()
 hs.timer.doAfter(10, onSystemDidWake) -- 初回
 
 -- iot every 10 minutes

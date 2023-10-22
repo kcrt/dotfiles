@@ -5,3 +5,4 @@
 *.zip diff=exstrings
 *.lzh diff=exstrings
 *.rar diff=exstrings
+*.lockb binary diff=lockb

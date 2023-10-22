@@ -10,6 +10,26 @@
 #		http://www.clear-code.com/blog/2011/9/5.html
 #		https://github.com/zplug/zplug/blob/master/doc/guide/ja/README.md
 
+if [[ -n "$BENCHMARK_ZSHRC" ]]; then
+	function date_in_ms(){
+		if [[ "$OSTYPE" = darwin* ]]; then
+			gdate +%s%3N
+		else
+			date +%s%3N
+		fi
+	}
+	start=$(date_in_ms)
+	function end_of(){
+		now=$(date_in_ms)
+		# show elapsed time in ms with color (aqua)
+		echo -e "\e[36m$1 done: $((now - start)) ms\e[m"
+	}
+else
+	function end_of(){
+		:	# do nothing
+	}
+fi
+
 # ${DOTFILES} are defined in .zshenv
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
@@ -17,6 +37,7 @@ source ${DOTFILES}/script/miscs.sh
 if [ -f ${DOTFILES}/no_git/secrets.sh ]; then
 	source ${DOTFILES}/no_git/secrets.sh
 fi
+end_of "source"
 
 # ----- 環境変数
 export LANG=ja_JP.UTF-8
@@ -26,6 +47,7 @@ export GPG_TTY=$(tty)
 export PYTHONSTARTUP=${DOTFILES}/pythonrc.py
 export GOOGLE_APPLICATION_CREDENTIALS="`echo ~/secrets/kcrtjp-google-serviceaccount.json`"
 stty stop undef					# ^Sとかを無効にする
+end_of "environment variables"
 
 # ----- ホスト毎にプロンプト色の変更
 # not all terminals support this
@@ -76,6 +98,7 @@ if [[ "$TERM" == (screen*|xterm*) && "$SSH_CONNECTION" == "" ]]; then
 	echo -n "\e]PE88FFFF\e\\"		# CYAN
 	echo -n "\e]PFFFFFFF\e\\"		# WHITE
 fi
+end_of "hostcolor"
 
 # ----- タイトルバーの文字列
 # ␛](OSC) 0; _title_ ␛\(ST)
@@ -94,6 +117,7 @@ else
 	title="$HOST (local)";
 fi
 echo -n "\e]2;${title}\e\\"
+end_of "titlebar"
 
 # ----- 色関係
 autoload colors					# $color[red]とかが使えるようになる。
@@ -103,12 +127,24 @@ if [[ -x dircolors ]]; then
 fi
 export ZLS_COLORS=$LS_COLORS
 export CLICOLOR=true
+end_of "colors"
+
+# ----- homebrew
+# check arch to determine place of homebrew
+if [[ "$OSTYPE" = darwin* ]]; then
+	if [[ "$(uname -m)" = "arm64" ]]; then
+		export BIN_HOMEBREW="/opt/homebrew/bin/brew"
+	elif [[ "$(uname -m)" = "x86_64" ]]; then
+		export BIN_HOMEBREW="/usr/local/bin/brew"
+	fi
+	alias brew="$BIN_HOMEBREW"
+fi
 
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
 # autoload -U +X bashcompinit && bashcompinit
-if [ -x "`which /opt/homebrew/bin/brew`" ]; then
-	FPATH="$(/opt/homebrew/bin/brew --prefix)/share/zsh/site-functions:${FPATH}"
+if [[ -n "$BIN_HOMEBREW" ]]; then
+	FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 autoload -Uz compinit && compinit
 autoload zmv
@@ -118,6 +154,7 @@ autoload -Uz url-quote-magic
 if [[ -f /etc/zsh_command_not_found ]]; then
 	source /etc/zsh_command_not_found
 fi
+end_of "autoload"
 
 
 # ----- 補完
@@ -139,6 +176,7 @@ zstyle ':completion:*' verbose yes 	# 詳細な情報を使う。
 zstyle ':completion:sudo:*' environ PATH="$SUDO_PATH:$PATH" # sudo時にはsudo用のパスも使う。
 zstyle ':completion:*:default' menu select=2
 zstyle ':completion:*:processes' command 'ps x -o pid,args'	# kill <tab>での補完
+
 
 
 # ----- 履歴
@@ -167,6 +205,7 @@ setopt notify						# バックグラウンドジョブの状態変化を報告
 setopt NO_emacs						# viが一番！
 setopt NO_flow_control				# ^S/^Qを有効にするかどうか
 disable r							# r (再実行コマンド)を無効にする
+end_of "setopt"
 
 # ----- Japanese, Wide Char set, and Unicode
 setopt print_eight_bit				# 8ビット文字表示
@@ -188,15 +227,19 @@ if [[ -r ~/.zplug/init.zsh ]]; then
 	zplug "zsh-users/zsh-syntax-highlighting", defer:2
 	zplug "zsh-users/zsh-history-substring-search", defer:2
 	zplug "zsh-users/zsh-completions", defer:2
-	zplug "plugins/brew", from:oh-my-zsh, if:"which brew", defer:2
+	if [[ -n "$BIN_HOMEBREW" ]]; then
+		zplug "plugins/brew", from:oh-my-zsh, defer:2
+	fi
 	zplug "rupa/z", use:z.sh, defer:2
 	zplug "b4b4r07/enhancd", use:init.sh, defer:2
 	zplug "momo-lab/zsh-abbrev-alias", defer:2
+	end_of "zplug 1"
 	export ENHANCED_FILTER=fzy:fzf:peco
 	if ! zplug check; then
 		zplug install
 	fi
 	zplug load
+	end_of "zplug 2"
 else
 	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh' to install zplug"
 	function abbrev-alias(){
@@ -227,6 +270,7 @@ if is-at-least 4.3.7; then
 	add-zsh-hook precmd precmd_vcs_info
 	RPROMPT="%1(v|%F{green}%1v%f|)"
 fi
+end_of "gitinfo"
 
 # ----- プロンプト
 if [ -x ~/dotfiles/script/have_mail.sh ]; then
@@ -251,6 +295,7 @@ bindkey ''	forward-char
 bindkey ''	up-line-or-history
 bindkey ''	down-line-or-history
 bindkey ''	vi-backward-delete-char
+end_of "bindkey"
 
 # ----- 自分用関数
 function ShowStatus(){
@@ -314,6 +359,7 @@ bindkey '^P' history-incremental-pattern-search-backward
 bindkey '^N' history-incremental-pattern-search-forward
 bindkey "^Q" self-insert
 # }}}
+end_of "vi mode key"
 
 
 # ----- パス
@@ -353,7 +399,6 @@ function testallarchive(){
 		testarchive $i
 	done;
 }
-
 function backupnethack(){
 	DATETIME=`date +"%Y%m%d_%H%M%S"`
 	cp /usr/local/Cellar/nethacked/1.0/libexec/save/501kcrt.Z ~/backup/nethacked-backup-${DATETIME}-501kcrt.Z
@@ -367,6 +412,7 @@ function python_update() {
 	pip install --upgrade pip
 	pip freeze --local | grep -v '^\-e' | cut -d = -f 1 | xargs pip install --upgrade
 }
+end_of "function definitions"
 
 # ----- エイリアス
 # コマンド置き換え
@@ -472,7 +518,7 @@ function mcd(){
 		echo "example: `mcd iryou` will execute `cd 医療`"
 	elif [ $# -eq 1 ]; then
 		if [ "$(uname)" = "Darwin" ]; then
-			migemolist=`cmigemo -d /opt/homebrew/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
+			migemolist=`cmigemo -d $($BIN_HOMEBREW --prefix)/Cellar/cmigemo/*/share/migemo/utf-8/migemo-dict -w "$1"`
 			dirname=`find . -maxdepth 1 -mindepth 1 -type d | iconv -f UTF-8-MAC -t UTF-8 | grep --color=never -E $migemolist`
 		else
 			migemolist=`cmigemo -d /usr/share/cmigemo/utf-8/migemo-dict -w "$1"`
@@ -524,7 +570,9 @@ abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/
 abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
 abbrev-alias docker_secretlint='docker run -v `pwd`:`pwd` -w `pwd` --rm -it secretlint/secretlint secretlint "**/*"'
 
+export WINE_PREFIX="~/.wine"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
+abbrev-alias wine_gameportingkit="MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
 abbrev-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastChangeRevision LastChangeBy HeadURL Rev Date Author"'
@@ -565,7 +613,7 @@ abbrev-alias iconv-nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
 abbrev-alias verynice="nice -n 20"
 
 # ----- suffix alias ()
-alias -s exe='wine'
+alias -s exe='wine_gameportingkit'
 alias -s txt='less'
 alias -s log='tail -f -n20'
 alias -s html='w3m'
@@ -601,6 +649,7 @@ elif [[ -x /usr/bin/apt ]] ; then
 	alias :package_search="sudo apt show"
 	alias :package_file="apt-file search"
 fi
+end_of "alias definitions"
 
 
 # ----- Fedora 固有設定
@@ -619,17 +668,14 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	export MANPATH=/opt/local/man:$MANPATH
 
 	export PATH=/usr/local/opt/llvm/bin:~/Library/Android/sdk/platform-tools:$PATH
-	if [[ -x /opt/homebrew/bin/brew ]] ; then
+	if [[ -n "$BIN_HOMEBREW" ]] ; then
 		unset HOMEBREW_SHELLENV_PREFIX # dirty hack
-		eval $(/opt/homebrew/bin/brew shellenv)
-	elif [[ -x /usr/local/bin/brew ]] ; then
-		export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-		export HOMEBREW_NO_AUTO_UPDATE=1
+		eval $($BIN_HOMEBREW shellenv)
+		for libname in readline zlib openssl@3 portaudio; do
+			export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
+			export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
+		done
 	fi
-	for libname in readline zlib openssl@3 portaudio; do
-		export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
-		export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
-	done
 	if [[ -x /usr/bin/xcrun ]]; then
 		export SDKPATH=`xcrun --show-sdk-path`/usr/include
 		# alias pyenv="SDKROOT=$(xcrun --show-sdk-path) pyenv"
@@ -666,6 +712,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 	fi
+	end_of "macOS specific settings"
 fi
 
 alias :tailf_syslog='sudo tail -f /var/log/syslog | ccze'
@@ -782,6 +829,7 @@ function CheckCommandTime_precmd(){
 add-zsh-hook preexec ShowTitle_preexec
 add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
+end_of "hooks"
 
 # ----- 開発関係
 # if which pyenv > /dev/null; then
@@ -789,9 +837,9 @@ add-zsh-hook preexec CheckCommandTime_preexec
 #	export PATH="$(pyenv root)/shims:$PATH"
 #fi
 #if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
-if [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
-	source /opt/homebrew/opt/asdf/libexec/asdf.sh
-	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+if [ -f $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh ]; then
+	source $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh
+	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
 fi
 
 export PERL5LIB=~/perl5/lib/perl5
@@ -800,6 +848,8 @@ export PERL5LIB=~/perl5/lib/perl5
 if command -v github-copilot-cli > /dev/null 2>&1 ; then
 	eval "$(github-copilot-cli alias -- "$0")"
 fi
+end_of "dev settings"
+
 if [[ -x `which tmux` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
 		echo "tmux"
@@ -813,11 +863,13 @@ elif [[ -x `which screen` ]]; then
 else
 	echo "screen not found."
 fi
+end_of "tmux/screen"
 
 if [ ! -f ~/zshrc.zwc -o ~/.zshrc -nt ~/.zshrc.zwc ]; then
 	# compile if modified
     zcompile ~/.zshrc
 fi
+end_of "zcompile"
 
 # finally, execute fortune.
 if [[ -x `which fortune` ]]; then
@@ -826,6 +878,7 @@ if [[ -x `which fortune` ]]; then
 	fortune
 	echo -n "[0m"
 	echo ""
+	end_of "fortune"
 fi
 
 if (which zprof > /dev/null 2>&1); then

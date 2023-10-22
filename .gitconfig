@@ -65,3 +65,6 @@
 	helper = cache --timeout 3600
 [init]
 	defaultBranch = main
+[diff "lockb"]
+	textconv = bun
+	binary = true
