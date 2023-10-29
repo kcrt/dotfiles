@@ -462,6 +462,7 @@ alias history='history -E 1'
 abbrev-alias wget='noglob wget'
 abbrev-alias ping='ping -a -c4'
 abbrev-alias ping6='ping6 -a -c4'
+abbrev-alias monitor_network='gping --watch-interval 2 --buffer 120 --color=green,blue,yellow profile.kcrt.net 8.8.8.8 192.168.0.1'
 alias sudo='sudo -E '	#スペースを付けておくとsudo llなどが使える
 alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'

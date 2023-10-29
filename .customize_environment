@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-# This script is for GitHub Codespaces customization
+# This script is for google cloud shell customization
+
+apt-get update
+apt-get install -y zsh
 
 curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh
 
