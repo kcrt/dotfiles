@@ -64,7 +64,7 @@ end
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 function onICRecorderNotify(data)
 	local startRecorderTimer = hs.timer.doAfter(5, function()
-		hs.application.open(os.getenv("HOME") .. "/Desktop/others/DrainRecorder.app")
+		hs.application.open(os.getenv("HOME") .. "/Documents/Automators/DrainRecorder.app")
 	end)
 end
 function onAmazonKindleNotify(data)

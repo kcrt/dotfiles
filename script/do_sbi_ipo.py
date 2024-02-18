@@ -5,9 +5,9 @@ import os
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import datetime
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+# import datetime
+# from google.oauth2.credentials import Credentials
+# from googleapiclient.discovery import build
 
 # to install driver, run:
 #   brew install chromedriver (for Mac)

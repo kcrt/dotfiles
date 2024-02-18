@@ -3,7 +3,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-Icon
+Icon
+
 ._*
 .Spotlight-V100
 .Trashes
@@ -41,3 +42,4 @@ node_modules
 ### Other ###
 no_git
 .tmp.driveupload
+trck.png

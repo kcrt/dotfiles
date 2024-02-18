@@ -45,6 +45,8 @@ for (i, entry) in enumerate(har["log"]["entries"]):
             filename = digitstr(i) + "_" + os.path.basename(o.path)
     else:
         filename = digitstr(i)
+    if filename == "":
+        filename = "index"
     print(f"#{i}: {url} -> {filename}")
     if "text" not in entry["response"]["content"]:
         print("No content. skipping...")

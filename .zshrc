@@ -10,6 +10,7 @@
 #		http://www.clear-code.com/blog/2011/9/5.html
 #		https://github.com/zplug/zplug/blob/master/doc/guide/ja/README.md
 
+# To check loading time, run `bench-zsh`
 if [[ -n "$BENCHMARK_ZSHRC" ]]; then
 	function date_in_ms(){
 		if [[ "$OSTYPE" = darwin* ]]; then
@@ -28,9 +29,14 @@ else
 	function end_of(){
 		:	# do nothing
 	}
+	alias bench-zsh='time BENCHMARK_ZSHRC=1 zsh -i -c exit'
 fi
 
-# ${DOTFILES} are defined in .zshenv
+# ----- load external files
+if [[ -z "$DOTFILES" ]]; then
+	echo "DOTFILES is not defined. Please define DOTFILES in .zshenv"
+	return 1
+fi
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
@@ -273,13 +279,39 @@ fi
 end_of "gitinfo"
 
 # ----- プロンプト
-if [ -x ~/dotfiles/script/have_mail.sh ]; then
-	PROMPT='%{%(!.$fg[red].$fg[$hostcolor])%}[%n@%m]$(~/dotfiles/script/have_mail.sh) %# %{$reset_color%}'
-else
-	PROMPT='%{%(!.$fg[red].$fg[$hostcolor])%}[%n@%m] %# %{$reset_color%}'
+PROMPT_COLOR="%(!.$fg[red].$fg[$hostcolor])"
+# is on tmux ?
+SUBSTLV=$SHLVL
+if [[ "$TERM_PROGRAM" = "vscode" ]]; then
+	SUBSTLV=$[SUBSTLV-3]
+elif [[ -n "$TMUX" ]]; then
+	SUBSTLV=$[SUBSTLV-1]
 fi
+if [[ $SUBSTLV -gt 1 ]]; then
+	for (( i=2; i<=$SUBSTLV; i++ )); do
+		PROMPT_SUBSTLV="${PROMPT_SUBSTLV}>"
+	done
+	PROMPT_SUBSTLV="%B${PROMPT_SUBSTLV}%b"
+else
+	PROMPT_SUBSTLV=""
+fi
+PROMPT_USER='%n'
+PROMPT_HOST='${${(%):-%M}%%.local}'
+if [[ -x ${DOTFILES}/script/have_mail.sh ]]; then
+	PROMPT_MAILCHECK='$(~/dotfiles/script/have_mail.sh)'
+else
+	PROMPT_MAILCHECK=''
+fi
+PROMPT_SHARP=' %# '
+PROMPT_RESETCOLOR='%{$reset_color%}'
+PROMPT="${PROMPT_SUBSTLV}${PROMPT_COLOR}[${PROMPT_USER}@${PROMPT_HOST}]${PROMPT_MAILCHECK}${PROMPT_SHARP}${PROMPT_RESETCOLOR}"
+
 # 最後に実行したプログラムがエラーだと反転するよ。
-RPROMPT="$RPROMPT %{%(?.$fg[cyan].$bg[cyan]$fg[black])%} [%~] ($(uname -m)) %{$reset_color%}"
+RPROMPT_SETCOLOR=' %{%(?.$fg[cyan].$bg[cyan]$fg[black])%}'
+RPROMPT_DIR=' [%(5~|%-2~/.../%2~|%~)] '
+RPROMPT_PLATFORM='($(uname -m)) '
+RPROMPT_BGJOB='%(1j.(bg: %j).)'
+RPROMPT="${RPORMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_RESETCOLOR}"
 
 # ----- キー
 bindkey -v
@@ -462,14 +494,14 @@ alias history='history -E 1'
 abbrev-alias wget='noglob wget'
 abbrev-alias ping='ping -a -c4'
 abbrev-alias ping6='ping6 -a -c4'
-abbrev-alias monitor_network='gping --watch-interval 2 --buffer 120 --color=green,blue,yellow profile.kcrt.net 8.8.8.8 192.168.0.1'
+#abbrev-alias monitor_network='gping --watch-interval 2 --buffer 120 --color=green,blue,yellow profile.kcrt.net 8.8.8.8 192.168.0.1'
+abbrev-alias monitor_network='sudo trip --geoip-mmdb-file ~/GeoLite2-City.mmdb --tui-geoip-mode short profile.kcrt.net 8.8.8.8'
 alias sudo='sudo -E '	#スペースを付けておくとsudo llなどが使える
 alias ag='ag -S'
 alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --exclude-dir=.svn'
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 abbrev-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
-abbrev-alias bench-zsh='time BENCHMARK_ZSHRC=1 zsh -i -c exit'
 abbrev-alias whisper-jp="whisper --language Japanese --model large --device mps"
 abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
@@ -571,9 +603,9 @@ abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/
 abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
 abbrev-alias docker_secretlint='docker run -v `pwd`:`pwd` -w `pwd` --rm -it secretlint/secretlint secretlint "**/*"'
 
-export WINE_PREFIX="~/.wine"
+export WINEPREFIX="$HOME/.wine"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
-abbrev-alias wine_gameportingkit="MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
+abbrev-alias wine_gameportingkit="LANG=ja_JP.UTF-8 LC_ALL=ja_JP.UTF-8 MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
 abbrev-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastChangeRevision LastChangeBy HeadURL Rev Date Author"'
@@ -709,6 +741,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		alias vim="/usr/local/bin/mvim -v"
 	fi
 	
+	export CLOUDSDK_PYTHON=`which python3`
 	if [ -d "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/" ]; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
@@ -842,8 +875,10 @@ if [ -f $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh ]; then
 	source $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh
 	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
 fi
-
 export PERL5LIB=~/perl5/lib/perl5
+if [ -x /opt/homebrew/bin/difft ]; then
+	export GIT_EXTERNAL_DIFF=/opt/homebrew/bin/difft
+fi
 
 # check if github-copilot-cli is installed
 if command -v github-copilot-cli > /dev/null 2>&1 ; then

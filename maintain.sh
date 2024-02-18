@@ -29,14 +29,12 @@ case $HOST in
 		brew update
 		brew outdated
 		brew upgrade
-		brew cleanup
-		brew cleanup -s
 		brew bundle dump -f --file ${DOTFILES}/Brewfile
 
 		OSNotify "Anti-virus database updating..."
 		freshclam
 		OSNotify "Scanning system. This may take a while..."
-		clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+		# clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
 
 		# if command fails, pause and wait for user to press enter
 		if [[ $? -ne 0 ]]; then
@@ -144,6 +142,26 @@ case $HOST in
 			DATE=`date +%Y%m%d`
 			cp ~/Documents/passwords.kdbx /Volumes/Main/shelter/passwords/passwords-$DATE.kdbx
 		fi
+		
+		OSNotify "Cleaning Caches..."
+		hdfreebefore=`df -h / | grep / | awk '{print $4}'`
+		cd ~/prog
+		# Find Cargo.toml and execute cargo clean
+		find . -name Cargo.toml -execdir cargo clean \;
+		cd ~
+		rm -rf ~/Library/Developer/Xcode/DerivedData/*
+		rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*
+		rm -rf ~/Library/Developer/Xcode/Archives/*
+		rm -rf ~/Library/Caches/com.apple.dt.Xcode/*
+		rm -rf ~/Library/Developer/CoreSimulator/Caches/dyld/*
+		xcrun simctl delete unavailable
+		brew cleanup
+		brew cleanup -s
+		rm -rf /Users/kcrt/Library/Caches/Cypress/*
+		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
+		OSNotify "Cleaned. Free space: $hdfreebefore -> $hdfreeafter"
+
+
 		
 		# echo_info "==== joplin ===="
 		# joplin sync
