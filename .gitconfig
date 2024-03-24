@@ -1,5 +1,5 @@
 [user]
-	name = TAKAHASHI Kyohei
+	name = TAKAHASHI, Kyohei
 	email = kcrt@kcrt.net
 	#GPG: signingkey = A193875B
 	signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOPgJQcfABeJYG6ANq9VpyO/kcrt/V5gp7pcZpCtW6U kcrt@kcrt.net"

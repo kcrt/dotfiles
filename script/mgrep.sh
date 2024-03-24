@@ -10,6 +10,7 @@
 
 if [ $# -eq 0 ]; then
 	echo "example: ls | mgrep misoshiru" 
+	echo "which is to grep -E (ﾐｿｼﾙ|ミソシル|味噌汁|みそしる|ｍｉｓｏｓｈｉｒｕ|misoshiru)"
 	exit
 elif [ $# -eq 1 ]; then
 	if [ "$(uname)" = "Darwin" ]; then

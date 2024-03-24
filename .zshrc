@@ -150,9 +150,12 @@ fi
 autoload -Uz is-at-least		# versionによる判定
 # autoload -U +X bashcompinit && bashcompinit
 if [[ -n "$BIN_HOMEBREW" ]]; then
-	FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:${FPATH}"
+	CARGO_COMPLETION="`~/.cargo/bin/rustc --print sysroot`/share/zsh/site-functions"
+	FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:$CARGO_COMPLETION:${FPATH}"
 fi
-autoload -Uz compinit && compinit
+if [[ $UID -ne 0 ]]; then
+	autoload -Uz compinit && compinit
+fi
 autoload zmv
 autoload zargs
 autoload zsh/files
@@ -279,7 +282,11 @@ fi
 end_of "gitinfo"
 
 # ----- プロンプト
-PROMPT_COLOR="%(!.$fg[red].$fg[$hostcolor])"
+if [[ $UID -eq 0 ]]; then
+	PROMPT_COLOR="%F{red}"
+else
+	PROMPT_COLOR="%F{$hostcolor}"
+fi
 # is on tmux ?
 SUBSTLV=$SHLVL
 if [[ "$TERM_PROGRAM" = "vscode" ]]; then
@@ -307,10 +314,10 @@ PROMPT_RESETCOLOR='%{$reset_color%}'
 PROMPT="${PROMPT_SUBSTLV}${PROMPT_COLOR}[${PROMPT_USER}@${PROMPT_HOST}]${PROMPT_MAILCHECK}${PROMPT_SHARP}${PROMPT_RESETCOLOR}"
 
 # 最後に実行したプログラムがエラーだと反転するよ。
+RPROMPT_BGJOB='%(1j.(bg: %j).)'
 RPROMPT_SETCOLOR=' %{%(?.$fg[cyan].$bg[cyan]$fg[black])%}'
 RPROMPT_DIR=' [%(5~|%-2~/.../%2~|%~)] '
 RPROMPT_PLATFORM='($(uname -m)) '
-RPROMPT_BGJOB='%(1j.(bg: %j).)'
 RPROMPT="${RPORMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_RESETCOLOR}"
 
 # ----- キー
@@ -880,15 +887,14 @@ if [ -x /opt/homebrew/bin/difft ]; then
 	export GIT_EXTERNAL_DIFF=/opt/homebrew/bin/difft
 fi
 
-# check if github-copilot-cli is installed
-if command -v github-copilot-cli > /dev/null 2>&1 ; then
-	eval "$(github-copilot-cli alias -- "$0")"
+if [ -x `which gh` ]; then
+	# eval "$(gh copilot alias -- zsh)"
+	alias "??"="gh copilot suggest -s"
 fi
 end_of "dev settings"
 
 if [[ -x `which tmux` ]]; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
-		echo "tmux"
 		tmux ls
 	fi
 elif [[ -x `which screen` ]]; then

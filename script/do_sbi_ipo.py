@@ -38,9 +38,9 @@ def main():
     driver.find_element(by=By.NAME, value="user_id").send_keys(USER_ID)
     driver.find_element(
         by=By.NAME, value="user_password").send_keys(USER_LOGIN_PASS)
-    time.sleep(1)
+    time.sleep(5)
     driver.find_element(by=By.NAME, value="ACT_login").click()
-    time.sleep(1)
+    time.sleep(3)
 
     print("--- IPO申込 ---")
     while True:
