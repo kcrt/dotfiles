@@ -887,7 +887,7 @@ if [ -x /opt/homebrew/bin/difft ]; then
 	export GIT_EXTERNAL_DIFF=/opt/homebrew/bin/difft
 fi
 
-if [ -x `which gh` ]; then
+if [ -x "`which gh`" ]; then
 	# eval "$(gh copilot alias -- zsh)"
 	alias "??"="gh copilot suggest -s"
 fi
