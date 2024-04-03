@@ -43,8 +43,8 @@ case $HOST in
 		fi
 
 		if [[ -e /Volumes/Main/ ]]; then
-			OSNotify "/Volumes/Main/ mounted, refreshing VolumesMain.txt..."
-			pv /Volumes/Main/DroboFileList.txt | grep -v "AppleDouble" | grep -v "\._" | grep -v "DS_Store" | LANG=C sort > ~/VolumeMain.txt
+			OSNotify "/Volumes/Main/ mounted, refreshing DroboFileList.txt..."
+			pv /Volumes/Main/DroboFileList.txt | grep -v "AppleDouble" | grep -v "\._" | grep -v "DS_Store" | LANG=C sort | sed "s|/mnt/DroboFS/Shares/|/Volumes/|" > ~/DroboFileList.txt
 		else
 			OSError "/Volumes/Main not found."
 		fi
