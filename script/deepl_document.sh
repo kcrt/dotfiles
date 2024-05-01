@@ -11,6 +11,9 @@
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
 #       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
 #
+#          NOTE:  Before running this script, set DEEPL_API_KEY in your environment.
+#                 Set DEBUG=1 for verbose information
+#
 #===============================================================================
 
 if [ $# -eq 1 ]; then
@@ -39,6 +42,20 @@ ret=`curl -X POST 'https://api-free.deepl.com/v2/document' \
 	-F "source_lang=$SOURCE_LANG" \
 	-F "target_lang=$TARGET_LANG" \
 	-F "file=@$FILENAME"`
+
+# store error code
+send_document_code=$?
+
+# show ret in DEBUG mode
+if [ -n "$DEBUG" ]; then
+    echo $ret
+fi
+
+# show error code
+if [ $send_document_code -ne 0 ]; then
+    echo "Error: curl command failed with error code $send_document_code"
+    exit 1
+fi
 
 document_id=`echo $ret | jq -r '.document_id'`
 document_key=`echo $ret | jq -r '.document_key'`

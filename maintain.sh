@@ -34,13 +34,19 @@ case $HOST in
 		OSNotify "Anti-virus database updating..."
 		freshclam
 		OSNotify "Scanning system. This may take a while..."
-		# clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+		clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
 
 		# if command fails, pause and wait for user to press enter
 		if [[ $? -ne 0 ]]; then
 			OSError "!!! Virus found !!!"
-			read -p "Please check message. Press [Enter] key to continue..."
+			read "Please check message. Press [Enter] key to continue..."
 		fi
+		 
+		# Before sending server, find Cargo.toml and execute cargo clean
+		OSNotify "Cleaning up Rust projects..."
+		cd ~/prog
+		find . -name Cargo.toml -execdir cargo clean \;
+		cd ~
 
 		if [[ -e /Volumes/Main/ ]]; then
 			OSNotify "/Volumes/Main/ mounted, refreshing DroboFileList.txt..."
@@ -146,8 +152,6 @@ case $HOST in
 		OSNotify "Cleaning Caches..."
 		hdfreebefore=`df -h / | grep / | awk '{print $4}'`
 		cd ~/prog
-		# Find Cargo.toml and execute cargo clean
-		find . -name Cargo.toml -execdir cargo clean \;
 		cd ~
 		rm -rf ~/Library/Developer/Xcode/DerivedData/*
 		rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*

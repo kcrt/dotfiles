@@ -2,6 +2,6 @@
 
 TARGET=`cat ~/DroboFileList.txt | grep -v "[^/]*\..*$" | /Users/kcrt/dotfiles/script/mgrep.sh "$1" | peco`
 if [ -n "$TARGET" ]; then
-	echo "opeing $TARGET"
+	echo "opening $TARGET"
 	open "$TARGET"
 fi

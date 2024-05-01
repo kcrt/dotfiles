@@ -536,9 +536,27 @@ function ffmpeg_720p_hevc_anime(){
 	ffmpeg -i "$1" -vf scale=-1:720 -c:v libx265 -tune animation "${1:t:r} [720p hevc].mp4"
 }
 function ffmpeg_1080p_h264(){
+	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
+	if [ "$height" -lt 1080 ]; then
+		echo "height is less than 1080"
+		return 1
+	fi
 	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libx264 "${1:t:r} [1080p h264].mp4"
 }
-function ffmpeg_1080p_hevc(){
+function ffmpeg_1080p_hevc_high_quality(){
+	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
+	if [ "$height" -lt 1080 ]; then
+		echo "height is less than 1080"
+		return 1
+	fi
+	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libx265 -x265-params crf=20 "${1:t:r} [1080p hevc].mp4"
+}
+function ffmpeg_1080p_hevc_default_quality(){
+	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
+	if [ "$height" -lt 1080 ]; then
+		echo "height is less than 1080"
+		return 1
+	fi
 	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libx265 "${1:t:r} [1080p hevc].mp4"
 }
 function use_for_regza(){
@@ -707,7 +725,7 @@ fi
 if [[ $OSTYPE = *darwin* ]] ; then
 	export MANPATH=/opt/local/man:$MANPATH
 
-	export PATH=/usr/local/opt/llvm/bin:~/Library/Android/sdk/platform-tools:$PATH
+	export PATH=/usr/local/opt/llvm/bin:$PATH:~/Library/Android/sdk/platform-tools
 	if [[ -n "$BIN_HOMEBREW" ]] ; then
 		unset HOMEBREW_SHELLENV_PREFIX # dirty hack
 		eval $($BIN_HOMEBREW shellenv)
@@ -739,13 +757,12 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	alias HeySiri="open -a Siri"
 	alias objdump="objdump --x86-asm-syntax=intel"
 	alias zsh_on_rosetta="arch -x86_64 /bin/zsh"
-	
-	
-	# ctags=`echo /usr/local/Cellar/ctags/*/bin/ctags`
-	# alias ctags=$ctags
 
 	if [ -x "/usr/local/bin/mvim" ]; then
 		alias vim="/usr/local/bin/mvim -v"
+	fi
+	if [ -x "/Applications/CotEditor.app/Contents/SharedSupport/bin/cot" ]; then
+		alias cot="/Applications/CotEditor.app/Contents/SharedSupport/bin/cot"
 	fi
 	
 	export CLOUDSDK_PYTHON=`which python3`
@@ -845,7 +862,7 @@ function CheckCommandTime_preexec(){
 
 	# --- notify long command
 	COMMAND="$1"
-	COMMAND_TIME=`date +%s`
+	COMMAND_TIME=`date +%s`	# start time (Unix epoch)
 
 }
 function CheckCommandTime_precmd(){
@@ -855,13 +872,23 @@ function CheckCommandTime_precmd(){
 	if [[ "$COMMAND_TIME" -ne "0" ]]; then
 		local d=`date +%s`
 		d=`expr $d - $COMMAND_TIME`
+		# if the command takes more than 30 seconds, notify with terminal
 		if [[ "$d" -ge "30" ]] ; then
+			# set COMMAND_INFO to
+			#  $COMMAND without double quotes
+			#  First 20 character
+			local COMMAND_INFO=`echo $COMMAND | sed -e 's/^"//' -e 's/"$//' | cut -c 1-20`
 			if [[ IsError -ne 0 ]]; then
-				OSError "$COMMAND" "took $d seconds and finally failed."
+				OSError "$COMMAND_INFO" "took $d seconds and finally failed."
 			else
-				OSNotify "$COMMAND" "took $d seconds and finally finished."
+				OSNotify "$COMMAND_INFO" "took $d seconds and finally finished."
+			fi
+			# if the command takes more than 30 minutes, notify with slack
+			if [[ "$d" -ge "1800" ]]; then
+				notify-slack "Command took $d seconds with $IsError: $COMMAND_INFO"
 			fi
 		fi
+
 	fi
 	COMMAND=""
 	COMMAND_TIME="0"
@@ -889,7 +916,7 @@ fi
 
 if [ -x "`which gh`" ]; then
 	# eval "$(gh copilot alias -- zsh)"
-	alias "??"="gh copilot suggest -s"
+	alias "??"="gh copilot suggest -t shell"
 fi
 end_of "dev settings"
 

@@ -3,6 +3,8 @@ a[href*="kyoko-np.net"]:before{
 	color: black;
 }
 
+/* 基本的に広告は除去しない方針だが、誤クリックを誘うような内容・詐欺サイトなどEvilなもの・でかすぎてコンテンツを阻害しているもの・大量の通信が発生するもの・CPU負荷が高いもの については除去する */
+
 div#fc2_bottom_bnr{
 	display: none !important;
 }
@@ -90,3 +92,10 @@ div#overlayAd{
 	display: none !important;
 }
 
+/* fandom.com */
+div.top-ads-container{
+	display: none !important;
+}
+div.gpt-ad{
+	display: none !important;
+}
