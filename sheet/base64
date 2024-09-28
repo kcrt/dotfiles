@@ -1,0 +1,12 @@
+base64 -i filename
+base64 --decode|-d -i filename
+--
+basenc --base64 -i filename
+basenc --base64 --decode|-d -i filename
+
+--base64url: base64の +/ を -_ に置き換えた物
+--base32: A-Z, 2-7, =(padding)のみ
+--base32hex: 0-9, A-V, =(padding)のみ
+--base16: 0-9, A-F, =(padding), 16進数と同じ
+--base2lsbf, --base2msbf: ビット列をリトルエンディアン、ビッグエンディアンでエンコード
+--z85: 修正Asci85

@@ -34,19 +34,19 @@ echo_aqua "    programmed by kcrt <kcrt@kcrt.net>"
 echo_aqua "-----------------------------------------------------"
 echo_aqua ""
 
-if [ -f ~/dotfiles/init.sh -a "$1" != "-f" ]; then
+if [ -f ~/dotfiles/init.sh ] && [ "$1" != "-f" ]; then
 	echo_red "Probably, you had already executed this script."
 	echo_red "If you really want to execute this script, please use -f option."
 	exit
 fi
 
-if [ ! -x `which sudo` ]; then
+if [ ! -x "$(which sudo)" ]; then
 	echo_red "You need 'sudo' to execute this script."
 	echo_red "Please install 'sudo' first."
 fi
 
 echo_aqua "Are you a member of sudoers? (y/N): "
-read ans
+read -r ans
 if [ "$ans" != "y" ] ; then
 	echo_aqua "This script need 'sudo', and you need to be a member of sudoers."
 	echo_aqua "Going to edit /etc/sudoers first."
@@ -57,7 +57,7 @@ if [ "$ans" != "y" ] ; then
 fi
 
 echo_aqua "Testing 'sudo'..."
-if [ `sudo echo 'test'` != 'test' ] ; then
+if [ "$(sudo echo 'test')" != 'test' ] ; then
 	echo "'sudo' failed. "
 	echo "Please re-check /etc/sudoers and try again."
 	exit
@@ -98,27 +98,27 @@ elif [ -x "`which brew`" ]; then
 
 	echo_aqua "Gathering information of brew packages.... This will take a few minutes."
 	declare -a brew_info	# associative array doesn't work on macOS bash (because it's ver. 3)
-	for p in ${brew_packages[@]}; do
-		ret=`brew info "$p"`
+	for p in "${brew_packages[@]}"; do
+		ret=$(brew info "$p")
 		if [ $? -ne 0 ]; then
 			echo_red "$p is not available."
 		else
-			info=`echo "$ret" | head -n2 | tail -n1`
+			info=$(echo "$ret" | head -n2 | tail -n1)
 			brew_info+=( $p )
 			brew_info[${#brew_info[*]}]="${info}"
 			brew_info+=( 1 )
 		fi
 	done
 
-	selected=`whiptail --title "Homebrew packages" --checklist "Please select packages to install." 0 0 0  "${brew_info[@]}" 3>&1 1>&2 2>&3`
-	selected=(`echo $selected |  sed s/'"'//g`)
-	for p in ${selected[@]}; do
+	selected=$(whiptail --title "Homebrew packages" --checklist "Please select packages to install." 0 0 0  "${brew_info[@]}" 3>&1 1>&2 2>&3)
+	selected=($(echo $selected |  sed s/'"'//g))
+	for p in "${selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
-		brew install $p
+		brew install "$p"
 	done 
 
 	echo "Do you want to install fonts? (Y/n)"
-	read ans
+	read -r ans
 	if [ "$ans" != "n" ] ; then
 		brew install homebrew/cask-fonts/font-fira-code
 		brew install font-ipaexfont
@@ -126,13 +126,11 @@ elif [ -x "`which brew`" ]; then
 	
 	# ---- Mac App Store
 	echo "Going to install Mac App Store software"
-	mas account
-	if [ $? -ne 0 ] ; then
+	if ! mas account ; then
 		echo_aqua "Please log-in to App Store."
 		open "/System/Applications/App Store.app"
 	fi
-	mas account
-	while [ $? -ne 0 ]; do
+	while ! mas account; do
 		sleep 5
 		mas account
 	done
@@ -142,26 +140,26 @@ elif [ -x "`which brew`" ]; then
 	# sudo xcodebuild -license
 	echo_aqua "Gathering information of mac app store packages.... This will take a few minutes."
 	declare -a mas_info	# associative array doesn't work on macOS bash (because it's ver. 3)
-	for p in ${mas_packages[@]}; do
-		ret=`mas info "$p"`
+	for p in "${mas_packages[@]}"; do
+		ret=$(mas info "$p")
 		if [ $? -ne 0 ]; then
 			echo_red "$p is not available."
 		else
-			info=`echo "$ret" | head -n1`
+			info=$(echo "$ret" | head -n1)
 			mas_info+=( $p )
 			mas_info[${#mas_info[*]}]="${info}"
 			mas_info+=( 1 )
 		fi
 	done
 
-	selected=`whiptail --title "Mac App Store packages" --checklist "Please select packages to install." 0 0 0  "${mas_info[@]}" 3>&1 1>&2 2>&3`
-	selected=(`echo $selected |  sed s/'"'//g`)
-	for p in ${selected[@]}; do
+	selected=$(whiptail --title "Mac App Store packages" --checklist "Please select packages to install." 0 0 0  "${mas_info[@]}" 3>&1 1>&2 2>&3)
+	selected=($(echo $selected |  sed s/'"'//g))
+	for p in "${selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
-		mas install $p
+		mas install "$p"
 	done 
 
-elif [ `uname` = "Darwin" ]; then
+elif [ $(uname) = "Darwin" ]; then
 	echo_aqua "Homebrew not found!"
 	echo_aqua "Please install homebrew first."
 	open "https://brew.sh"
@@ -186,15 +184,15 @@ elif [ -x /usr/bin/apt ]; then
 	sudo dpkg-reconfigure -plow unattended-upgrades
 	echo_aqua "Please set e-mail address for information of unattended upgrades."
 	echo_aqua "And set Automatic-Reboot to true if required."
-	read ans
+	read -r ans
 	sudo vim /etc/apt/apt.conf.d/50unattended-upgrades
 	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "
-	read ans
+	read -r ans
 	if [ "$ans" = "y" ] ; then
 		sudo apt-get install ssmpt
 		sudo vim /etc/ssmtp/ssmtp.conf
 		echo_aqua "Test mail? (Your address): "
-		read ans
+		read -r ans
 		if [ "$ans" = "" ] ; then
 			echo "skipping..."
 		else
@@ -210,14 +208,14 @@ EOF
 		echo_aqua "Please consider to install postfix or other MTAs."
 	fi
 	echo_aqua "Do you want to install GUI applications? (y/N): "
-	read ans
+	read -r ans
 	if [ "$ans" = "y" ] ; then
 		sudo apt-get install adobe-flashplugin
 		sudo apt-get install vlc
 		sudo apt-get install ubuntu-restricted-extras
 		sudo apt-get install chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra
 		sudo apt-get install ibus-mozc
-		if [ -d "~/ドキュメント" ] ; then
+		if [ -d "$HOME/ドキュメント" ] ; then
 			echo_aqua "renaming directory name into English..."
 			LANG=C; xdg-user-dirs-gtk-update
 		fi
@@ -227,57 +225,57 @@ else
 	exit
 fi
 
-if [ -x "`which pyenv`" ]; then
+if [ -x "$(which pyenv)" ]; then
 	echo "pyenv:"
 	pyenv install --list
 	echo "Which environment do you want to install? (Package Name / n)"
-	read ans
+	read -r ans
 	if [ "$ans" != "n" ] ; then
 		eval "$(pyenv init -)"
 		pyenv install $ans
 	fi
-elif [ -x "`which python3`" ]; then
+elif [ -x "$(which python3)" ]; then
 	python3 -m ensurepip --upgrade
 fi
 
 echo_aqua "(3/5) : Downloading and setting dot files -----------"
-if [ -f ~/.ssh/id_rsa ]; then
+if [ -f ~/.ssh/id_ed25519 ]; then
 	echo_aqua "key found."
 else
 	echo_aqua "generation public/secret keys..."
-	ssh-keygen -t ed25519
+	ed25519-keygen -t ed25519
 fi
 echo_aqua "Please add this public key to gitolite of kcrt.net and github"
 echo_aqua "-----"
-cat ~/.ssh/id_rsa.pub
+cat ~/.ssh/id_ed25519.pub
 echo_aqua "-----"
 echo_aqua "( add to keydir, and commit push to the repository )"
 echo_aqua "push Enter to proceed."
-read pause
+read -r pause
 
 cd ~
-git clone https://github.com/kcrt/dotfiles.git
+git clone --depth=1 https://github.com/kcrt/dotfiles.git
 ~/dotfiles/script/link_dots.sh
 
 
 # neovim
-mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
-ln -s ~/.vim $XDG_CONFIG_HOME/nvim
-ln -s ~/.vimrc $XDG_CONFIG_HOME/nvim/init.vim
+mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
+ln -s ~/.vim "$XDG_CONFIG_HOME"/nvim
+ln -s ~/.vimrc "$XDG_CONFIG_HOME"/nvim/init.vim
 
 echo_aqua "(4/5) : Changing Default Shell ----------------------"
-chsh -s `which zsh`
+chsh -s $(which zsh)
 
 echo_aqua "(5/5) : Optional Step -------------------------------"
 echo_aqua "Do you want to install vim plugin manager Vundle? (Y/n): "
-read ans
+read -r ans
 if [ "$ans" != "n" ] ; then
 	mkdir ~/.vim
 	git clone https://github.com/gmarik/vundle.git ~/.vim/bundle/Vundle.git
 	vim -c ':PluginInstall' -c ':qall'
 fi
 
-if [ `uname` = "Darwin" ]; then
+if [ "$(uname)" = "Darwin" ]; then
 	echo_aqua "Mac OS X Setting..."
 	sudo nvram SystemAudioVolume=%00					# no boot sound
 	defaults write -g AppleKeyboardUIMode -int 3				# Full keyboard access

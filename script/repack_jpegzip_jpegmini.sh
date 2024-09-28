@@ -25,7 +25,7 @@ imageoptim --jpegmini "/tmp/repack/REPACK_JPEG_HALF/**/*.jpg"
 echo "Converting... (png->jpg)"
 for i in $(find /tmp/repack -name "*.png"); do
 	echo "$i"
-	convert "$i" -quality 90 "${i:r}_png.jpg"
+	magick convert "$i" -quality 90 "${i:r}_png.jpg"
 	rm "$i"
 done
 

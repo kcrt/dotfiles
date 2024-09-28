@@ -11,7 +11,7 @@
 setBackgroundColor()
 {
     #printf '\x1bPtmux;\x1b\x1b[48;2;%s;%s;%sm' $1 $2 $3
-    printf '\x1b[48;2;%s;%s;%sm' $1 $2 $3
+    printf '\x1b[48;2;%s;%s;%sm' "$1" "$2" "$3"
 }
 
 resetOutput()
@@ -55,46 +55,46 @@ rainbowColor()
     fi
 }
 
-for i in `seq 0 127`; do
-    setBackgroundColor $i 0 0
+for i in $(seq 0 127); do
+    setBackgroundColor "$i" 0 0
     echo -en " "
 done
 resetOutput
-for i in `seq 255 -1 128`; do
-    setBackgroundColor $i 0 0
+for i in $(seq 255 -1 128); do
+    setBackgroundColor "$i" 0 0
     echo -en " "
 done
 resetOutput
 
-for i in `seq 0 127`; do
-    setBackgroundColor 0 $i 0
+for i in $(seq 0 127); do
+    setBackgroundColor 0 "$i" 0
     echo -n " "
 done
 resetOutput
-for i in `seq 255 -1 128`; do
-    setBackgroundColor 0 $i 0
-    echo -n " "
-done
-resetOutput
-
-for i in `seq 0 127`; do
-    setBackgroundColor 0 0 $i
-    echo -n " "
-done
-resetOutput
-for i in `seq 255 -1 128`; do
-    setBackgroundColor 0 0 $i
+for i in $(seq 255 -1 128); do
+    setBackgroundColor 0 "$i" 0
     echo -n " "
 done
 resetOutput
 
-for i in `seq 0 127`; do
-    setBackgroundColor `rainbowColor $i`
+for i in $(seq 0 127); do
+    setBackgroundColor 0 0 "$i"
     echo -n " "
 done
 resetOutput
-for i in `seq 255 -1 128`; do
-    setBackgroundColor `rainbowColor $i`
+for i in $(seq 255 -1 128); do
+    setBackgroundColor 0 0 "$i"
+    echo -n " "
+done
+resetOutput
+
+for i in $(seq 0 127); do
+    setBackgroundColor "$(rainbowColor "$i")"
+    echo -n " "
+done
+resetOutput
+for i in $(seq 255 -1 128); do
+    setBackgroundColor "$(rainbowColor "$i")"
     echo -n " "
 done
 resetOutput

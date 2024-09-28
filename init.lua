@@ -260,6 +260,7 @@ function audioEventCallback(arg)
 		local balance = outdev:balance()
 		if balance ~= nil and math.abs(balance - 0.5) > 0.01 then
 			warn_alert("Unbalanced output of stereo device [" .. outdev:name() .. "] " .. (balance * 1000 // 10 / 100))
+			outdev:setBalance(0.5)
 		end
 		if outdev:name() == "kcrt's AirPods Pro" then
 			outdev:setMuted(false)
@@ -553,31 +554,30 @@ caffeinateWatcher:start()
 hs.timer.doAfter(10, onSystemDidWake) -- 初回
 
 -- iot every 10 minutes
-
-function onIoTSended(status, body, headers)
-	if status ~= 200 then
-		logger.i("[onIoT send] " .. status)
-		logger.i(body)
-	end
-end
-function IoTSend()
-	headers = {}
-	headers["Content-Type"] = "application/json"
-
-	local currentmAh = io.popen("ioreg -l | grep '\"AppleRawCurrentCapacity\" = ' | sed -e 's/.* = //'", "r"):read("*a")
-	local maxmAh = io.popen("ioreg -l | grep '\"AppleRawMaxCapacity\" = ' | sed -e 's/.* = //'", "r"):read("*a")
-	local cpuload = io.popen("uptime | sed 's/.*load average.*: //' | sed 's/,/ /' | awk '{printf($1)}'", "r"):read("*a")
-	local url = secrets.iot_oxygen_url
-
-	hs.http.asyncPost(url .. "batteryPercentage/" .. hs.battery.percentage(), nil, headers, onIoTSended)
-	hs.http.asyncPost(url .. "batteryMilliAmpere/" .. chomp(currentmAh), nil, headers, onIoTSended)
-	hs.http.asyncPost(url .. "batteryMaxMilliAmpere/" .. chomp(maxmAh), nil, headers, onIoTSended)
-	hs.http.asyncPost(url .. "cpuload/" .. chomp(cpuload), nil, headers, onIoTSended)
-
-	return true
-end
-iotsender = hs.timer.new(60 * 10, IoTSend, true):start()
-IoTSend()
+-- function onIoTSended(status, body, headers)
+-- 	if status ~= 200 then
+-- 		logger.i("[onIoT send] " .. status)
+-- 		logger.i(body)
+-- 	end
+-- end
+-- function IoTSend()
+-- 	headers = {}
+-- 	headers["Content-Type"] = "application/json"
+-- 
+-- 	local currentmAh = io.popen("ioreg -l | grep '\"AppleRawCurrentCapacity\" = ' | sed -e 's/.* = //'", "r"):read("*a")
+-- 	local maxmAh = io.popen("ioreg -l | grep '\"AppleRawMaxCapacity\" = ' | sed -e 's/.* = //'", "r"):read("*a")
+-- 	local cpuload = io.popen("uptime | sed 's/.*load average.*: //' | sed 's/,/ /' | awk '{printf($1)}'", "r"):read("*a")
+-- 	local url = secrets.iot_oxygen_url
+-- 
+-- 	hs.http.asyncPost(url .. "batteryPercentage/" .. hs.battery.percentage(), nil, headers, onIoTSended)
+-- 	hs.http.asyncPost(url .. "batteryMilliAmpere/" .. chomp(currentmAh), nil, headers, onIoTSended)
+-- 	hs.http.asyncPost(url .. "batteryMaxMilliAmpere/" .. chomp(maxmAh), nil, headers, onIoTSended)
+-- 	hs.http.asyncPost(url .. "cpuload/" .. chomp(cpuload), nil, headers, onIoTSended)
+-- 
+-- 	return true
+-- end
+-- iotsender = hs.timer.new(60 * 10, IoTSend, true):start()
+-- IoTSend()
 -- TODO: hs.battery.capacity()がバッテリー使用時にどうなっているか？
 
 

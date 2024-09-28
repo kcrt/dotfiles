@@ -318,7 +318,7 @@ RPROMPT_BGJOB='%(1j.(bg: %j).)'
 RPROMPT_SETCOLOR=' %{%(?.$fg[cyan].$bg[cyan]$fg[black])%}'
 RPROMPT_DIR=' [%(5~|%-2~/.../%2~|%~)] '
 RPROMPT_PLATFORM='($(uname -m)) '
-RPROMPT="${RPORMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_RESETCOLOR}"
+RPROMPT="${RPROMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_RESETCOLOR}"
 
 # ----- キー
 bindkey -v
@@ -403,7 +403,7 @@ end_of "vi mode key"
 
 # ----- パス
 typeset -U path PATH
-export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin:/snap/bin
+export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin:/snap/bin:~/bin
 
 # ----- 関数
 function _w3m(){
@@ -467,7 +467,6 @@ abbrev-alias mkdir='nocorrect mkdir'
 abbrev-alias w3m=' noglob _w3m'
 abbrev-alias carbonyl='docker run -ti fathyb/carbonyl --rm '
 abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
-abbrev-alias gdb="gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 abbrev-alias mutt='neomutt'
 abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
 if [[ -x `which thefuck` ]]; then
@@ -535,6 +534,9 @@ function ffmpeg_720p_hevc(){
 function ffmpeg_720p_hevc_anime(){
 	ffmpeg -i "$1" -vf scale=-1:720 -c:v libx265 -tune animation "${1:t:r} [720p hevc].mp4"
 }
+function ffmpeg_720p_av1(){
+	ffmpeg -i "$1" -vf scale=-1:720 -c:v libsvtav1 "${1:t:r} [720p av1].mp4"
+}
 function ffmpeg_1080p_h264(){
 	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
 	if [ "$height" -lt 1080 ]; then
@@ -558,6 +560,14 @@ function ffmpeg_1080p_hevc_default_quality(){
 		return 1
 	fi
 	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libx265 "${1:t:r} [1080p hevc].mp4"
+}
+function ffmpeg_1080p_av1_default_quality(){
+	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
+	if [ "$height" -lt 1080 ]; then
+		echo "height is less than 1080"
+		return 1
+	fi
+	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libsvtav1 "${1:t:r} [1080p av1].mp4"
 }
 function use_for_regza(){
 	ffmpeg -i "$1" -f mpegts -c:v libx265 -c:a aac "/Volumes/REGZA/${1:t:r}.ts"
@@ -597,7 +607,8 @@ function mcd(){
 abbrev-alias hist='history'
 abbrev-alias :q='exit'
 abbrev-alias su='su -s =zsh'
-abbrev-alias hexdump='od -Ax -tx1 -c'
+abbrev-alias od='od -Ax -tx1 -c'
+abbrev-alias hexdump="hexdump -C"
 abbrev-alias hex2bin="xxd -r -p"
 abbrev-alias beep='print "\a"'
 abbrev-alias cls='clear'
@@ -757,6 +768,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	alias HeySiri="open -a Siri"
 	alias objdump="objdump --x86-asm-syntax=intel"
 	alias zsh_on_rosetta="arch -x86_64 /bin/zsh"
+	abbrev-alias gdb="arch -x86_64 gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 
 	if [ -x "/usr/local/bin/mvim" ]; then
 		alias vim="/usr/local/bin/mvim -v"
@@ -874,6 +886,13 @@ function CheckCommandTime_precmd(){
 		d=`expr $d - $COMMAND_TIME`
 		# if the command takes more than 30 seconds, notify with terminal
 		if [[ "$d" -ge "30" ]] ; then
+			# if the command takes more than 30 minutes, notify with slack
+
+			# ignore zsh, tmux, ssh, mosh
+			if [[ "$COMMAND" =~ ^(zsh|tmux|ssh|mosh) ]]; then
+				return
+			fi
+
 			# set COMMAND_INFO to
 			#  $COMMAND without double quotes
 			#  First 20 character

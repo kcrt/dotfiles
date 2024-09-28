@@ -23,7 +23,7 @@ echo "Converting... (avif->jpg)"
 find /tmp/repack -name "*.avif" | while read i
 do
 	echo "$i"
-	convert "$i" -quality 90 "${i:r}.jpg"
+	magick convert "$i" -quality 90 "${i:r}.jpg"
 	rm "$i"
 done
 

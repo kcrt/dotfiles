@@ -18,14 +18,15 @@
 
 if [ $# -eq 1 ]; then
     FILENAME=$1
-    SOURCE_LANG="JA"
-    TARGET_LANG="EN-US"
+    SOURCE_LANG="EN"
+    TARGET_LANG="JA"
 elif [ $# -eq 3 ]; then
     FILENAME=$1
     SOURCE_LANG=$2
     TARGET_LANG=$3
 else
     echo "Usage: $0 FILENAME [SOURCE_LANG TARGET_LANG]"
+    echo "e.g. $0 document.docx EN JA"
     exit 1
 fi
 
@@ -60,21 +61,38 @@ fi
 document_id=`echo $ret | jq -r '.document_id'`
 document_key=`echo $ret | jq -r '.document_key'`
 
+if [ -n "$DEBUG" ]; then
+    echo "document_id: $document_id"
+    echo "document_key: $document_key"
+fi
+
 echo "Waiting for translation to complete..."
 while [ true ]; do
     sleep 5
-    ret=`curl -X POST "https://api-free.deepl.com/v2/document/$document_id" \
+    ret=`curl --silent -m 30 -X POST "https://api-free.deepl.com/v2/document/$document_id" \
 	-H "Authorization: DeepL-Auth-Key $DEEPL_API_KEY" \
 	-d "document_key=$document_key"`
-    status=`echo $ret | jq -r '.status'`
-    seconds_remaining=`echo $ret | jq -r '.seconds_remaining'`
-    if [ "$status" = "done" ]; then
+    if [ -n "$DEBUG" ]; then
+        echo $ret
+    fi
+    trans_status=`echo $ret | jq -r '.status'`
+    if [ "$trans_status" = "done" ]; then
+        billed_characters=`echo $ret | jq -r '.billed_characters'`
+        echo "Done! Billed characters: $billed_characters"
         break
+    elif [ "$trans_status" = "error" ]; then
+        error_message=`echo $ret | jq -r '.error_message'`
+        echo "Error: Translation failed: $error_message"
+        exit 1
+    elif [ "$trans_status" = "queued" ]; then
+        echo "Translation is in queue."
+    elif [ "$trans_status" = "translating" ]; then
+        seconds_remaining=`echo $ret | jq -r '.seconds_remaining'`
+        echo "$seconds_remaining [sec] ($trans_status)..."
     else
-        echo "$seconds_remaining [sec]..."
+        echo "Unknown status: $trans_status"
     fi
 done
-echo "Done!"
 
 curl -X POST "https://api-free.deepl.com/v2/document/$document_id/result" \
 	-H "Authorization: DeepL-Auth-Key $DEEPL_API_KEY" \

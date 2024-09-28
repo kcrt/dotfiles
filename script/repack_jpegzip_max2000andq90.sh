@@ -19,20 +19,16 @@ mkdir /tmp/repack/REPACK_JPEG_HALF
 unzip "$fullname" -d /tmp/repack/REPACK_JPEG_HALF
 
 setopt GLOBSTARSHORT
-echo "Shrinking..."
-#for i in $(find /tmp/repack -name "*.jpg"); do
-#	echo "$i"
-#	mogrify -resize 50% "$i"
-#done
-
-find /tmp/repack -name "*.jpg" | parallel --progress -j 4 'mogrify -resize "2000x2000>" "{}"'
 
 echo "Converting... (png->jpg)"
 for i in $(find /tmp/repack -name "*.png"); do
 	echo "$i"
-	magick convert "$i" -quality 90 "${i:r}_png.jpg"
+	magick convert "$i" -quality 100 "${i:r}_png.jpg"
 	rm "$i"
 done
+
+echo "Resize and setting quality 90..."
+find /tmp/repack/REPACK_JPEG_HALF -name "*.jpg" | parallel --progress -j 4 'magick mogrify -resize "2000x2000>" -quality 90 "{}"'
 
 echo "Repacking..."
 mv "$fullname" "${fullname}.org"

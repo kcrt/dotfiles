@@ -34,12 +34,13 @@ case $HOST in
 		OSNotify "Anti-virus database updating..."
 		freshclam
 		OSNotify "Scanning system. This may take a while..."
-		clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+		# clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
 
 		# if command fails, pause and wait for user to press enter
 		if [[ $? -ne 0 ]]; then
 			OSError "!!! Virus found !!!"
-			read "Please check message. Press [Enter] key to continue..."
+			echo "Please check message. Press Enter key to continue..."
+			read
 		fi
 		 
 		# Before sending server, find Cargo.toml and execute cargo clean

@@ -5,9 +5,7 @@ import os
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-# import datetime
-# from google.oauth2.credentials import Credentials
-# from googleapiclient.discovery import build
+import sys
 
 # to install driver, run:
 #   brew install chromedriver (for Mac)
@@ -20,13 +18,21 @@ USER_LOGIN_PASS = os.environ.get("SBI_LOGIN_PASS")
 USER_TRANSACTION_PASS = os.environ.get("SBI_TRANSACTION_PASS")
 
 
+def is_venv():
+    return (hasattr(sys, 'real_prefix') or
+            (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
+
+
 def main():
 
     if USER_ID is None or USER_LOGIN_PASS is None or USER_TRANSACTION_PASS is None:
         raise Exception(
             "Please set SBI_ID, SBI_LOGIN_PASS, SBI_TRANSACTION_PASS as environment variables.")
 
-    # Run every monday
+    if is_venv():
+        print("Currently running inside a virtual environment.")
+    else:
+        print("Not running inside a virtual environment")
 
     options = webdriver.ChromeOptions()
     driver = webdriver.Chrome(options=options)
@@ -47,25 +53,40 @@ def main():
         driver.get("https://site2.sbisec.co.jp/ETGate/")
         time.sleep(1)
 
-        linkIPO = [x for x in driver.find_elements(by=By.TAG_NAME, value="img") if x.get_attribute(
-            "src") == "https://sbisec.akamaized.net/sbisec/images/base02/heading_ipopo_01.gif"][0]
+        # find h3 tag whose contents is "IPO・PO".
+        ipo_tag = [x for x in driver.find_elements(
+            by=By.TAG_NAME, value="h5") if x.text == "IPO・PO"][0]
+        parent_div = ipo_tag.find_element(by=By.XPATH, value="../../..")
+        linkIPO = [x for x in parent_div.find_elements(
+            by=By.TAG_NAME, value="a") if "一覧" in x.text][0]
         driver.execute_script("arguments[0].scrollIntoView(false);", linkIPO)
         linkIPO.click()
-        time.sleep(1)
+        time.sleep(5)
 
-        assert "新規上場株式ブックビルディング" in driver.find_element(
-            by=By.TAG_NAME, value="body").text
+        assert driver.find_element(
+            by=By.CSS_SELECTOR, value="h1.ttl").text == "新規上場株式 公募増資・売出ブックビルディング情報"
+
         t = [x for x in driver.find_elements(by=By.TAG_NAME, value="img") if x.get_attribute(
-            "alt") == "申込" and x.get_attribute("src") == "https://sbisec.akamaized.net/v3/images/common/trading/b_ipo_moshikomi.gif"]
+            "alt") == "新規上場株式ブックビルディング / 購入意思表示"]
 
         if len(t) == 0:
             break
         driver.execute_script("arguments[0].scrollIntoView(false);", t[0])
         t[0].click()
-
         time.sleep(2)
+
+        # print(driver.find_element(by=By.TAG_NAME, value="h2").text)
         assert driver.find_element(
-            by=By.TAG_NAME, value="h2").text == "新規上場株式ブックビルディング申込"
+            by=By.TAG_NAME, value="h2").text == "新規上場株式ブックビルディング / 購入意思表示"
+
+        t = [x for x in driver.find_elements(by=By.TAG_NAME, value="img") if x.get_attribute(
+            "alt") == "申込"]
+
+        if len(t) == 0:
+            break
+        driver.execute_script("arguments[0].scrollIntoView(false);", t[0])
+        t[0].click()
+        time.sleep(2)
 
         corp_name = [x for x in driver.find_elements(
             by=By.TAG_NAME, value="td") if "mbody" in x.get_attribute("class")][0].text

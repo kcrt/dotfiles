@@ -5,8 +5,6 @@ else
 	...
 fi
 
-[ は /bin/[、[[はビルドインコマンド
-
 * file
 -b, -c, -p, -S, -g, -k, -u
 -d: Directory	-f: Normal file	-L: Symbolic link
@@ -15,7 +13,7 @@ fi
 
 * string
 -n: not null	-z: null string
-str1 = str2		str1 != str2
+str1 = str2		str1 != strt2
 "string" =~ expression
 [[の時はexpresisonは囲まない
 

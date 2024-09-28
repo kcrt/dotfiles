@@ -10,7 +10,7 @@ backtick 1 99999 99999 echo $USER
 backtick 2 5 20 $HOME/etc/script/cpuload.sh heavy
 backtick 3 5 20 $HOME/etc/script/cpuload.sh light
 backtick 4 5 60 $HOME/etc/script/appworking.sh yum yum "port u" port apt- apt aptitude apt wget wget ffmpeg ff recfriio (R) "brew upg" brew
-backtick 5 60 60 $HOME/etc/script/battery.sh
+backtick 5 60 60 $HOME/etc/script/battery_info.sh
 backtick 6 600 600 $HOME/etc/script/hasupdate.sh
 # backtick 7 0 30 $HOME/etc/script/pingtime.sh
 
