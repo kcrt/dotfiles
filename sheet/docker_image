@@ -1,0 +1,10 @@
+
+docker image ls				# was: docker images
+docker image build [-f Dockerfile] [-t imagename:ver] [<path of COPY>]
+docker image import
+docker image history
+docker image pull|push
+docker image rm IMAGE_ID
+docker image save
+docker image tag
+docker inspect CONTAINER|IMAGE

@@ -1,0 +1,48 @@
+---
+title: "Analysis Main"
+author: "kcrt"
+date: '`r Sys.Date()`'
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+## Initialize
+### System
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+if (Sys.info()["sysname"] == "Darwin") {
+  # for macOS
+  par(family = "HiraMaruProN-W3")
+}
+```
+
+## Common functions
+```{r}
+```
+
+### Load library
+```{r load library}
+require(tidyverse)
+require(gtsummary)
+require(gtsummary)
+require(coin)
+require(exactRankTests)
+```
+
+## Load file
+```{r load control group}
+df_raw = readxl::read_excel("./data.xlsx", sheet = "data")
+my_data = df_raw
+```
+
+## Table 1
+```{r table1}
+my_data |>
+  select(Group) |> 
+  tbl_summary(by=Group) |>
+  add_p()
+```
+

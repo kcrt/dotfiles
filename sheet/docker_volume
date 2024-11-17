@@ -1,0 +1,2 @@
+docker volume create --name VOLUME_NAME
+docker volume inspect VOLUME_NAME

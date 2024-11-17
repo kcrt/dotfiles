@@ -1,0 +1,26 @@
+docker container run --rm hello-world
+
+docker container ls -a
+docker container create|run -it [--detach] [--rm] [--hostname HOSTNAME] [--name NAME] [-v HOST_PATH:CONTAINER_PATH] IMAGE
+	run = create(コンテナの生成: イメージ⇒ コンテナ) + start (起動)
+	-it								# interective + tty
+	-d | --detach					# detach after run (run background)
+	--rm							# remove after exit
+	--pids-limits 20				# limit pids
+	--platform=linux/amd64			# Apple Silliconでx86イメージで動かす
+	-v | --volume LOCAL_OR_VOLUME:REMOTE[:ro]
+		コンテナにマウント (ro: read-only)
+		例: -v `pwd`:/mnt
+	--mount type=volume,source=VOLUME_NAME,destination=REMOTE_PATH
+			type=bind,source=LOCAL_PATH,destination=REMOTE_PATH
+		-vより詳細に指定できる
+	-e | --env VARIABLENAME=VALUE	# 環境変数の設定
+	-p | --publish HOST_PORT:CONTAINER_PORT
+	-P すべての公開ポートをランダムポートに対応させて転送する (外からでデータを受け取る時など)
+	--network NETWORK_NAME --network-alias ALIAS
+									# Docker networkに接続 (ALIASで接続可)
+docker container start NAME|CONTAINER_ID -i
+docker container attach/stop/kill NAME|CONTAINER_ID
+docker container exec NAME|CONTAINER_ID [--tty] [--user root] COMMAND
+docker container rm [-f] NAME|CONTAINER_ID	# -f: stop して rm
+docker container stats/top/pause/unpause

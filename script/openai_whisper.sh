@@ -9,7 +9,7 @@ fi
 while true; do
     # ask for file name
     echo "Please enter the path to the audio file you want to transcribe:"
-    read filename
+    read -r filename
     # check if file exists
     if [ -f "$filename" ]; then
         break

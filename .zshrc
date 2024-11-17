@@ -509,6 +509,7 @@ alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 abbrev-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
 abbrev-alias whisper-jp="whisper --language Japanese --model large --device mps"
+abbrev-alias mlx_whisper-jp='mlx_whisper --language Japanese --model "mlx-community/whisper-large-v3-turbo" --output-format vtt'
 abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
@@ -568,6 +569,14 @@ function ffmpeg_1080p_av1_default_quality(){
 		return 1
 	fi
 	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libsvtav1 "${1:t:r} [1080p av1].mp4"
+}
+function ffmpeg_1080p_av1_high_quality(){
+	height=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=s=x:p=0 "$1")
+	if [ "$height" -lt 1080 ]; then
+		echo "height is less than 1080"
+		return 1
+	fi
+	ffmpeg -i "$1" -vf scale=-1:1080 -c:v libsvtav1 -crf 23 "${1:t:r} [1080p av1 crf23].mp4"
 }
 function use_for_regza(){
 	ffmpeg -i "$1" -f mpegts -c:v libx265 -c:a aac "/Volumes/REGZA/${1:t:r}.ts"
@@ -654,6 +663,9 @@ abbrev-alias openai_chatgpt='openai api chat_completions.create -m gpt-3.5-turbo
 function openai_whatisthisfile(){
 	openai api chat_completions.create -m gpt-3.5-turbo --max-tokens 1000 -g user "$(cat <(echo "下記のファイルの内容を説明してください。"; echo '```'; cat "$1"; echo '```'; ))"
 }
+abbrev-alias ollama-llama3.1='ollama run llama3.1:latest'
+abbrev-alias ollama-llama3.2='ollama run llama3.2:latest'
+abbrev-alias ollama-jp='ollama run 7shi/tanuki-dpo-v1.0'
 
 
 # global alias
@@ -904,7 +916,16 @@ function CheckCommandTime_precmd(){
 			fi
 			# if the command takes more than 30 minutes, notify with slack
 			if [[ "$d" -ge "1800" ]]; then
-				notify-slack "Command took $d seconds with $IsError: $COMMAND_INFO"
+				MIN=`expr $d / 60`
+				SEC=`expr $d % 60`
+				if [ $MIN -ge 60 ]; then
+					HOUR=`expr $MIN / 60`
+					MIN=`expr $MIN % 60`
+					duration_str="$HOUR hours $MIN minutes $SEC seconds"
+				else
+					duration_str="$MIN minutes $SEC seconds"
+				fi
+				notify-slack "Command took $duration_str with $IsError: $COMMAND_INFO"
 			fi
 		fi
 

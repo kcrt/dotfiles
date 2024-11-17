@@ -528,20 +528,22 @@ function mountDrives()
 	logger.i("Mount drives")
 	-- mount diskimage of /Users/kcrt/diskimages/*.sparsebundle with upper case name
 end
+function WiredConnectionCheck()
+	ipv4if, ipv6if = hs.network.primaryInterfaces()
+	if ipv4if == "en8" then
+		logger.i("Connected to wired network")
+	else
+		warn_alert("Not connected to wired network")
+	end
+end
 function onSystemDidWake()
 	logger.i("System did wake")
 
 	if hs.screen.find("PHL 279P1") ~= nil then
 		logger.i("Connected to the mother ship display")
 		hs.audiodevice.findOutputByName("PHL 279P1"):setDefaultOutputDevice()
-		-- check network (en8) is available
-		ipv4if, ipv6if = hs.network.primaryInterfaces()
-		ifdetail = hs.network.interfaceDetails(ipv4if)
-		if ipv4if ~= "en8" then
-			warn_alert("Wired connection is not available.")
-		end
-		-- ask to mount diskimage and network drives
-		-- hs.notify.new(mountDrives, {title="Connected to the mother ship display", informativeText="Do you want to mount drives?", actionButtonTitle="Mount", hasActionButton=true, withdrawAfter=60}):send()
+		-- check network (en8) is available after 10 sec.
+		hs.timer.doAfter(10, WiredConnectionCheck)
 	end
 end
 function onCaffeinate(eventType)

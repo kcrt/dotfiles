@@ -1,0 +1,3 @@
+docker network ls
+docker network create NETWORK_NAME
+docker network insepct NETWORK_NAME

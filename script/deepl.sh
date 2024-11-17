@@ -1,8 +1,7 @@
 #!/usr/bin/env zsh
 
-
 if [[ "$1" == "" ]]; then
-	echo "Usage: echo \"Hello world\" | $0 en|ja"
+	echo "Usage: echo \"Hello world\" | $0 en|ja (target language)"
 	exit
 fi
 

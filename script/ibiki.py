@@ -44,7 +44,7 @@ while True:
     else:
         print(chalk.red("*", bold=xmax>0.2), end="", flush=True)
         if time.time() - lastwakeup > 2:
-            os.system("/usr/bin/say \"wake up\" &")
+            os.system("/usr/bin/say -v 'Ava (Premium)' \"wake up\" &")
             lastwakeup = time.time()
 
     cnt += 1

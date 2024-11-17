@@ -9,7 +9,7 @@ rm -r /tmp/repack || echo "Start..."
 fullname="$1"
 filename="${fullname:t}"
 stem="${filename:r}"
-filesize=`wc -c $fullname | awk '{print $1}'`
+filesize=$(wc -c $fullname | awk '{print $1}')
 (( org_filesize = filesize / 1024 / 1024))
 
 print $stem
@@ -21,14 +21,14 @@ unzip "$fullname" -d /tmp/repack/REPACK_JPEG_HALF
 setopt GLOBSTARSHORT
 
 echo "Converting... (png->jpg)"
-for i in $(find /tmp/repack -name "*.png"); do
+while IFS= read -r -d '' i; do
 	echo "$i"
-	magick convert "$i" -quality 100 "${i:r}_png.jpg"
+	magick "$i" -quality 100 "${i:r}_png.jpg"
 	rm "$i"
-done
+done < <(find /tmp/repack -name "*.png" -print0)
 
 echo "Resize and setting quality 90..."
-find /tmp/repack/REPACK_JPEG_HALF -name "*.jpg" | parallel --progress -j 4 'magick mogrify -resize "2000x2000>" -quality 90 "{}"'
+find /tmp/repack/REPACK_JPEG_HALF -name "*.jpg" | parallel --progress -j 4 'magick mogrify -resize "2000x2000>" -quality 90 {}'
 
 echo "Repacking..."
 mv "$fullname" "${fullname}.org"
