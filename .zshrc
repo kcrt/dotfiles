@@ -303,7 +303,7 @@ else
 	PROMPT_SUBSTLV=""
 fi
 PROMPT_USER='%n'
-PROMPT_HOST='${${(%):-%M}%%.local}'
+PROMPT_HOST='${${${(%):-%M}%%.local}%.kcrtjp.internal}'
 if [[ -x ${DOTFILES}/script/have_mail.sh ]]; then
 	PROMPT_MAILCHECK='$(~/dotfiles/script/have_mail.sh)'
 else
