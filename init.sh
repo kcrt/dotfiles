@@ -243,7 +243,7 @@ if [ -f ~/.ssh/id_ed25519 ]; then
 	echo_aqua "key found."
 else
 	echo_aqua "generation public/secret keys..."
-	ed25519-keygen -t ed25519
+	ssh-keygen -t ed25519
 fi
 echo_aqua "Please add this public key to gitolite of kcrt.net and github"
 echo_aqua "-----"

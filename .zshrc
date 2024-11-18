@@ -465,7 +465,6 @@ abbrev-alias mv='nocorrect mv'
 abbrev-alias cp='nocorrect cp'
 abbrev-alias mkdir='nocorrect mkdir'
 abbrev-alias w3m=' noglob _w3m'
-abbrev-alias carbonyl='docker run -ti fathyb/carbonyl --rm '
 abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias mutt='neomutt'
 abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
@@ -647,6 +646,8 @@ abbrev-alias docker_ubuntu_mount_home="docker run -it --rm -v $HOME:/root ubuntu
 abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
 abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
 abbrev-alias docker_secretlint='docker run -v `pwd`:`pwd` -w `pwd` --rm -it secretlint/secretlint secretlint "**/*"'
+abbrev-alias docker_carbonyl='docker run -ti fathyb/carbonyl --rm '
+abbrev-alias docker_lazydocker='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /yourpath:/.config/jesseduffield/lazydocker lazyteam/lazydocker'
 
 export WINEPREFIX="$HOME/.wine"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
