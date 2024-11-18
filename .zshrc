@@ -651,7 +651,9 @@ abbrev-alias docker_lazydocker='docker run --rm -it -v /var/run/docker.sock:/var
 
 export WINEPREFIX="$HOME/.wine"
 abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
-abbrev-alias wine_gameportingkit="LANG=ja_JP.UTF-8 LC_ALL=ja_JP.UTF-8 MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
+if [[ $OSTYPE = *darwin* ]] ; then
+	abbrev-alias wine_gameportingkit="LANG=ja_JP.UTF-8 LC_ALL=ja_JP.UTF-8 MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
+fi
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
 # one liner
 abbrev-alias :svnsetkeyword='svn propset svn:keywords "Id LastChangeDate LastChangeRevision LastChangeBy HeadURL Rev Date Author"'
