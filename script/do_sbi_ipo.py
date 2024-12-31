@@ -52,15 +52,23 @@ def main():
     while True:
         driver.get("https://site2.sbisec.co.jp/ETGate/")
         time.sleep(1)
+        driver.get("https://site0.sbisec.co.jp/marble/domestic/top.do?")    # 国内株式
+        time.sleep(1)
 
         # find h3 tag whose contents is "IPO・PO".
+        # ipo_tag = [x for x in driver.find_elements(
+        #     by=By.TAG_NAME, value="h5") if x.text == "IPO・PO"][0]
+        # parent_div = ipo_tag.find_element(by=By.XPATH, value="../../..")
+        # linkIPO = [x for x in parent_div.find_elements(
+        #     by=By.TAG_NAME, value="a") if "一覧" in x.text][0]
+        # driver.execute_script("arguments[0].scrollIntoView(false);", linkIPO)
+        # linkIPO.click()
+        # time.sleep(5)
+
+        # find a tag with text "IPO・PO" under div.navi2M
         ipo_tag = [x for x in driver.find_elements(
-            by=By.TAG_NAME, value="h5") if x.text == "IPO・PO"][0]
-        parent_div = ipo_tag.find_element(by=By.XPATH, value="../../..")
-        linkIPO = [x for x in parent_div.find_elements(
-            by=By.TAG_NAME, value="a") if "一覧" in x.text][0]
-        driver.execute_script("arguments[0].scrollIntoView(false);", linkIPO)
-        linkIPO.click()
+            by=By.CSS_SELECTOR, value="div.navi2M a") if x.text == "IPO・PO"][0]
+        ipo_tag.click()
         time.sleep(5)
 
         assert driver.find_element(
@@ -97,10 +105,16 @@ def main():
             by=By.NAME, value="suryo").send_keys("200")
         [x for x in driver.find_elements(
             by=By.TAG_NAME, value="label") if "ストライクプライス" in x.text][0].click()
-        [x for x in driver.find_elements(
-            by=By.TAG_NAME, value="label") if "使用する" in x.text][0].click()
-        driver.find_element(
-            by=By.NAME, value="usePoint").send_keys("3")
+
+        IPO_POINT = 0
+        if IPO_POINT == 0:
+            [x for x in driver.find_elements(
+                by=By.TAG_NAME, value="label") if "使用しない" in x.text][0].click()
+        else:
+            [x for x in driver.find_elements(
+                by=By.TAG_NAME, value="label") if "使用する" in x.text][0].click()
+            driver.find_element(
+                by=By.NAME, value="usePoint").send_keys(str(IPO_POINT))    # IPO Points
         driver.find_element(
             by=By.NAME, value="tr_pass").send_keys(USER_TRANSACTION_PASS)
         time.sleep(1)

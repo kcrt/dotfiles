@@ -250,7 +250,7 @@ if [[ -r ~/.zplug/init.zsh ]]; then
 	zplug load
 	end_of "zplug 2"
 else
-	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh| zsh' to install zplug"
+	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh' to install zplug"
 	function abbrev-alias(){
 		# skip this command
 	}
@@ -482,7 +482,7 @@ else
 	alias la='ls -F -a --color=auto'
 	alias ll='ls -F -la -t -r --human-readable --color=auto'
 fi
-abbrev-alias du='du -hcs *'
+abbrev-alias du='\du -hcs *'
 abbrev-alias df='df -H'
 if [ -f /usr/share/vim/vimcurrent/macros/less.sh ]; then
 	alias less=/usr/share/vim/vimcurrent/macros/less.sh
@@ -662,9 +662,15 @@ abbrev-alias :howmanyfiles='find . -print | wc -l'
 abbrev-alias serve_http_here='python3 -m http.server'
 
 abbrev-alias openai_image='openai api image.create -n 1 -p'
-abbrev-alias openai_chatgpt='openai api chat_completions.create -m gpt-3.5-turbo --max-tokens 3500 -g user'
+abbrev-alias openai_chatgpt='openai api chat_completions.create -m o1-preview --max-tokens 3500 -g user'
 function openai_whatisthisfile(){
-	openai api chat_completions.create -m gpt-3.5-turbo --max-tokens 1000 -g user "$(cat <(echo "下記のファイルの内容を説明してください。"; echo '```'; cat "$1"; echo '```'; ))"
+	FILENAME="$1"
+	FILESIZE=`wc -c < "$FILENAME"`
+	if [ $FILESIZE -ge 2048 ]; then
+		echo "File too large."
+	else
+		openai api chat_completions.create -m o1-preview --max-tokens 1000 -g user "$(cat <(echo "下記のファイルの内容を説明してください。"; echo '```'; cat "$1"; echo '```'; ))"
+	fi
 }
 abbrev-alias ollama-llama3.1='ollama run llama3.1:latest'
 abbrev-alias ollama-llama3.2='ollama run llama3.2:latest'
@@ -792,7 +798,7 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		alias cot="/Applications/CotEditor.app/Contents/SharedSupport/bin/cot"
 	fi
 	
-	export CLOUDSDK_PYTHON=`which python3`
+	# export CLOUDSDK_PYTHON=`which python3`
 	if [ -d "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/" ]; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
@@ -986,10 +992,18 @@ end_of "zcompile"
 # finally, execute fortune.
 if [[ -x `which fortune` ]]; then
 	echo ""
-	echo -n "[3;$color[$hostcolor]m"
-	fortune
-	echo -n "[0m"
-	echo ""
+	STARTUP_FORTUNE=`fortune`
+	echo -n "[$color[$hostcolor]m"
+	echo $STARTUP_FORTUNE
+	if [[ -x `which ollama` ]]; then
+		echo -n "[2;97m"
+		echo "Run [4mwhat_is_this_fortune[24m to know the meaning of this fortune."
+		echo -n "[0m"
+		echo ""
+		function what_is_this_fortune(){
+			ollama-jp "下記の文章を解説してください。\n$STARTUP_FORTUNE"
+		}
+	fi
 	end_of "fortune"
 fi
 

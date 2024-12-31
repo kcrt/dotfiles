@@ -131,7 +131,11 @@ function ssidChangedCallback(watcher, message, interface)
 	ssid = hs.wifi.currentNetwork(interface)
 	
 	if ssid == nil then
+		if lastssid == "" then
+			return false
+		end
 		normal_alert("Wifi disconnected")
+		lastssid = ""
 		return false
 	else
 		logger.i("SSID: " .. ssid)
@@ -139,7 +143,6 @@ function ssidChangedCallback(watcher, message, interface)
 			-- 頻繁な切り替えを無視
 			return false
 		end
-
 		lastSSIDTime = os.time()
 		normal_alert("Connected to: " .. ssid .. " on " ..interface)
 	end
