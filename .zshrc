@@ -675,6 +675,7 @@ function openai_whatisthisfile(){
 abbrev-alias ollama-llama3.1='ollama run llama3.1:latest'
 abbrev-alias ollama-llama3.2='ollama run llama3.2:latest'
 abbrev-alias ollama-jp='ollama run 7shi/tanuki-dpo-v1.0'
+abbrev-alias ollama-update="ollama list | tail -n +2 | tr -s ' ' | cut -d ' ' -f1 | xargs -n1 ollama pull"
 
 
 # global alias
@@ -948,7 +949,7 @@ add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
 end_of "hooks"
 
-# ----- 開発関係
+# ===== 開発関係
 # if which pyenv > /dev/null; then
 # 	eval "$(pyenv init -)"
 #	export PATH="$(pyenv root)/shims:$PATH"
@@ -962,6 +963,15 @@ export PERL5LIB=~/perl5/lib/perl5
 if [ -x /opt/homebrew/bin/difft ]; then
 	export GIT_EXTERNAL_DIFF=/opt/homebrew/bin/difft
 fi
+# if zulu-17 is installed, set JAVA_HOME
+# export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+if [ -d /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home ]; then
+	export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+fi
+
+# --- Rust
+alias cargo\ test="nocorrect cargo test"
+
 
 if [ -x "`which gh`" ]; then
 	# eval "$(gh copilot alias -- zsh)"

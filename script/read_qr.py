@@ -23,6 +23,8 @@ def main():
     for obj in decoded_objects:
         print('Type:', obj.type)
         print('Data:', obj.data.decode('utf-8'))
+        print('Quality:', obj.quality)
+        print('Position:', obj.rect)
         print("----")
 
 

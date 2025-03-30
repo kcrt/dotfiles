@@ -3,10 +3,6 @@
 	email = kcrt@kcrt.net
 	#GPG: signingkey = A193875B
 	signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOPgJQcfABeJYG6ANq9VpyO/kcrt/V5gp7pcZpCtW6U kcrt@kcrt.net"
-[gpg]
-	format = "ssh"
-[color]
-	ui = auto
 [core]
 	excludesfile = /Users/kcrt/.gitignore
 	attributesfile = ~/.gitattributes
@@ -14,6 +10,39 @@
 	editor = vim
 	autocrlf=input
 	precomposeunicode = true
+[gpg]
+	format = "ssh"
+[branch]
+	sort = -committerdate
+[commit]
+	verbose = true
+[column]
+	gpgsign = true
+	template = ~/.gitcommittemplate
+	ui = auto
+[color]
+	ui = auto
+[diff]
+	algorithm = histogram
+	colorMoved = plain
+	mnemonicPrefix = true
+	renames = true
+[fetch]
+	prune = true
+	pruneTags = true
+	all = true
+[help]
+	autocorrect = prompt
+[pull]
+	rebase = true
+[push]
+	default = simple
+	autoSetupRemote = true
+	followTags = true
+[rerere]
+	enabled = true
+[tag]
+	sort = version:refname
 [alias]
 	log-graph = log --graph --date=auto:human --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s'
 	yesterday = log --graph --date=auto:human --pretty=format:'%Cgreen%h %cd %Cblue%cn %Creset%s' master@{yesterday}..master
@@ -45,13 +74,6 @@
 [mergetool "sourcetree"]
 	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true
-[commit]
-	gpgsign = true
-	template = ~/.gitcommittemplate
-[pull]
-	rebase = true
-[push]
-	default = simple
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
@@ -68,5 +90,3 @@
 [diff "lockb"]
 	textconv = bun
 	binary = true
-[rerere]
-	enabled = true

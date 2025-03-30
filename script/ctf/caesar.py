@@ -13,6 +13,7 @@ import argparse
 
 
 def parse_args():
+    """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description='Print caesar cipher with key of 1 to 25')
     parser.add_argument('--mode', choices=['all', 'key'])
@@ -22,43 +23,61 @@ def parse_args():
     return parser.parse_args()
 
 
-def caesar(s, k):
+def caesar(s, keys):
+    """
+    Perform Caesar cipher encryption/decryption
+    
+    Args:
+        s (str): Input string to process
+        keys (int or list): Shift value(s) to apply
+    
+    Returns:
+        str: Processed string with Caesar cipher applied
+    """
     result = ''
     i = 0
-    print(k)
-    if not isinstance(k, list):
-        keys = [k]
-    else:
-        keys = k
+    # Convert single key to list for consistent processing
+    if not isinstance(keys, list):
+        keys = [keys]
 
     for c in s:
         if c.isalpha():
-            k = keys[i % len(keys)]
+            # Get current key based on position in the text
+            current_key = keys[i % len(keys)]
             if c.isupper():
-                result += chr((ord(c) - ord('A') + k) % 26 + ord('A'))
+                # Process uppercase letters (A-Z)
+                result += chr((ord(c) - ord('A') + current_key) % 26 + ord('A'))
             else:
-                result += chr((ord(c) - ord('a') + k) % 26 + ord('a'))
-            i += 1
+                # Process lowercase letters (a-z)
+                result += chr((ord(c) - ord('a') + current_key) % 26 + ord('a'))
+            i += 1  # Only increment for alphabetic characters
         else:
+            # Non-alphabetic characters remain unchanged
             result += c
     return result
 
 
 def main():
+    """Main function to process input text with Caesar cipher"""
     args = parse_args()
-    s = input()
-    if args.mode == 'all':
+    s = input()  # Read input text from stdin
+    
+    # Default mode (ROT13)
+    if args.mode is None:
+        print(caesar(s, 13))
+    # All possible shifts (1-25)
+    elif args.mode == 'all':
         for i in range(1, 26):
             print(str(i) + ": " + caesar(s, i))
+    # Custom key mode
     elif args.mode == 'key':
+        # Parse space-separated key values
         keys = list(map(int, args.keys.split(' ')))
         if args.rotate:
-            # shift key, e.g. [1 2 3] -> [2 3 1]
+            # Rotate key sequence if specified
+            # e.g. [1 2 3] with rotate=1 becomes [2 3 1]
             keys = keys[args.rotate:] + keys[:args.rotate]
-
         print(caesar(s, keys))
-
-    pass
 
 
 if __name__ == '__main__':

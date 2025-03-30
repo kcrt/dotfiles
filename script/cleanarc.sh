@@ -8,7 +8,7 @@ if [ ! -x "`which parallel`" ]; then
 fi
 
 touch xxxxxx.rar
-find . -name "*.rar" | parallel --bar -j4 'arepack {} {.}.zip && rm {}'
+find . -name "*.rar" | parallel --unsafe --bar -j4 'arepack {} {.}.zip && rm {}'
 rm xxxxxx.rar
 
 for i in **/*.zip; do

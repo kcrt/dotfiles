@@ -1,12 +1,9 @@
 #!/bin/bash
 
 # --------------------------------------------------------------
-#
 # Init script - set up my environment after OS clean installation
-#
 # To use:
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)"
-#
 # --------------------------------------------------------------
 
 brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost boost-python boxofsnoo-fairmount burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld mendeley mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl soundflower sourcetree sqlite suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim virtualbox vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm youtube-dl zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters )
@@ -51,6 +48,7 @@ if [ "$ans" != "y" ] ; then
 	echo_aqua "This script need 'sudo', and you need to be a member of sudoers."
 	echo_aqua "Going to edit /etc/sudoers first."
 	echo_aqua "Input the password of *root*, and execute visudo..."
+	# shellcheck disable=SC2117
 	su
 	echo_aqua "Please execute this script again!"
 	exit
@@ -83,7 +81,7 @@ if [ -x /usr/bin/yum ] ; then
 	echo_aqua "Detected yum..."
 	sudo yum update
 	sudo yum -y install perl zsh yum-utils vim-common vim-enhanced screen rsync subversion w3m yafc rdiff-backup fastest-mirror mutt clamav
-elif [ -x "`which brew`" ]; then
+elif [ -x "$(which brew)" ]; then
 	OSType=HomeBrew
 	echo_aqua "Detected Homebrew..."
 	# ---- Homebrew
@@ -99,19 +97,18 @@ elif [ -x "`which brew`" ]; then
 	echo_aqua "Gathering information of brew packages.... This will take a few minutes."
 	declare -a brew_info	# associative array doesn't work on macOS bash (because it's ver. 3)
 	for p in "${brew_packages[@]}"; do
-		ret=$(brew info "$p")
-		if [ $? -ne 0 ]; then
+		if ! brew info "$p"; then
 			echo_red "$p is not available."
 		else
-			info=$(echo "$ret" | head -n2 | tail -n1)
-			brew_info+=( $p )
+			info=$(brew info "$p" | head -n2 | tail -n1)
+			brew_info+=( "$p" )
 			brew_info[${#brew_info[*]}]="${info}"
 			brew_info+=( 1 )
 		fi
 	done
 
 	selected=$(whiptail --title "Homebrew packages" --checklist "Please select packages to install." 0 0 0  "${brew_info[@]}" 3>&1 1>&2 2>&3)
-	selected=($(echo $selected |  sed s/'"'//g))
+	selected=($(echo "$selected" |  sed s/'"'//g))
 	for p in "${selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
 		brew install "$p"
@@ -170,17 +167,17 @@ elif [ -x /usr/bin/apt ]; then
 	# ----- Debian, Ubuntu --------------------------------
 	OSType=Debian
 	echo_aqua "Detected apt..."
-	sudo apt-get update
-	sudo apt-get upgrade
-	sudo apt-get  install locales
+	sudo apt update
+	sudo apt upgrade
+	sudo apt install locales
 	sudo dpkg-reconfigure locales
-	sudo apt-get install perl w3m zsh clamav tmux less ntpdate rsync vim vim-common wget iputils-ping net-tools
-	sudo apt-get install cron-apt ntpdate locales manpages-ja nmap netcat tcpdump fping atool lsof
-	sudo apt-get install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
-	sudo apt-get install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
-	sudo apt-get install curl make nodejs make g++
-	sudo apt-get install ffmpeg
-	sudo apt-get install unattended-upgrades
+	sudo apt install perl w3m zsh clamav tmux less ntpdate rsync vim vim-common wget iputils-ping net-tools
+	sudo apt install cron-apt locales manpages-ja nmap netcat tcpdump fping atool lsof
+	sudo apt install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
+	sudo apt install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
+	sudo apt install curl make nodejs make g++
+	sudo apt install ffmpeg
+	sudo apt install unattended-upgrades
 	sudo dpkg-reconfigure -plow unattended-upgrades
 	echo_aqua "Please set e-mail address for information of unattended upgrades."
 	echo_aqua "And set Automatic-Reboot to true if required."
@@ -189,7 +186,7 @@ elif [ -x /usr/bin/apt ]; then
 	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "
 	read -r ans
 	if [ "$ans" = "y" ] ; then
-		sudo apt-get install ssmpt
+		sudo apt install ssmpt
 		sudo vim /etc/ssmtp/ssmtp.conf
 		echo_aqua "Test mail? (Your address): "
 		read -r ans

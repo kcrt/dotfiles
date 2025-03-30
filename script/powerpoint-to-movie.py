@@ -10,6 +10,7 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Inches
 from moviepy.editor import *
+import moviepy.video.fx.all as vfx
 from gtts import gTTS
 from pdf2image import convert_from_path
 import os
@@ -57,7 +58,11 @@ def extract_notes(pptx_path: str) -> List[str]:
 
     for slide in prs.slides:
         if slide.notes_slide:
-            notes_text = slide.notes_slide.notes_text_frame.text
+            # Check if notes_text_frame exists and is not None
+            if slide.notes_slide.notes_text_frame:
+                notes_text = slide.notes_slide.notes_text_frame.text
+            else:
+                notes_text = ""
             # Rule 1: remove lines after "---"
             if "---" in notes_text:
                 notes_text = notes_text.split("---")[0]
@@ -198,14 +203,16 @@ def create_video(files_path: str, output_path: str, no_audio_duration: float = 5
                 audio_clip).set_duration(audio_clip.duration + padding)
         else:
             slide_clip = slide_clip.set_duration(no_audio_duration)
-
+            
+        # Apply speed adjustment to each clip individually
+        if speed != 1.0:
+            # Use the speedx method directly from the clip
+            slide_clip = slide_clip.speedx(speed)
+            
         clips.append(slide_clip)
 
     # Concatenate all clips
-    video = concatenate_videoclips(clips, method="compose")
-
-    # Adjust video speed
-    final_video = video.fx(vfx.speedx, speed)
+    final_video = concatenate_videoclips(clips, method="compose")
 
     # Write the video file
     final_video.write_videofile(output_path, codec=codec, fps=10)

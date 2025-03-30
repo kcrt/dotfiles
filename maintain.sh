@@ -59,10 +59,10 @@ case $HOST in
 		echo_info "==== Data back up and sync ===="
 
 		OSNotify "prog -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
+		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo|\.mypy_cache)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
 		if [[ -d /Volumes/Main/shelter/ ]]; then
 			OSNotify "prog -> Drobo"
-			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/prog/ /Volumes/Main/shelter/backup/prog
+			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/prog/ /Volumes/Main/shelter/backup/prog
 		fi
 
 		OSNotify "Documents -> Google Cloud"
@@ -85,10 +85,10 @@ case $HOST in
 		fi
 
 		OSNotify "Calibre -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre\ Library/ gs://auto.backup.kcrt.net/auto/calibre
+		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre/ gs://auto.backup.kcrt.net/auto/calibre
 		if [[ -d /Volumes/Main/ ]]; then
 			OSNotify "Calibre -> drobo"
-			rsync -ahv --progress --delete ~/Calibre\ Library/ /Volumes/Private/backup/Calibre\ Library
+			rsync -ahv --progress --delete ~/Calibre/ /Volumes/Private/backup/Calibre
 		fi
 
 		if [[ -d /Volumes/eee/ && -d /Volumes/Private/comic/eee/ ]]; then

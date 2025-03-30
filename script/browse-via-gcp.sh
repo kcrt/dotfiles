@@ -2,9 +2,9 @@
 
 #===============================================================================
 #
-#          FILE:  browse-via.sh
+#          FILE:  browse-via-gcp.sh
 #
-#         USAGE:  ./browse-via.sh <zone> <url>
+#         USAGE:  ./browse-via-gcp.sh <zone> <url>
 #
 #   DESCRIPTION:  Create virtual machine on Google Cloud Platform and browse via it. 
 #
@@ -67,7 +67,7 @@ gcloud compute instances create proxy-machine \
     --instance-termination-action=STOP \
     --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
     --enable-display-device \
-    --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/ubuntu-os-cloud/global/images/ubuntu-2310-mantic-amd64-v20240213,mode=rw,size=10,type=projects/$PROJECT/zones/$ZONE/diskTypes/pd-balanced \
+    --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/ubuntu-os-cloud/global/images/ubuntu-2404-noble-amd64-v20250313,mode=rw,size=10,type=projects/$PROJECT/zones/$ZONE/diskTypes/pd-balanced \
     --no-shielded-secure-boot \
     --shielded-vtpm \
     --shielded-integrity-monitoring \
@@ -85,6 +85,7 @@ sleep 30
 
 # Get the external IP address of the virtual machine
 VIRTUALMACHINE_IP=$(gcloud compute instances describe proxy-machine --zone=$ZONE --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+echo "Virtual machine [proxy-machine] IP: $VIRTUALMACHINE_IP"
 
 # ssh into the virtual machine and install tinyproxy
 echo_info "Installing tinyproxy on the virtual machine [proxy-machine]"

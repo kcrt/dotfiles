@@ -11,14 +11,15 @@ tap "homebrew/services"
 tap "itchyny/tap"
 tap "mackerelio/mackerel-agent"
 tap "oven-sh/bun"
+tap "ramborogers/netventory"
 tap "theseal/ssh-askpass"
 tap "wader/tap"
 tap "ynqa/tap"
 brew "freetype"
 brew "fontconfig"
 brew "gettext"
-brew "xz"
 brew "glib"
+brew "xz"
 brew "cairo"
 brew "fribidi"
 brew "icu4c@76"
@@ -37,17 +38,15 @@ brew "arping"
 brew "boost"
 brew "docbook"
 brew "asciidoc"
-brew "autoconf"
-brew "automake"
-brew "gmp"
-brew "coreutils"
-brew "libtool"
 brew "asdf"
 brew "atkmm@2.28"
 brew "atomicparsley"
 brew "atool"
+brew "autoconf"
+brew "automake"
 brew "azure-cli"
 brew "bandwhich"
+brew "libgit2"
 brew "bat"
 brew "bchunk"
 brew "binaryen"
@@ -56,8 +55,10 @@ brew "binwalk"
 brew "blueutil"
 brew "boost-python3"
 brew "brew-gem"
+brew "bundletool"
 brew "cabextract"
 brew "ccd2iso"
+brew "gmp"
 brew "gcc"
 brew "openblas"
 brew "suite-sparse"
@@ -70,6 +71,7 @@ brew "protobuf-c"
 brew "clamav"
 brew "cmake"
 brew "cmigemo"
+brew "coreutils"
 brew "cowsay"
 brew "croc"
 brew "cscope"
@@ -112,12 +114,13 @@ brew "xvid"
 brew "ffmpeg"
 brew "open-mpi"
 brew "figlet"
-brew "firebase-cli"
+brew "firebase-cli", link: false
 brew "portaudio"
 brew "fluid-synth"
 brew "ghostscript"
 brew "libheif"
 brew "libraw"
+brew "libtool"
 brew "imagemagick"
 brew "folderify"
 brew "fontforge"
@@ -133,7 +136,7 @@ brew "go"
 brew "gobject-introspection"
 brew "gping"
 brew "gpredict"
-brew "grafana-agent", restart_service: true
+brew "grafana-agent", restart_service: :changed
 brew "netpbm"
 brew "graphviz"
 brew "gsl"
@@ -148,6 +151,7 @@ brew "htop"
 brew "httpie"
 brew "icoutils"
 brew "id3v2"
+brew "jadx"
 brew "jnethack"
 brew "john-jumbo"
 brew "vips"
@@ -160,7 +164,6 @@ brew "leveldb"
 brew "lha"
 brew "libdvdcss"
 brew "libewf"
-brew "libgit2"
 brew "libimobiledevice"
 brew "libmng"
 brew "libpst"
@@ -196,7 +199,7 @@ brew "newt"
 brew "nginx"
 brew "nkf"
 brew "nmap"
-brew "numpy"
+brew "numpy", link: false
 brew "ollama"
 brew "pytorch"
 brew "openai-whisper"
@@ -296,6 +299,7 @@ cask "calibre"
 cask "chatgpt"
 cask "chromedriver"
 cask "clipy"
+cask "cocoarestclient"
 cask "color-oracle"
 cask "cscreen"
 cask "cubicsdr"
@@ -316,6 +320,7 @@ cask "forklift"
 cask "freecad"
 cask "ghidra"
 cask "gimp"
+cask "github-copilot-for-xcode"
 cask "google-chrome"
 cask "google-cloud-sdk"
 cask "google-drive"
@@ -368,6 +373,7 @@ cask "netron"
 cask "openemu"
 cask "osirix-quicklook"
 cask "popclip"
+cask "postman"
 cask "powershell"
 cask "qflipper"
 cask "qgis"
@@ -390,6 +396,7 @@ cask "smartgit"
 cask "smartreporter-free"
 cask "sourcetree"
 cask "steam"
+cask "stratoshark"
 cask "suspicious-package"
 cask "teamviewer"
 cask "tigervnc-viewer"
@@ -400,6 +407,7 @@ cask "transmission"
 cask "tripmode"
 cask "ultimaker-cura"
 cask "unicodechecker"
+cask "upscayl"
 cask "utm"
 cask "visual-studio-code"
 cask "vlc"
@@ -409,6 +417,7 @@ cask "xld"
 cask "xquartz"
 cask "zoom"
 cask "zotero"
+cask "zulu@17"
 mas "Affinity Designer", id: 824171161
 mas "Affinity Designer 2", id: 1616831348
 mas "Affinity Photo", id: 824183456
@@ -422,13 +431,14 @@ mas "Boom 3D Netflix Extension", id: 6445882848
 mas "ByeGraph", id: 6467188044
 mas "CHM Reader - Enjoy", id: 1661528239
 mas "Cinebench", id: 1438772273
-mas "com.adriangranados.wifiexplorerlite", id: 1408727408
 mas "CotEditor", id: 1024640650
 mas "Developer", id: 640199958
 mas "Diffusers", id: 1666309574
 mas "Disk Speed Test", id: 425264550
 mas "Display Menu", id: 549083868
+mas "Dropover", id: 1355679052
 mas "EdgeView", id: 1580323719
+mas "Enchanted", id: 6474268307
 mas "Final Cut Pro", id: 424389933
 mas "Front Row", id: 6480318506
 mas "GarageBand", id: 682658836
@@ -452,7 +462,6 @@ mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
-mas "Microsoft Remote Desktop", id: 1295203466
 mas "Microsoft Word", id: 462054704
 mas "MIDI Player Plus", id: 1612350258
 mas "MIDITrail", id: 421739418
@@ -465,19 +474,21 @@ mas "Pages", id: 409201541
 mas "PDF Squeezer 3", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
-mas "Playgrounds", id: 1496833156
 mas "Prime Video", id: 545519333
 mas "QR Journal", id: 483820530
 mas "RemoteDrive", id: 6502180430
 mas "shakepin", id: 6599856142
 mas "Steam Link", id: 1246969117
+mas "Swift Playground", id: 1496833156
 mas "The Unarchiver", id: 425424353
 mas "TinyStopwatch", id: 1447754003
 mas "uBlacklist for Safari", id: 1547912640
 mas "Wappalyzer - Technology profiler", id: 1520333300
 mas "WattsConnected", id: 1639692859
+mas "WiFi Explorer Lite", id: 1408727408
 mas "WiFi Signal", id: 525912054
 mas "WinArchiver Lite", id: 414855915
+mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
 vscode "cschlosser.doxdocgen"
 vscode "dart-code.dart-code"
@@ -536,10 +547,13 @@ vscode "platformio.platformio-ide"
 vscode "pranaygp.vscode-css-peek"
 vscode "quarto.quarto"
 vscode "qwtel.sqlite-viewer"
+vscode "redhat.vscode-yaml"
 vscode "reditorsupport.r"
 vscode "rust-lang.rust-analyzer"
 vscode "ryanluker.vscode-coverage-gutters"
+vscode "saoudrizwan.claude-dev"
 vscode "swellaby.vscode-rust-test-adapter"
+vscode "swiftlang.swift-vscode"
 vscode "tauri-apps.tauri-vscode"
 vscode "timonwong.shellcheck"
 vscode "toba.vsfire"

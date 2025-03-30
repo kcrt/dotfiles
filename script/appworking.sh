@@ -6,15 +6,7 @@
 #
 #         USAGE:  ./appworking.sh app1 app1str app2 app2str
 #
-#   DESCRIPTION:
-#
-#       OPTIONS:  ---
-#  REQUIREMENTS:  ---
-#          BUGS:  ---
-#         NOTES:  ---
-#        AUTHOR:  kcrt <kcrt@kcrt.net>
-#       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
-#      REVISION:  $Id$
+#   DESCRIPTION:  Checks if the given apps are running and returns a string
 #
 #===============================================================================
 
