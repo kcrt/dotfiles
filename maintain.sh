@@ -191,7 +191,7 @@ vim -c "PluginInstall!" -c "qall"
 echo_info "R update"
 R --vanilla << R_UPDATE
 options(repos=c(CRAN="http://cran.r-project.org"))
-packages_to_need = c("tidyverse")
+packages_to_need = c("tidyverse", "languageserver")
 packages_installed = rownames(installed.packages())
 packages_to_install = packages_to_need[!is.element(packages_to_need, packages_installed)]
 install.packages(packages_to_install, dependencies=TRUE)

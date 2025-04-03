@@ -144,17 +144,35 @@ if [[ "$OSTYPE" = darwin* ]]; then
 		export BIN_HOMEBREW="/usr/local/bin/brew"
 	fi
 	alias brew="$BIN_HOMEBREW"
+	
+	# Load homebrew completions early to avoid conflicts
+	if [[ -d "$($BIN_HOMEBREW --prefix)/share/zsh/site-functions" ]]; then
+		FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:${FPATH}"
+	fi
 fi
 
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
 # autoload -U +X bashcompinit && bashcompinit
-if [[ -n "$BIN_HOMEBREW" ]]; then
-	CARGO_COMPLETION="`~/.cargo/bin/rustc --print sysroot`/share/zsh/site-functions"
-	FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:$CARGO_COMPLETION:${FPATH}"
+if [[ -d "$HOME/.cargo" && -x "$HOME/.cargo/bin/rustc" ]]; then
+	CARGO_COMPLETION="`$HOME/.cargo/bin/rustc --print sysroot 2>/dev/null`/share/zsh/site-functions"
+	if [[ -d "$CARGO_COMPLETION" ]]; then
+		FPATH="$CARGO_COMPLETION:${FPATH}"
+	fi
 fi
 if [[ $UID -ne 0 ]]; then
-	autoload -Uz compinit && compinit
+	# Only regenerate completions once per day
+	autoload -Uz compinit
+	if [[ -n "$ZSH_COMPDUMP" ]]; then
+		compinit -d "$ZSH_COMPDUMP"
+	else
+		ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump-${ZSH_VERSION}"
+		if [[ -f "$ZSH_COMPDUMP" && $(date +'%j') != $(stat -f '%Sm' -t '%j' "$ZSH_COMPDUMP") ]]; then
+			compinit -d "$ZSH_COMPDUMP"
+		else
+			compinit -C -d "$ZSH_COMPDUMP"
+		fi
+	fi
 fi
 autoload zmv
 autoload zargs
@@ -172,19 +190,25 @@ setopt auto_list					# 曖昧な補完で自動的にリスト表示
 setopt NO_menu_complete				# 一回目の補完で候補を挿入(cf. auto_menu)
 setopt auto_menu					# 二回目の補完で候補を挿入
 setopt magic_equal_subst			# --include=/usr/... などの=補完を有効に
-setopt NO_complete_in_word			# TODO:よくわからない
+setopt NO_complete_in_word			# カーソル位置で補完する
 setopt list_packed					# 補完候補をできるだけつめて表示する
 setopt NO_list_beep					# 補完候補表示時にビープ音を鳴らす
 setopt list_types					# ファイル名のおしりに識別マークをつける
+
+# Advanced completion configuration
 zstyle ':completion:*' format '%B%d%b'
 zstyle ':completion:*' group-name ''	# 補完候補をグループ化する
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}	# 補完も色つける
 zstyle ':completion:*' use-cache yes
-zstyle ':completion:*' completer _complete _approximate
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
+zstyle ':completion:*' completer _expand _complete _ignored _approximate
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' verbose yes 	# 詳細な情報を使う。
 zstyle ':completion:sudo:*' environ PATH="$SUDO_PATH:$PATH" # sudo時にはsudo用のパスも使う。
 zstyle ':completion:*:default' menu select=2
 zstyle ':completion:*:processes' command 'ps x -o pid,args'	# kill <tab>での補完
+zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
 
 
 
@@ -194,8 +218,12 @@ HISTSIZE=100000						# 使用する履歴数
 SAVEHIST=100000						# 保存する履歴数
 setopt hist_ignore_space			# スペースで始まるコマンドを記録しない
 setopt hist_ignore_all_dups			# 重複した履歴を記録しない
+setopt hist_find_no_dups			# 履歴検索中に重複を飛ばす
+setopt hist_save_no_dups			# 重複するコマンドを保存しない
+setopt hist_reduce_blanks			# 余分な空白を削除して保存
 setopt share_history				# ターミナル間の履歴を共有する
 setopt append_history				# 履歴を追記する
+setopt inc_append_history			# 履歴をすぐに追記する
 
 # ----- ファイル操作関連
 setopt auto_cd						# ディレクトリ名でcd
@@ -233,22 +261,51 @@ function print_test(){
 # ----- zplug
 if [[ -r ~/.zplug/init.zsh ]]; then
 	source ~/.zplug/init.zsh
+	
+	# Essential plugins
 	zplug "zsh-users/zsh-syntax-highlighting", defer:2
 	zplug "zsh-users/zsh-history-substring-search", defer:2
 	zplug "zsh-users/zsh-completions", defer:2
+	zplug "zsh-users/zsh-autosuggestions", defer:2
+	
+	# Conditional plugins
 	if [[ -n "$BIN_HOMEBREW" ]]; then
 		zplug "plugins/brew", from:oh-my-zsh, defer:2
 	fi
+	
+	# Navigation and utility plugins
 	zplug "rupa/z", use:z.sh, defer:2
 	zplug "b4b4r07/enhancd", use:init.sh, defer:2
 	zplug "momo-lab/zsh-abbrev-alias", defer:2
+	
 	end_of "zplug 1"
 	export ENHANCED_FILTER=fzy:fzf:peco
+	
+	# Install plugins if not already installed
 	if ! zplug check; then
-		zplug install
+		printf "Install missing zplug plugins? [y/N]: "
+		if read -q; then
+			echo; zplug install
+		fi
 	fi
+	
 	zplug load
 	end_of "zplug 2"
+	
+	# Configure zsh-history-substring-search keybindings
+	if zplug check "zsh-users/zsh-history-substring-search"; then
+		bindkey '^[[A' history-substring-search-up
+		bindkey '^[[B' history-substring-search-down
+		bindkey -M vicmd 'k' history-substring-search-up
+		bindkey -M vicmd 'j' history-substring-search-down
+	fi
+	
+	# Configure zsh-autosuggestions
+	if zplug check "zsh-users/zsh-autosuggestions"; then
+		ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+		ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+		ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
+	fi
 else
 	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh' to install zplug"
 	function abbrev-alias(){
@@ -403,7 +460,12 @@ end_of "vi mode key"
 
 # ----- パス
 typeset -U path PATH
-export PATH=~/.deno/bin:$PATH:$GOPATH/bin:~/.cargo/bin:/snap/bin:~/bin
+# Add paths only if they exist
+[[ -d "$HOME/.deno/bin" ]] && path=("$HOME/.deno/bin" $path)
+[[ -n "$GOPATH" && -d "$GOPATH/bin" ]] && path=($path "$GOPATH/bin")
+[[ -d "$HOME/.cargo/bin" ]] && path=($path "$HOME/.cargo/bin")
+[[ -d "/snap/bin" ]] && path=($path "/snap/bin")
+[[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
 
 # ----- 関数
 function _w3m(){
@@ -419,12 +481,6 @@ function _w3m(){
 		\w3m $W3MOPT $@
 	fi
 	:title $SHELL
-}
-function :svnwhatsnew(){
-	vimdiff =(svn cat --revision PREV $1) =(svn cat --revision HEAD $1)
-}
-fucntion :svnwhatchanged(){
-	vimdiff $1 =(svn cat --revision HEAD $1)
 }
 function testarchive(){
 	if [[ ${1:e} = "zip" ]]; then
@@ -468,9 +524,13 @@ abbrev-alias w3m=' noglob _w3m'
 abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias mutt='neomutt'
 abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
-if [[ -x `which thefuck` ]]; then
-	eval "$(thefuck --alias)"
+
+# Load thefuck if available (but only if not already loaded to avoid slowdowns)
+if [[ -x "$(command -v thefuck)" && -z "$THEFUCK_LOADED" ]]; then
+    export THEFUCK_LOADED=1
+    eval "$(thefuck --alias)"
 fi
+
 abbrev-alias ssh-sign="ssh-keygen -Y sign -f ~/.ssh/kcrt-ssh-ed25519.pem -n file"
 # 引数
 if [[ "$OSTYPE" = darwin* || $OSTYPE = freebs* ]]; then
@@ -756,25 +816,41 @@ fi
 
 # ----- MacOS 固有設定
 if [[ $OSTYPE = *darwin* ]] ; then
-	export MANPATH=/opt/local/man:$MANPATH
+	# Set up man path if it exists
+	[[ -d "/opt/local/man" ]] && export MANPATH=/opt/local/man:$MANPATH
 
-	export PATH=/usr/local/opt/llvm/bin:$PATH:~/Library/Android/sdk/platform-tools
+	# Add LLVM and Android tools to path if they exist
+	[[ -d "/usr/local/opt/llvm/bin" ]] && path=("/usr/local/opt/llvm/bin" $path)
+	[[ -d "$HOME/Library/Android/sdk/platform-tools" ]] && path=($path "$HOME/Library/Android/sdk/platform-tools")
+	
+	# Set up Homebrew environment
 	if [[ -n "$BIN_HOMEBREW" ]] ; then
 		unset HOMEBREW_SHELLENV_PREFIX # dirty hack
 		eval $($BIN_HOMEBREW shellenv)
+		
+		# Set up common library flags for compilation
 		for libname in readline zlib openssl@3 portaudio; do
-			export LDFLAGS="-L$(brew --prefix $libname)/lib $LDFLAGS"
-			export CFLAGS="-I$(brew --prefix $libname)/include $CFLAGS"
+			if [[ -d "$($BIN_HOMEBREW --prefix $libname 2>/dev/null)" ]]; then
+				export LDFLAGS="-L$($BIN_HOMEBREW --prefix $libname)/lib $LDFLAGS"
+				export CFLAGS="-I$($BIN_HOMEBREW --prefix $libname)/include $CFLAGS"
+			fi
 		done
 	fi
+	
+	# Set up Xcode SDK path
 	if [[ -x /usr/bin/xcrun ]]; then
 		export SDKPATH=`xcrun --show-sdk-path`/usr/include
-		# alias pyenv="SDKROOT=$(xcrun --show-sdk-path) pyenv"
 	fi
-	export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig;/usr/local/opt/zlib/lib/pkgconfig"
+	
+	# Set up pkg-config path
+	if [[ -d "/usr/local/opt/libxml2/lib/pkgconfig" || -d "/usr/local/opt/zlib/lib/pkgconfig" ]]; then
+		export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig:/usr/local/opt/zlib/lib/pkgconfig"
+	fi
 
-	export ANDROID_SDK=$HOME/Library/Android/sdk
+	# Set Android SDK path if it exists
+	[[ -d "$HOME/Library/Android/sdk" ]] && export ANDROID_SDK=$HOME/Library/Android/sdk
 
+	# macOS specific aliases
 	alias locate='mdfind -name'
 	alias :sleep="pmset sleepnow"
 	alias GetInProgress="mdfind 'kMDItemUserTags==InProgress'"
@@ -792,14 +868,17 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	alias zsh_on_rosetta="arch -x86_64 /bin/zsh"
 	abbrev-alias gdb="arch -x86_64 gdb -q -ex 'set disassembly-flavor intel' -ex 'disp/i \$pc'"
 
+	# Use MacVim's CLI version if available
 	if [ -x "/usr/local/bin/mvim" ]; then
 		alias vim="/usr/local/bin/mvim -v"
 	fi
+	
+	# Add CotEditor to path if available
 	if [ -x "/Applications/CotEditor.app/Contents/SharedSupport/bin/cot" ]; then
 		alias cot="/Applications/CotEditor.app/Contents/SharedSupport/bin/cot"
 	fi
 	
-	# export CLOUDSDK_PYTHON=`which python3`
+	# Set up Google Cloud SDK if available
 	if [ -d "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/" ]; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
@@ -950,21 +1029,25 @@ add-zsh-hook preexec CheckCommandTime_preexec
 end_of "hooks"
 
 # ===== 開発関係
-# if which pyenv > /dev/null; then
-# 	eval "$(pyenv init -)"
-#	export PATH="$(pyenv root)/shims:$PATH"
-#fi
-#if which nodenv > /dev/null; then eval "$(nodenv init -)"; fi
-if [ -f $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh ]; then
-	source $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh
-	export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
+# Load version managers if available
+if [[ -n "$BIN_HOMEBREW" && -f "$($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh" ]]; then
+	source "$($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh"
+	
+	# Configure Ruby build options if openssl is available
+	if [[ -d "$($BIN_HOMEBREW --prefix openssl@1.1 2>/dev/null)" ]]; then
+		export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
+	fi
 fi
-export PERL5LIB=~/perl5/lib/perl5
+
+# Set up Perl paths if they exist
+[[ -d "$HOME/perl5/lib/perl5" ]] && export PERL5LIB=~/perl5/lib/perl5
+
+# Use difft for git diff if available
 if [ -x /opt/homebrew/bin/difft ]; then
 	export GIT_EXTERNAL_DIFF=/opt/homebrew/bin/difft
 fi
-# if zulu-17 is installed, set JAVA_HOME
-# export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+
+# Set JAVA_HOME if zulu-17 is installed
 if [ -d /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home ]; then
 	export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
 fi
