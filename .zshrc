@@ -717,8 +717,8 @@ abbrev-alias docker_carbonyl='docker run -ti fathyb/carbonyl --rm '
 abbrev-alias docker_lazydocker='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /yourpath:/.config/jesseduffield/lazydocker lazyteam/lazydocker'
 
 export WINEPREFIX="$HOME/.wine"
-abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
 if [[ $OSTYPE = *darwin* ]] ; then
+	abbrev-alias wine_steam="wine64 ~/.wine/drive_c/Program\ Files\ \(x86\)/Steam/Steam.exe -no-cef-sandbox"
 	abbrev-alias wine_gameportingkit="LANG=ja_JP.UTF-8 LC_ALL=ja_JP.UTF-8 MTL_HUD_ENABLED=1 WINEESYNC=1 `arch -x86_64 brew --prefix game-porting-toolkit`/bin/wine64"
 fi
 abbrev-alias oj_test_python="oj test -c './main.py' -d tests"
@@ -1035,13 +1035,9 @@ add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
 end_of "hooks"
 
-# ===== 開発関係
-# Load version managers if available
-if [[ -n "$BIN_HOMEBREW" && -f "$($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh" ]]; then
-	source "$($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh"
-	
-	# Configure Ruby build options if openssl is available
-	if [[ -d "$($BIN_HOMEBREW --prefix openssl@1.1 2>/dev/null)" ]]; then
+if [[ $OSTYPE = *darwin* ]] ; then
+	if [ -f $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh ]; then
+		source $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh
 		export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
 	fi
 fi
