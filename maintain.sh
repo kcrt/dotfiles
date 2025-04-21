@@ -204,6 +204,11 @@ if [ -x `which gcloud` ]; then
 fi
 pip3 install -U crcmod	# for gsutil rsync
 
+echo_info "GitHub Copilot update"
+if [ -x `which gh` ]; then
+	gh extension upgrade gh-copilot
+fi
+
 echo_info "google key"
 wget "https://pki.goog/roots.pem" -O ~/secrets/google-roots.pem
 

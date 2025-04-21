@@ -19,15 +19,15 @@ brew "freetype"
 brew "fontconfig"
 brew "gettext"
 brew "glib"
-brew "xz"
 brew "cairo"
 brew "fribidi"
-brew "icu4c@76"
+brew "xz"
 brew "harfbuzz"
 brew "librsvg"
 brew "afflib"
 brew "afio"
 brew "afsctool"
+brew "icu4c@76"
 brew "little-cms2"
 brew "openjdk"
 brew "ant"
@@ -71,7 +71,6 @@ brew "protobuf-c"
 brew "clamav"
 brew "cmake"
 brew "cmigemo"
-brew "coreutils"
 brew "cowsay"
 brew "croc"
 brew "cscope"
@@ -254,6 +253,9 @@ brew "transmission-cli"
 brew "tree"
 brew "trippy"
 brew "trivy"
+brew "uutils-coreutils"
+brew "uutils-diffutils"
+brew "uutils-findutils"
 brew "uv"
 brew "vgmstream"
 brew "w3m"
@@ -290,8 +292,8 @@ cask "battery"
 cask "betterzip"
 cask "blackhole-16ch"
 cask "blender"
+cask "bluestacks"
 cask "boom-3d"
-cask "bose-updater"
 cask "boxofsnoo-fairmount"
 cask "burn"
 cask "caffeine"
@@ -306,7 +308,9 @@ cask "cubicsdr"
 cask "cyberduck"
 cask "deepl"
 cask "docker"
+cask "dolphin"
 cask "duet"
+cask "fiji"
 cask "firefox"
 cask "flycast"
 cask "font-biz-udgothic"
@@ -400,6 +404,7 @@ cask "stratoshark"
 cask "suspicious-package"
 cask "teamviewer"
 cask "tigervnc-viewer"
+cask "timemachinestatus"
 cask "tomighty"
 cask "tor-browser"
 cask "touch-bar-simulator"
@@ -426,23 +431,24 @@ mas "Affinity Publisher", id: 881418622
 mas "Affinity Publisher 2", id: 1606941598
 mas "App Language Chooser", id: 451732904
 mas "Apple Configurator", id: 1037126344
+mas "Blackmagic Disk Speed Test", id: 425264550
 mas "BlueSee", id: 1336679524
-mas "Boom 3D Netflix Extension", id: 6445882848
+mas "Boom3D Netflix Extension", id: 6445882848
 mas "ByeGraph", id: 6467188044
 mas "CHM Reader - Enjoy", id: 1661528239
 mas "Cinebench", id: 1438772273
+mas "Copilot", id: 6738511300
 mas "CotEditor", id: 1024640650
 mas "Developer", id: 640199958
 mas "Diffusers", id: 1666309574
-mas "Disk Speed Test", id: 425264550
 mas "Display Menu", id: 549083868
 mas "Dropover", id: 1355679052
 mas "EdgeView", id: 1580323719
 mas "Enchanted", id: 6474268307
+mas "EPUB Reader", id: 1506541486
 mas "Final Cut Pro", id: 424389933
 mas "Front Row", id: 6480318506
 mas "GarageBand", id: 682658836
-mas "GM EPUB Reader", id: 1506541486
 mas "Goodnotes", id: 1444383602
 mas "Hex Fiend", id: 1342896380
 mas "iMovie", id: 408981434
@@ -463,7 +469,7 @@ mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Word", id: 462054704
-mas "MIDI Player Plus", id: 1612350258
+mas "MidiPlayerPlus", id: 1612350258
 mas "MIDITrail", id: 421739418
 mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
@@ -471,10 +477,10 @@ mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
-mas "PDF Squeezer 3", id: 504700302
+mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
-mas "Prime Video", id: 545519333
+mas "PrimeVideo", id: 545519333
 mas "QR Journal", id: 483820530
 mas "RemoteDrive", id: 6502180430
 mas "shakepin", id: 6599856142
@@ -497,6 +503,7 @@ vscode "davidanson.vscode-markdownlint"
 vscode "dbaeumer.vscode-eslint"
 vscode "deibit.devdocs"
 vscode "denoland.vscode-deno"
+vscode "docker.docker"
 vscode "docsmsft.docs-markdown"
 vscode "expo.vscode-expo-tools"
 vscode "formulahendry.auto-rename-tag"
@@ -510,6 +517,7 @@ vscode "google.geminicodeassist"
 vscode "googlecloudtools.cloudcode"
 vscode "hbenl.vscode-test-explorer"
 vscode "jeff-hykin.better-cpp-syntax"
+vscode "llvm-vs-code-extensions.lldb-dap"
 vscode "mechatroner.rainbow-csv"
 vscode "ms-azuretools.vscode-docker"
 vscode "ms-ceintl.vscode-language-pack-ja"
@@ -547,6 +555,7 @@ vscode "platformio.platformio-ide"
 vscode "pranaygp.vscode-css-peek"
 vscode "quarto.quarto"
 vscode "qwtel.sqlite-viewer"
+vscode "rdebugger.r-debugger"
 vscode "redhat.vscode-yaml"
 vscode "reditorsupport.r"
 vscode "rust-lang.rust-analyzer"

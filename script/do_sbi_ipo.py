@@ -28,6 +28,7 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='SBI IPO application automation')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose debug output')
+    parser.add_argument('--gui', action='store_true', help='Run with GUI (non-headless mode)')
     args = parser.parse_args()
     
     verbose = args.verbose
@@ -48,6 +49,11 @@ def main():
         print("Setting up Chrome driver...")
 
     options = webdriver.ChromeOptions()
+    if not args.gui:
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
     if verbose:
         print("Chrome options configured")
     driver = webdriver.Chrome(options=options)

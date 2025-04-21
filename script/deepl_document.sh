@@ -5,6 +5,7 @@
 #          FILE:  deepl_document.sh
 #
 #         USAGE:  ./deepl_document.sh FILENAME [SOURCE_LANG TARGET_LANG]
+#                 ./deepl_document.sh list_lang
 #
 #   DESCRIPTION:  Translate documents via DeepL API
 #
@@ -15,6 +16,13 @@
 #                 Set DEBUG=1 for verbose information
 #
 #===============================================================================
+
+
+
+if [ "$1" = "list_lang" ]; then
+    echo "https://developers.deepl.com/docs/getting-started/supported-languages"
+    exit 0
+fi
 
 if [ $# -eq 1 ]; then
     FILENAME=$1

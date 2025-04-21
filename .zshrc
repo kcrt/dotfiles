@@ -525,10 +525,17 @@ abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias mutt='neomutt'
 abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
 
-# Load thefuck if available (but only if not already loaded to avoid slowdowns)
+# Load command if available
 if [[ -x "$(command -v thefuck)" && -z "$THEFUCK_LOADED" ]]; then
     export THEFUCK_LOADED=1
     eval "$(thefuck --alias)"
+fi
+# TODO: croc
+# Check if croc command exists, if not, define a function using Docker
+if ! command -v croc &> /dev/null; then
+    function croc() {
+        docker run -it --rm -w "$(pwd)" -v "$(pwd):$(pwd)" thecatlady/croc "$@"
+    }
 fi
 
 abbrev-alias ssh-sign="ssh-keygen -Y sign -f ~/.ssh/kcrt-ssh-ed25519.pem -n file"
@@ -1094,7 +1101,7 @@ if [[ -x `which fortune` ]]; then
 		echo -n "[0m"
 		echo ""
 		function what_is_this_fortune(){
-			ollama-jp "下記の文章を解説してください。\n$STARTUP_FORTUNE"
+			ollama run gemma3:4b-it-qat "下記の文章を日本語で解説してください。\n$STARTUP_FORTUNE"
 		}
 	fi
 	end_of "fortune"

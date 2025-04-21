@@ -1,0 +1,21 @@
+# zstd - Compress or decompress files using Zstandard algorithm
+# Reads from STDIN if INPUT is `-` or not provided.
+# Usage: zstd [OPTIONS...] [INPUT... | -] [-o OUTPUT]
+
+# Common Options
+-o OUTPUT           # Write output to file OUTPUT.
+-d, --decompress    # Decompress.
+--rm                # Remove input file(s) after processing.
+-f, --force         # Force overwrite of output file and other checks.
+-c, --stdout        # Write to standard output.
+-l                  # List information about compressed file(s).
+--test              # Test compressed file integrity.
+
+# Compression Level
+-Tn                 # Spawn n compression threads. [Default: 1; pass 0 for core count.]
+-#                  # Compression level 1-19 (default: 3). Higher level = better compression, slower speed.
+--fast[=#]          # Alias for level 1 or specified fast level.
+--ultra             # Enable levels 20-22 (requires more memory).
+
+# Recursive Operation
+-r                  # Operate recursively on directories.

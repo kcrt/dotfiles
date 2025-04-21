@@ -214,7 +214,7 @@ EOF
 		sudo apt-get install ibus-mozc
 		if [ -d "$HOME/ドキュメント" ] ; then
 			echo_aqua "renaming directory name into English..."
-			LANG=C; xdg-user-dirs-gtk-update
+			LANG=C xdg-user-dirs-gtk-update
 		fi
 	fi
 else

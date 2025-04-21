@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument('--codec', type=str, default='libx264',
                         help='The codec to use for the output video.')
     parser.add_argument('--pronunciation', type=str,
-                        help="The pronunciation csv file. The second column should be the pronunciation of the first column."),
+                        help="The pronunciation csv file. The second column should be the pronunciation of the first column.")
     return parser.parse_args()
 
 
