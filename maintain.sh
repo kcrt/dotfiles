@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 #===============================================================================
 #
@@ -13,9 +13,7 @@ source ${DOTFILES}/script/OSNotify.sh
 autoload zmv
 
 case $HOST in
-	nitrogen.local | oxygen.local | aluminum.local)
-		OSNotify "macOS maintain script start"
-
+	aluminum.local)
 		if [[ "`networksetup -getairportnetwork en0`" =~ nano* ]]; then
 			;
 		else
@@ -25,12 +23,8 @@ case $HOST in
 			fi
 		fi
 
-		OSNotify "Updating brew..."
-		brew update
-		brew outdated
-		brew upgrade
-		brew bundle dump -f --file ${DOTFILES}/Brewfile
-
+		. "${DOTFILES}/routine/macos_brew_upgrade.sh"
+		
 		OSNotify "Anti-virus database updating..."
 		freshclam
 		OSNotify "Scanning system. This may take a while..."
@@ -49,72 +43,38 @@ case $HOST in
 		find . -name Cargo.toml -execdir cargo clean \;
 		cd ~
 
-		if [[ -e /Volumes/Main/ ]]; then
-			OSNotify "/Volumes/Main/ mounted, refreshing DroboFileList.txt..."
-			pv /Volumes/Main/DroboFileList.txt | grep -v "AppleDouble" | grep -v "\._" | grep -v "DS_Store" | LANG=C sort | sed "s|/mnt/DroboFS/Shares/|/Volumes/|" > ~/DroboFileList.txt
+		if [[ -d /Volumes/Backup/ ]]; then
+			OSNotify "/Volumes/Backup/ mounted, refreshing QnapFileList.txt..."
+			pv /Volumes/Backup/QnapFileList.txt | grep -v "AppleDouble" | grep -v "\._" | grep -v "DS_Store" | grep -v ".@__thumb" | LANG=C sort > ~/QnapFileList.txt
 		else
-			OSError "/Volumes/Main not found."
+			OSError "/Volumes/Backup not found."
 		fi
 
 		echo_info "==== Data back up and sync ===="
 
-		OSNotify "prog -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo|\.mypy_cache)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
-		if [[ -d /Volumes/Main/shelter/ ]]; then
-			OSNotify "prog -> Drobo"
-			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/prog/ /Volumes/Main/shelter/backup/prog
-		fi
+		# QNAP (Backup) -> Google Cloudに移行
+		# OSNotify "prog -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo|\.mypy_cache)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
+		# OSNotify "Documents -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/Documents gs://auto.backup.kcrt.net/auto/documents
+		# OSNotify "diskimage -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://auto.backup.kcrt.net/auto/diskimages
+		# OSNotify "Calibre -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre/ gs://auto.backup.kcrt.net/auto/calibre
+		# OSNotify "Pictures -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures/ gs://auto.backup.kcrt.net/auto/pictures
+		# OSNotify "Zotero -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero/ gs://auto.backup.kcrt.net/auto/zotero
+		
+		# TODO: QNAP -> Google Cloudで定期バックアップ
+		# OSNotify "books(drobo) -> Google Cloud"
+		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r /Volumes/Main/books/ gs://auto.backup.kcrt.net/auto/books
+		# OSNotify "HomeVideo(Drobo) -> Google Cloud"
+		# gsutil -m rsync -d -r /Volumes/HomeVideo/Converted/ gs://auto.backup.kcrt.net/auto/convertedvideos
+		# gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM/ gs://auto.backup.kcrt.net/auto/videos
 
-		OSNotify "Documents -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/Documents gs://auto.backup.kcrt.net/auto/documents
-		if [[ -d /Volumes/Main/shelter/ ]]; then
-			OSNotify "Documents -> Drobo"
-			rsync -ahvz --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --iconv=UTF-8,UTF-8-MAC --progress --delete --no-o --no-p --no-g --backup --backup-dir=/Volumes/Main/shelter/Trash ~/Documents/ /Volumes/Main/shelter/backup/documents
-		fi
-
-		OSNotify "diskimage -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://auto.backup.kcrt.net/auto/diskimages
-		if [[ -d /Volumes/Private/diskimages/ ]]; then
-			OSNotify "diskimage -> Drobo (Private)"
-			rsync -ahv --progress --delete ~/diskimages/ /Volumes/Private/backup/diskimages
-		fi
-
-		if [[ -d /Volumes/Main/books/ ]]; then
-			OSNotify "books(Drobo) -> Google Cloud"
-			LANG=ja_JP.UTF-8 gsutil -m rsync -d -r /Volumes/Main/books/ gs://auto.backup.kcrt.net/auto/books
-		fi
-
-		OSNotify "Calibre -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre/ gs://auto.backup.kcrt.net/auto/calibre
-		if [[ -d /Volumes/Main/ ]]; then
-			OSNotify "Calibre -> drobo"
-			rsync -ahv --progress --delete ~/Calibre/ /Volumes/Private/backup/Calibre
-		fi
-
-		if [[ -d /Volumes/eee/ && -d /Volumes/Private/comic/eee/ ]]; then
-			OSNotify "eee (mounted) -> Drobo"
-			rsync -ahv --iconv=UTF-8,UTF-8-MAC --progress --delete /Volumes/eee/comics/ /Volumes/Private/backup/eee/
-		fi
-
-		OSNotify "Pictures -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures/ gs://auto.backup.kcrt.net/auto/pictures
-		if [[ -d /Volumes/Private/ ]]; then
-			OSNotify "Pictures -> drobo"
-			rsync -ahv --progress --delete ~/Pictures/ /Volumes/Private/backup/pictures
-		fi
-
-		OSNotify "Zotero -> Google Cloud"
-		LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero/ gs://auto.backup.kcrt.net/auto/zotero
-		if [[ -d /Volumes/Main/ ]]; then
-			OSNotify "Zotero -> drobo"
-			rsync -ahv --progress --delete ~/Zotero/ /Volumes/Main/shelter/backup/Zotero
-		fi
-
-		if [[ -e /Volumes/HomeVideo/ ]]; then
-			OSNotify "HomeVideo(Drobo) -> Google Cloud"
-			gsutil -m rsync -d -r /Volumes/HomeVideo/Converted/ gs://auto.backup.kcrt.net/auto/convertedvideos
-			gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM/ gs://auto.backup.kcrt.net/auto/videos
-		fi
+		. "${DOTFILES}/routine/aluminum_backup.sh"
+		 
 
 		echo_info "==== recording (if available) ===="
 		if [[ -d /Volumes/Private/Recording/ ]]; then
@@ -145,9 +105,9 @@ case $HOST in
 		cp ~/Documents/passwords.kdbx ~/others/passwords.kdbx
 		cp ~/Documents/passwords.kdbx "/Users/kcrt/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx"
 		gsutil cp ~/Documents/passwords.kdbx gs://auto.backup.kcrt.net/auto/passwords.kdbx
-		if [[ -e /Volumes/Main/ ]]; then
+		if [[ -e /Volumes/Backup/ ]]; then
 			DATE=`date +%Y%m%d`
-			cp ~/Documents/passwords.kdbx /Volumes/Main/shelter/passwords/passwords-$DATE.kdbx
+			cp ~/Documents/passwords.kdbx /Volumes/Backup/passwords/passwords-$DATE.kdbx
 		fi
 		
 		OSNotify "Cleaning Caches..."
@@ -166,7 +126,6 @@ case $HOST in
 		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
 		OSNotify "Cleaned. Free space: $hdfreebefore -> $hdfreeafter"
 
-
 		
 		# echo_info "==== joplin ===="
 		# joplin sync
@@ -181,22 +140,8 @@ esac
 echo_info "vim update"
 vim -c "PluginInstall!" -c "qall"
 
-# echo_info "Bioconductor update"
-# R --vanilla << BIO_UPDATE
-# source("http://bioconductor.org/biocLite.R")
-# biocLite()
-# biocLite("GEOquery")
-# biocLite("impute")
-# BIO_UPDATE
-echo_info "R update"
-R --vanilla << R_UPDATE
-options(repos=c(CRAN="http://cran.r-project.org"))
-packages_to_need = c("tidyverse", "languageserver")
-packages_installed = rownames(installed.packages())
-packages_to_install = packages_to_need[!is.element(packages_to_need, packages_installed)]
-install.packages(packages_to_install, dependencies=TRUE)
-update.packages(ask=FALSE)
-R_UPDATE
+
+. "${DOTFILES}/routine/r_install_packages.sh"
 
 echo_info "Google cloud command update"
 if [ -x `which gcloud` ]; then

@@ -22,6 +22,7 @@ for i in **/*.zip; do
 	zip --delete "$i" ".DS_Store"
 	zip --delete "$i" "_____padding_file_"
 	zip --delete "$i" "_____padding_file_*____"
+	zip --delete "$i" ".@__thumb/*" ".@__thumb/"
 done
 
 echo "finish!"

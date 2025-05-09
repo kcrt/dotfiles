@@ -37,5 +37,5 @@ fi
 if echo "$response" | grep -q '<span class="emptyInfo">在庫なし</span>'; then
     exit 0
 else
-    echo "入荷があります :${URL}"
+    echo "入荷があります: ${URL}"
 fi

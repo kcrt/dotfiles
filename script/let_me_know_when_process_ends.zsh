@@ -4,14 +4,29 @@
 #
 #          FILE:  let_me_know_when_process_ends.sh
 #
-#         USAGE:  ./let_me_know_when_process_ends.sh name|pid
+#         USAGE:  ./let_me_know_when_process_ends.sh [--audio] name|pid
 #
 #===============================================================================
 
 source ${DOTFILES}/script/OSNotify.sh
 
+# Parse options
+play_audio=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --audio)
+            play_audio=true
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
 if [ $# -ne 1 ]; then
-    echo "Usage: $0 name|pid"
+    echo "Usage: $0 [--audio] name|pid"
+    echo "  --audio    Play audio notification when process ends"
     exit 1
 fi
 
@@ -39,4 +54,11 @@ done
 
 OSNotify "pid: $pid" "Process $1 was finished"
 
-
+# Play audio notification if requested
+if [ "$play_audio" = true ]; then
+    if [ -f "${HOME}/dotfiles/audio/done.m4a" ]; then
+        afplay --volume 0.5 "${HOME}/dotfiles/audio/done.m4a"
+    else
+        echo "Audio file not found: ${HOME}/dotfiles/audio/done.m4a"
+    fi
+fi

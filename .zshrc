@@ -1,4 +1,3 @@
-
 #
 #	.zshrc
 #		Written by kcrt <kcrt@kcrt.net>
@@ -680,7 +679,16 @@ function mcd(){
 }
 # 省略とか
 abbrev-alias hist='history'
-abbrev-alias :q='exit'
+
+function quit_command() {
+  if [[ -n "$VIRTUAL_ENV" ]]; then
+    deactivate
+  else
+    exit
+  fi
+}
+abbrev-alias :q='quit_command'
+abbrev-alias :q!='exit'
 abbrev-alias su='su -s =zsh'
 abbrev-alias od='od -Ax -tx1 -c'
 abbrev-alias hexdump="hexdump -C"

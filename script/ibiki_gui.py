@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# This script is a GUI application that monitors audio input,
+# displays a history of volume levels, and allows playback of
+# recorded segments. It is designed to detect snoring (ibiki)
+# and can optionally play a sound if a volume threshold is exceeded.
+
 import tkinter as tk
 from tkinter import ttk
 import pyaudio
@@ -11,6 +16,9 @@ from collections import deque
 import queue
 import sys
 import os
+from pydub import AudioSegment
+from pydub.exceptions import CouldntDecodeError
+from zmq import device
 
 # --- Constants ---
 CHUNK = 1024
@@ -23,7 +31,7 @@ CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 150
 BAR_WIDTH = CANVAS_WIDTH / MAX_SEGMENTS
 GUI_UPDATE_INTERVAL_MS = 100 # How often to update the GUI
-WAKEUP_VOLUME_THRESHOLD = 0.05 # Volume level to trigger wakeup sound
+DEFAULT_WAKEUP_VOLUME_THRESHOLD = 0.05 # Default volume level to trigger wakeup sound
 
 class IbikiMonitorApp:
     """
@@ -45,6 +53,9 @@ class IbikiMonitorApp:
         self.stop_event = threading.Event()
         self.playback_pyaudio = None # Separate instance for playback
         self.last_wakeup_time = 0 # Track when the wakeup sound was last played
+        self.wakeup_sound_data = None # To store raw audio data for wakeup sound
+        self.monitoring_start_time = None # Time when monitoring started
+        self.wakeup_volume_threshold = DEFAULT_WAKEUP_VOLUME_THRESHOLD # Initialize the instance variable
 
         # --- Setup GUI ---
         self.setup_gui()
@@ -63,23 +74,88 @@ class IbikiMonitorApp:
         self.canvas = tk.Canvas(self.master, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg="white")
         self.canvas.pack(pady=10, padx=10)
 
+        self.device_label = ttk.Label(self.master, text="Monitoring Device: Initializing...")
+        self.device_label.pack(pady=2)
+
         self.status_label = ttk.Label(self.master, text="Initializing...")
-        self.status_label.pack(pady=5)
+        self.status_label.pack(pady=2)
+
+        # Bind mouse wheel event to the canvas
+        self.canvas.bind("<MouseWheel>", self._on_mouse_wheel) # For Windows and macOS
+        self.canvas.bind("<Button-4>", self._on_mouse_wheel) # For Linux (scroll up)
+        self.canvas.bind("<Button-5>", self._on_mouse_wheel) # For Linux (scroll down)
+
+
+    def _on_mouse_wheel(self, event):
+        """Handles mouse wheel events to adjust the threshold."""
+        # Determine scroll direction and adjust threshold
+        # event.delta is for Windows/macOS, event.num is for Linux
+        if event.delta > 0 or event.num == 4: # Scroll up
+            self.wakeup_volume_threshold += 0.01 # Increase threshold
+        elif event.delta < 0 or event.num == 5: # Scroll down
+            self.wakeup_volume_threshold -= 0.01 # Decrease threshold
+
+        # Clamp threshold to a valid range (e.g., 0.0 to 1.0)
+        self.wakeup_volume_threshold = max(0.0, min(1.0, self.wakeup_volume_threshold))
+
+        print(f"Threshold adjusted to: {self.wakeup_volume_threshold:.3f}")
+
+        # Redraw the canvas to update the threshold line
+        self._redraw_canvas()
+
+
+    def _load_wakeup_sound(self):
+        """Loads the wakeup sound file into memory."""
+        wakeup_path = None # Initialize to ensure it's bound
+        # Ensure PyAudio instance exists before proceeding
+        if self.pyaudio_instance is None:
+            print("Error: PyAudio instance not initialized before loading sound.", file=sys.stderr)
+            self.status_label.config(text="Error: PyAudio init failed.")
+            return
+        try:
+            wakeup_path = os.path.join(os.path.dirname(__file__), '..', 'audio', 'wakeup.m4a')
+            print(f"Loading wakeup sound from: {wakeup_path}")
+            sound = AudioSegment.from_file(wakeup_path)
+            sound = sound.set_frame_rate(RATE).set_channels(CHANNELS).set_sample_width(self.pyaudio_instance.get_sample_size(FORMAT))
+            self.wakeup_sound_data = sound.raw_data
+            print(f"Wakeup sound loaded successfully ({len(self.wakeup_sound_data)} bytes).")
+        except CouldntDecodeError:
+             print(f"Error: Could not decode wakeup sound file. Is ffmpeg installed and in PATH?", file=sys.stderr)
+             self.status_label.config(text="Error: Failed to load wakeup sound (decode).")
+        except FileNotFoundError:
+            print(f"Error: Wakeup sound file not found at {wakeup_path}", file=sys.stderr)
+            self.status_label.config(text="Error: Wakeup sound file not found.")
+        except Exception as e:
+            print(f"Error loading wakeup sound: {e}", file=sys.stderr)
+            self.status_label.config(text=f"Error: {e}")
 
     def start_audio_processing(self):
         """Initializes PyAudio and starts the recording thread."""
         try:
             self.pyaudio_instance = pyaudio.PyAudio()
+
+            # Get default input device info
+            device_info = self.pyaudio_instance.get_default_input_device_info()
+            input_device_index = int(device_info['index'])
+            device_name = device_info['name']
+
             self.audio_stream = self.pyaudio_instance.open(format=FORMAT,
                                                             channels=CHANNELS,
                                                             rate=RATE,
                                                             input=True,
-                                                            frames_per_buffer=CHUNK)
+                                                            frames_per_buffer=CHUNK,
+                                                            input_device_index=input_device_index)
+
+            self._load_wakeup_sound()
+
             self.stop_event.clear()
             self.recording_thread = threading.Thread(target=self._audio_processor_thread, daemon=True)
             self.recording_thread.start()
-            self.status_label.config(text="Monitoring...")
-            print("Audio stream opened and recording thread started.")
+            self.monitoring_start_time = time.time() # Record start time
+            self.device_label.config(text=f"Monitoring Device: {device_name}") # Display device name in new label
+            self.status_label.config(text="Monitoring...") # Keep status label for monitoring time
+            print(f"Audio stream opened and recording thread started using device: {device_name}")
+
         except Exception as e:
             print(f"Error starting audio processing: {e}", file=sys.stderr)
             self.status_label.config(text=f"Error: {e}")
@@ -116,13 +192,17 @@ class IbikiMonitorApp:
                         print("Warning: Empty audio segment detected.")
 
                     # --- Wakeup Sound Logic ---
-                    if max_volume >= WAKEUP_VOLUME_THRESHOLD:
+                    if max_volume >= self.wakeup_volume_threshold:
                         now = time.time()
-                        if now - self.last_wakeup_time > 2:
-                            print(f"Volume threshold exceeded ({max_volume:.3f} >= {WAKEUP_VOLUME_THRESHOLD}). Playing wakeup sound.")
-                            # Use absolute path for afplay
-                            os.system("/usr/bin/afplay /Users/kcrt/dotfiles/audio/wakeup.m4a &")
+                        # Play only if sound data is loaded and cooldown period passed
+                        if self.wakeup_sound_data and (now - self.last_wakeup_time > 2):
+                            print(f"Volume threshold exceeded ({max_volume:.3f} >= {self.wakeup_volume_threshold:.3f}). Playing wakeup sound.")
+                            # Play the loaded sound data in a separate thread
+                            playback_thread = threading.Thread(target=self._play_audio_bytes_thread, args=(self.wakeup_sound_data,), daemon=True)
+                            playback_thread.start()
                             self.last_wakeup_time = now
+                        elif not self.wakeup_sound_data:
+                             print("Wakeup threshold exceeded, but sound data not loaded.", file=sys.stderr)
                     # --- End Wakeup Sound Logic ---
 
                     # Put raw audio data bytes into the queue for the GUI thread
@@ -177,8 +257,15 @@ class IbikiMonitorApp:
             if processed_new_data or len(self.canvas_items) < len(self.history_data):
                 self._redraw_canvas()
 
+            # Update status label with timer if monitoring started
+            if self.monitoring_start_time:
+                elapsed_seconds = int(time.time() - self.monitoring_start_time)
+                minutes = elapsed_seconds // 60
+                seconds = elapsed_seconds % 60
+                self.status_label.config(text=f"Monitoring... {minutes:02d}:{seconds:02d}")
+
         except queue.Empty:
-            pass # No new data
+            pass
         except Exception as e:
             print(f"Error updating graph: {e}", file=sys.stderr)
             import traceback
@@ -204,7 +291,7 @@ class IbikiMonitorApp:
             # Actual canvas item deleted by canvas.delete("all")
 
         # Draw the threshold line
-        threshold_y = CANVAS_HEIGHT - CANVAS_HEIGHT * np.sqrt(min(WAKEUP_VOLUME_THRESHOLD, 1.0))
+        threshold_y = CANVAS_HEIGHT - CANVAS_HEIGHT * np.sqrt(min(self.wakeup_volume_threshold, 1.0))
         self.canvas.create_line(0, threshold_y, CANVAS_WIDTH, threshold_y, fill="blue", dash=(4, 2), tags="threshold_line")
 
         # Draw bars for current history
@@ -254,16 +341,17 @@ class IbikiMonitorApp:
             print(f"Error: Could not find segment with timestamp {clicked_timestamp}")
             return
 
-        # Determine indices of segments to play (previous, current, next)
+        # Determine indices of segments to play (2 previous, current, 2 next)
         indices_to_play = []
-        if clicked_index > 0: # Check if previous exists
-            indices_to_play.append(clicked_index - 1)
-        indices_to_play.append(clicked_index)
-        if clicked_index < len(history_list) - 1: # Check if next exists
-            indices_to_play.append(clicked_index + 1)
+        start_index = max(0, clicked_index - 2)
+        end_index = min(len(history_list), clicked_index + 3) # +3 because slice upper bound is exclusive
+
+        for i in range(start_index, end_index):
+             indices_to_play.append(i)
+
 
         # Collect audio data bytes for the selected segments
-        print(f"Attempting to play segments at indices: {indices_to_play}")
+        print(f"Attempting to play segments at indices: {indices_to_play} (target: {clicked_index})")
         for index in indices_to_play:
             try:
                 ts, vol, audio_bytes = history_list[index]

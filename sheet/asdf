@@ -2,5 +2,5 @@ asdf plugin add nodejs
 asdf list all nodejs
 asdf install nodejs latest
 
-asdf global|local nodejs latest
+asdf set nodejs latest
 asdf plugin update --all|<name>
