@@ -99,3 +99,85 @@ div.top-ads-container{
 div.gpt-ad{
 	display: none !important;
 }
+
+/* twitter  */
+article[data-testid="tweet"]:has([data-testid="placementTracking"]) {
+    background-color: #111 !important;
+    border: 1px solid #e1e8ed !important;
+    border-radius: 8px !important;
+    opacity: 0.85 !important;
+}
+@media (prefers-color-scheme: dark) {
+    article[data-testid="tweet"]:has([data-testid="placementTracking"]) {
+        background-color: #111 !important;
+        border: 1px solid #444 !important;
+    }
+}
+article[data-testid="tweet"] [aria-label*="プロモーション"] {
+    background-color: #111 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+}
+article[data-testid="tweet"]:has([data-testid="placementTracking"]) {
+	background-color: #111 !important;
+	border: 2px solid #6c757d !important;
+	border-radius: 12px !important;
+	opacity: 0.85 !important;
+	position: relative !important;
+	margin: 8px 0 !important;
+}
+article[data-testid="tweet"]:has(svg + div[dir="ltr"]:contains("プロモーション")) {
+	background-color: #111 !important;
+	border: 2px solid #6c757d !important;
+	border-radius: 12px !important;
+	opacity: 0.85 !important;
+	position: relative !important;
+	margin: 8px 0 !important;
+}
+div[dir="ltr"]:contains("プロモーション") {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24) !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    font-size: 12px !important;
+    display: inline-block !important;
+}
+
+/* やらかし防止策 */
+/* 悲しい過去に基づいている */
+input[placeholder*="first" i][value*="Takahashi" i],
+input[placeholder*="fname" i][value*="Takahashi" i],
+input[placeholder*="given" i][value*="Takahashi" i],
+input[placeholder*="fore" i][value*="Takahashi" i],
+input[name*="first" i][value*="Takahashi" i],
+input[name*="fname" i][value*="Takahashi" i],
+input[name*="given" i][value*="Takahashi" i],
+input[name*="fore" i][value*="Takahashi" i],
+input[id*="first" i][value*="Takahashi" i],
+input[id*="fname" i][value*="Takahashi" i],
+input[id*="given" i][value*="Takahashi" i],
+input[id*="sir" i][value*="Takahashi" i] {
+    background-color: #ffeb3b !important;
+    border: 2px solid #ff5722 !important;
+    box-shadow: 0 0 15px rgba(255, 87, 34, 0.7) !important;
+}
+
+input[placeholder*="family" i][value*="Takahashi" i],
+input[placeholder*="last" i][value*="Takahashi" i],
+input[placeholder*="sur" i][value*="Takahashi" i],
+input[placeholder*="lname" i][value*="Takahashi" i],
+input[name*="family" i][value*="Takahashi" i],
+input[name*="last" i][value*="Takahashi" i],
+input[name*="sur" i][value*="Takahashi" i],
+input[name*="lname" i][value*="Takahashi" i],
+input[id*="family" i][value*="Takahashi" i],
+input[id*="last" i][value*="Takahashi" i],
+input[id*="sur" i][value*="Takahashi" i],
+input[id*="lname" i][value*="Takahashi" i] {
+    background-color: #e8f5e8 !important;
+    border: 2px solid #4caf50 !important;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5) !important;
+}

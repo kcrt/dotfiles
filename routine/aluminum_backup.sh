@@ -49,9 +49,11 @@ backup_directory_rsync() {
     if [[ "$src_dir" != */ ]]; then
         src_dir="$src_dir/"
     fi
-    /opt/homebrew/bin/rsync -ahvz \
+    # -z sometimes causes problems with large files, so we disable it.
+    /opt/homebrew/bin/rsync -ahv \
         --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" \
-        --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --exclude="*/.@__thumb/" \
+        --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --exclude="*/.@__thumb/" --exclude=".rustup" \
+		--exclude="Library/pnpm" \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
         "$src_dir" "kcrt@qnap.local:/share/Backup/$dest_dir"
 }
@@ -69,4 +71,6 @@ if [[ -d /Volumes/Backup/ ]]; then
     backup_directory_rsync ~/Pictures/ Pictures
     OSNotify "Zotero -> Qnap"
     backup_directory_rsync ~/Zotero/ Zotero
+    OSNotify "Parallels -> Qnap"
+    backup_directory_rsync ~/Parallels/ Parallels
 fi

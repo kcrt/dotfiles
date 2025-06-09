@@ -9,6 +9,9 @@ for filename in **/.*; do
 		if [[ `file "$filename"` =~ .*(Apple\ Desktop\ Services\ Store|AppleDouble\ encoded\ Macintosh\ file) ]]; then
 			echo "Deleting $filename ..."
 			rm "$filename"
+		elif [[ ! -s "$filename" ]]; then
+			echo "Deleting empty $filename ..."
+			rm "$filename"
 		else
 			echo "Unknown $filename"
 		fi

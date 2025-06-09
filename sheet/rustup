@@ -1,0 +1,26 @@
+rustup-init.[sh|exe]    # install rustup
+rustup update           # Update all installed toolchains and rustup itself
+
+* Managing Toolchains
+rustup show [active-toolchain] # Show (the active) toolchain
+rustup toolchain list   # List installed toolchains
+rustup toolchain install <toolchain>
+                        # Install a toolchain. Specify like:
+                        # <stable|beta|nightly>-<x86_64|aarch64>-<pc-windows-msvc|unknown-linux-gnu|apple-darwin>
+rustup toolchain uninstall <toolchain>
+
+* Managing Targets (for cross-compilation)
+rustup target list [--installed]
+rustup target add <target> [--toolchain <toolchain>]
+rustup target remove <target> [--toolchain <toolchain>]
+
+* Managing Components
+rustup component list [--installed] [--toolchain <toolchain>]
+                        # List available/installed components (e.g., rust-src, clippy, rustfmt)
+rustup component add <component> [--toolchain <toolchain>]
+rustup component remove <component> [--toolchain <toolchain>]
+
+* Overrides (Directory-specific toolchains)
+rustup override list    # List directory toolchain overrides
+rustup override set <toolchain>
+rustup override unset [--nonexistent]

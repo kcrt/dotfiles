@@ -441,7 +441,7 @@ zle -N Vi_InsertFirst
 zle -N Vi_AddNext
 zle -N Vi_AddEol
 zle -N Vi_Change
-bindkey -M viins "" Vi_ToCmd
+bindkey -M viins "\e" Vi_ToCmd
 bindkey -M vicmd "i" Vi_Insert
 bindkey -M vicmd "I" Vi_InsertFirst
 bindkey -M vicmd "a" Vi_AddNext
@@ -778,18 +778,24 @@ abbrev-alias iconv-nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
 abbrev-alias iconv-nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
 abbrev-alias verynice="nice -n 20"
 
-# ----- suffix alias ()
+# ----- suffix alias
 alias -s exe='wine_gameportingkit'
 alias -s txt='less'
 alias -s log='tail -f -n20'
 alias -s html='w3m'
-function viewxls(){
-	w3m -T text/html =(xlhtml $1)
-}
 alias -s png='imgcat'
 alias -s jpg='imgcat'
-alias -s md='glow -p'
 alias -s json='jq -C .'
+# use glow or bat for markdown files, if available
+if command -v glow &> /dev/null; then
+	alias -s md='glow -p'
+elif command -v bat &> /dev/null; then
+	alias -s md='bat --paging=always --color=always'
+else
+	alias -s md='cat'
+fi
+alias -s docx='~/dotfiles/script/tomd_and_show.sh'
+
 
 # ----- コマンドライン引数
 #export GREP_OPTIONS='--color=auto --binary-file=without-match --line-number --exclude-dir=.git --exclude-dir=.svn'
@@ -913,6 +919,18 @@ else
 	alias :tailf_apachelog='sudo tail -f /var/log/apache2/error.log /var/log/apache2/access.log | ccze'
 fi
 
+# ----- ssh and vscode
+# `code_<hostname> <path>` to run `code --remote ssh-remote+<hostname> <path>`
+# Analyze ~/.ssh/config to get the hostname
+if [[ -f ~/.ssh/config ]]; then
+	grep -E '^Host ' ~/.ssh/config | awk '{print $2}' | while read -r host; do
+		# assert it is valid host name [a-zA-Z0-9_.-]
+		if [[ ! $host =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+			continue
+		fi
+		eval "alias code_$host=\"code --remote ssh-remote+$host\""
+	done
+fi
 
 # ----- Hooks
 function :title(){
@@ -1066,7 +1084,6 @@ fi
 # --- Rust
 alias cargo\ test="nocorrect cargo test"
 
-
 if [ -x "`which gh`" ]; then
 	# eval "$(gh copilot alias -- zsh)"
 	alias "??"="gh copilot suggest -t shell"
@@ -1097,12 +1114,12 @@ end_of "zcompile"
 if [[ -x `which fortune` ]]; then
 	echo ""
 	STARTUP_FORTUNE=`fortune`
-	echo -n "[$color[$hostcolor]m"
+	echo -n "\e[$color[$hostcolor]m"
 	echo $STARTUP_FORTUNE
 	if [[ -x `which ollama` ]]; then
-		echo -n "[2;97m"
-		echo "Run [4mwhat_is_this_fortune[24m to know the meaning of this fortune."
-		echo -n "[0m"
+		echo -n "\e[2;97m"
+		echo "Run \e[4mwhat_is_this_fortune\e[24m to know the meaning of this fortune."
+		echo -n "\e[0m"
 		echo ""
 		function what_is_this_fortune(){
 			ollama run gemma3:4b-it-qat "下記の文章を日本語で解説してください。\n$STARTUP_FORTUNE"

@@ -10,6 +10,7 @@ tap "homebrew/core"
 tap "homebrew/services"
 tap "itchyny/tap"
 tap "mackerelio/mackerel-agent"
+tap "microsoft/foundrylocal"
 tap "oven-sh/bun"
 tap "ramborogers/netventory"
 tap "ruffle-rs/ruffle"
@@ -39,6 +40,7 @@ brew "arping"
 brew "boost"
 brew "docbook"
 brew "asciidoc"
+brew "git"
 brew "asdf"
 brew "atkmm@2.28"
 brew "atomicparsley"
@@ -129,7 +131,6 @@ brew "fortune"
 brew "fzf"
 brew "fzy"
 brew "gh"
-brew "git"
 brew "git-lfs"
 brew "glow"
 brew "gnu-time"
@@ -278,6 +279,7 @@ brew "zenity"
 brew "zsh"
 brew "zsh-syntax-highlighting"
 brew "itchyny/tap/mmv"
+brew "microsoft/foundrylocal/foundrylocal"
 brew "oven-sh/bun/bun"
 brew "ruffle-rs/ruffle/ruffle", args: ["HEAD"]
 brew "theseal/ssh-askpass/ssh-askpass"
@@ -441,6 +443,7 @@ mas "Affinity Publisher", id: 881418622
 mas "Affinity Publisher 2", id: 1606941598
 mas "App Language Chooser", id: 451732904
 mas "Apple Configurator", id: 1037126344
+mas "Batch Clipboard", id: 6695729238
 mas "Blackmagic Disk Speed Test", id: 425264550
 mas "BlueSee", id: 1336679524
 mas "Boom3D Netflix Extension", id: 6445882848
@@ -451,6 +454,7 @@ mas "Copilot", id: 6738511300
 mas "CotEditor", id: 1024640650
 mas "Developer", id: 640199958
 mas "Diffusers", id: 1666309574
+mas "Discovery", id: 1381004916
 mas "Display Menu", id: 549083868
 mas "Dropover", id: 1355679052
 mas "EdgeView", id: 1580323719
@@ -506,6 +510,7 @@ mas "WiFi Signal", id: 525912054
 mas "WinArchiver Lite", id: 414855915
 mas "Windows App", id: 1295203466
 mas "Xcode", id: 497799835
+vscode "anthropic.claude-code"
 vscode "cschlosser.doxdocgen"
 vscode "dart-code.dart-code"
 vscode "dart-code.flutter"
@@ -529,7 +534,7 @@ vscode "hbenl.vscode-test-explorer"
 vscode "jeff-hykin.better-cpp-syntax"
 vscode "llvm-vs-code-extensions.lldb-dap"
 vscode "mechatroner.rainbow-csv"
-vscode "ms-azuretools.vscode-docker"
+vscode "ms-azuretools.vscode-containers"
 vscode "ms-ceintl.vscode-language-pack-ja"
 vscode "ms-dotnettools.csharp"
 vscode "ms-dotnettools.vscode-dotnet-runtime"
@@ -568,6 +573,7 @@ vscode "qwtel.sqlite-viewer"
 vscode "rdebugger.r-debugger"
 vscode "redhat.vscode-yaml"
 vscode "reditorsupport.r"
+vscode "reditorsupport.r-syntax"
 vscode "rust-lang.rust-analyzer"
 vscode "ryanluker.vscode-coverage-gutters"
 vscode "saoudrizwan.claude-dev"

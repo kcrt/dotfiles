@@ -32,7 +32,7 @@ Here is the markdown document:
 """
     
     data = {
-        "model": "gemma3:27b",
+        "model": "gemma3:27b-it-qat",
         "prompt": prompt,
         "stream": False
     }
