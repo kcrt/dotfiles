@@ -11,6 +11,21 @@
 #
 #===============================================================================
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: source $(basename "$0")"
+    echo "This script provides functions for sending desktop notifications."
+    echo "It is intended to be sourced by other scripts, not run directly."
+    echo ""
+    echo "Functions available after sourcing:"
+    echo "  OSNotify \"Title\" \"Message\"   - Shows a standard notification."
+    echo "  OSError \"Title\" \"Error Message\" - Shows an error notification."
+    echo ""
+    echo "Example of sourcing in another script:"
+    echo "  source /path/to/$(basename "$0")"
+    echo "  OSNotify \"Task Complete\" \"Your task has finished.\""
+    exit 0
+fi
+
 source ${DOTFILES}/script/echo_color.sh
 
 function OSNotify(){

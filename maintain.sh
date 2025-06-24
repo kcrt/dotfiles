@@ -51,55 +51,10 @@ case $HOST in
 		fi
 
 		echo_info "==== Data back up and sync ===="
-
-		# QNAP (Backup) -> Google Cloudに移行
-		# OSNotify "prog -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo|\.mypy_cache)|Arduino\/libraries' -d -r ~/prog gs://auto.backup.kcrt.net/auto/prog
-		# OSNotify "Documents -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -x '.*\/(site-packages|\.git|\.DS_Store|\.tmp\.driveupload|venv|\.venv|\.pio|node_modules|dist|\.next|\.expo)|Arduino\/libraries' -d -r ~/Documents gs://auto.backup.kcrt.net/auto/documents
-		# OSNotify "diskimage -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -x "Tor.*\.sparsebundle" -d -r ~/diskimages/ gs://auto.backup.kcrt.net/auto/diskimages
-		# OSNotify "Calibre -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Calibre/ gs://auto.backup.kcrt.net/auto/calibre
-		# OSNotify "Pictures -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Pictures/ gs://auto.backup.kcrt.net/auto/pictures
-		# OSNotify "Zotero -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r ~/Zotero/ gs://auto.backup.kcrt.net/auto/zotero
-		
-		# TODO: QNAP -> Google Cloudで定期バックアップ
-		# OSNotify "books(drobo) -> Google Cloud"
-		# LANG=ja_JP.UTF-8 gsutil -m rsync -d -r /Volumes/Main/books/ gs://auto.backup.kcrt.net/auto/books
-		# OSNotify "HomeVideo(Drobo) -> Google Cloud"
-		# gsutil -m rsync -d -r /Volumes/HomeVideo/Converted/ gs://auto.backup.kcrt.net/auto/convertedvideos
-		# gsutil -m rsync -d -r /Volumes/HomeVideo/CamTemp/DCIM/ gs://auto.backup.kcrt.net/auto/videos
-
 		. "${DOTFILES}/routine/aluminum_backup.sh"
-		 
 
 		echo_info "==== recording (if available) ===="
-		if [[ -d /Volumes/Private/Recording/ ]]; then
-			n=`ls $HOME/nosync/RecordingToSend/*.MP3 | wc -l`
-			echo "There are $n mp3 file(s)."
-			if [[ "$n" -ge 1 ]]; then
-				zmv -v "$HOME/nosync/RecordingToSend/*_(*)_(*)A0.MP3" '/Volumes/Private/Recording/Recorder/$1_$2.MP3'
-			fi
-			n=`ls $HOME/nosync/RecordingToSend/*.m4a | wc -l`
-			echo "There are $n m4a file(s)."
-			if [[ "$n" -ge 1 ]]; then
-				for m4afile in ~/nosync/RecordingToSend/*.m4a; do
-					RECORDINGDATE=`ffprobe -loglevel quiet -of json -show_entries stream "$m4afile" | jq -r '.streams[0].tags.creation_time' | cut -c 1-19 | sed 's/:/-/g'`
-					mv -v "$m4afile" "/Volumes/Private/Recording/VoiceMemo/${RECORDINGDATE}_${m4afile:t}"
-				done
-			fi
-			for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
-				if [ ! -e "${i:r}.txt" ]; then
-					echo "Whisper: $i"
-					# Skip this temporary
-					# whisper --language Japanese --model large -f txt "$i"
-					# zmv -W "/Volumes/Private/Recording/VoiceMemo/*.m4a.txt" "/Volumes/Private/Recording/VoiceMemo/*.txt"
-				fi
-			done
-		fi
+		. "${DOTFILES}/routine/aluminum_recording.sh"
 		
 		echo_info "==== keepass ===="
 		cp ~/Documents/passwords.kdbx ~/others/passwords.kdbx

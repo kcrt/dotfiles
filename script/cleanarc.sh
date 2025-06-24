@@ -1,5 +1,14 @@
 #!/bin/zsh
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Recursively finds RAR files (*.rar) in the current directory and subdirectories,"
+    echo "converts them to ZIP files, and then cleans the ZIP files by removing common unwanted files"
+    echo "(e.g., .txt, .lnk, Thumbs.db, __MACOSX, .DS_Store)."
+    echo "Requires 'parallel', 'arepack', and 'zip' commands."
+    exit 0
+fi
+
 autoload zmv
 
 if [ ! -x "`which parallel`" ]; then

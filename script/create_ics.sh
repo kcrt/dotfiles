@@ -3,6 +3,14 @@
 # iCalendarファイル生成スクリプト
 # macOSとUbuntuで動作します
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Interactively creates an iCalendar (.ics) file and a Google Calendar link."
+    echo "Prompts for event title, location, description, start time, and end time."
+    echo "The .ics file is saved in ~/Downloads/."
+    exit 0
+fi
+
 # イベントタイトルを取得
 echo "イベントのタイトルを入力してください："
 read title

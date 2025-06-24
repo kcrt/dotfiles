@@ -1,5 +1,16 @@
 #!/usr/bin/env zsh
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Demonstrates various terminal escape sequences, including:"
+    echo "  - Basic 4-bit colors"
+    echo "  - Hyperlinks (OSC 8)"
+    echo "  - Window title setting (OSC 0)"
+    echo "  - iTerm2 notifications (OSC 9), if applicable."
+    echo "Also prints TERM, SHELL, and TERM_PROGRAM environment variables."
+    exit 0
+fi
+
 echo "TERM: $TERM"
 echo "SHELL: $SHELL"
 

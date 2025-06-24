@@ -1,9 +1,10 @@
 #!/bin/sh
 
-if [ "$#" != 3 ]; then
-	echo "$0 <channelId> <writeKey> <data(dict)>"
-	echo "note: data(dict) is like: '{\"d1\": 1.1, \"d2\": 2.2}'"
-	exit
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$#" != 3 ]; then
+    echo "Usage: $(basename "$0") <channelId> <writeKey> <data(dict)>"
+    echo "Sends data to ambidata.io."
+    echo "Example for data(dict): '{\"d1\": 1.1, \"d2\": 2.2}'"
+    exit 0
 fi
 
 CHANNEL_ID=$1
@@ -16,5 +17,3 @@ curl -X POST -H "Content-Type: application/json" -d "{\"writeKey\": \"$WRITE_KEY
 if [ $? != 0 ]; then
 	echo "Error"
 fi
-
-

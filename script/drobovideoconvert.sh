@@ -1,8 +1,18 @@
 #!/bin/zsh
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Converts video files (MP4, MTS) found in /Volumes/HomeVideo/CamTemp/(DCIM|AVCHD)/"
+    echo "to H.264 MP4 format (1920x1080, AAC audio 256k) and saves them to /Volumes/HomeVideo/Converted/."
+    echo "It also creates a smaller version (960x540, AAC audio 128k) in /Volumes/HomeVideo/ConvertedMini/."
+    echo "The script checks if /Volumes/HomeVideo/ is mounted and if output files already exist to avoid reconversion."
+    echo "Requires ffmpeg."
+    exit 0
+fi
+
 if [[ ! -e /Volumes/HomeVideo/ ]]; then
 	echo "/Volumes/HomeVideo/ not mounted"
-	exit
+	exit 1 # Changed to exit 1 for error
 fi
 
 rm /Volumes/HomeVideo/Converted/*.converting.mp4

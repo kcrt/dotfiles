@@ -2,7 +2,19 @@
 
 # show cpuload 1min
 #   param
-#		heavy | light
+#		heavy | light | tmux
+
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0") [heavy|light|tmux]"
+    echo "Displays CPU load average (1-minute) and temperature (if available)."
+    echo ""
+    echo "Arguments (optional):"
+    echo "  heavy   - Only display if load average > 6."
+    echo "  light   - Only display if load average <= 6."
+    echo "  tmux    - Format output for tmux status bar with color coding based on load."
+    echo "If no argument is given, displays load and temperature normally."
+    exit 0
+fi
 
 source ~/etc/script/echo_color.sh 
 

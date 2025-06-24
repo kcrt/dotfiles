@@ -6,6 +6,7 @@
 import numpy as np
 import pyaudio
 from typing import List, TypedDict
+import argparse
 
 
 class AudioDevice(TypedDict):
@@ -38,11 +39,17 @@ def get_volume(data: bytes) -> float:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Stream microphone input to an audio output device (headphones, speakers).")
+    parser.add_argument('--chunk_size', type=int, default=2048, help='Audio chunk size (frames per buffer). Default is 2048.')
+    parser.add_argument('--rate', type=int, default=44100 // 2, help='Sample rate in Hz. Default is 22050.')
+    # Potentially add arguments for non-interactive device selection in the future if needed.
+    args = parser.parse_args()
+
     # 基本パラメータ設定
-    CHUNK = 2048  # ブロックサイズ
+    CHUNK = args.chunk_size  # ブロックサイズ
     FORMAT = pyaudio.paInt16  # 16ビットフォーマット
     CHANNELS = 1  # モノラル
-    RATE = 44100 // 2  # サンプルレート
+    RATE = args.rate  # サンプルレート
 
     p = pyaudio.PyAudio()
 

@@ -66,8 +66,10 @@
 	edit-history = rebase -i HEAD~10
 	commit-without-sign = commit --no-gpg-sign
 	shallow-clone = clone --depth=1
-[diff "exstrings"]
-	textconv = ~/dotfiles/script/exstrings.sh
+[diff "totext"]
+	textconv = ~/dotfiles/script/totext.sh
+[diff "tomd"]
+	textconv = ~/dotfiles/script/tomd.sh
 [difftool "sourcetree"]
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
 	path = 

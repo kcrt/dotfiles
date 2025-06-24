@@ -1,17 +1,16 @@
-uv python install 3.11		# Pythonバージョンをインストール
-uv python list				# インストール済みPythonを表示
-uv python pin 3.11			# このディレクトリで使用するPythonを設定
+uv python install 3.11      # Pythonバージョンをインストール
+uv python list              # インストール済みPythonを表示
+uv python pin 3.11          # このディレクトリで使用するPythonを設定
+uv init myproject --python 3.11 # 新しいプロジェクトを作成
+uv init --python 3.11       # 既存ディレクトリを初期化
+uv add requests             # パッケージを追加
+uv add pytest --dev         # 開発用パッケージを追加
+uv remove requests          # パッケージを削除
+uv sync                     # 依存関係をインストール
+uv run python script.py     # スクリプトを実行
+uv run pytest               # テストを実行
+uv lock                     # ロックファイル生成
+uv sync --frozen            # ロックファイルから復元
 
-uv init myproject --python 3.11	# 新しいプロジェクトを作成
-uv init --python 3.11		# 既存ディレクトリを初期化
-
-uv add requests				# パッケージを追加
-uv add pytest --dev			# 開発用パッケージを追加
-uv remove requests			# パッケージを削除
-uv sync						# 依存関係をインストール
-
-uv run python script.py		# スクリプトを実行
-uv run pytest				# テストを実行
-
-uv lock						# ロックファイル生成
-uv sync --frozen			# ロックファイルから復元
+uv init --script sciprt.py
+uv add package_name --script script.py

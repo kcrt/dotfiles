@@ -75,6 +75,14 @@ case "$file_extension_lower" in
             exit 1
         fi
         ;;
+    zip|lzh|rar)
+        if command -v als &> /dev/null; then
+            als "$input_file"
+        else
+            echo "Error: als command not found. als is required to list contents of archive files." >&2
+            exit 1
+        fi
+        ;;
     *)
         echo "Error: Unsupported file type '$file_extension_lower'." >&2
         exit 1

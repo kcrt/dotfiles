@@ -1,49 +1,62 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "pymupdf",
+# ]
+# ///
+
 # -*- coding: utf-8 -*-
 
 import fitz  # PyMuPDF
 import argparse
 import os
 
-def connect_pdfs(input_pdf_paths, output_pdf_path):
+def connect_files(input_paths, output_pdf_path):
     """
-    Connects multiple PDF files into a single PDF file.
+    Connects multiple PDF and image (JPG, PNG) files into a single PDF file.
 
     Args:
-        input_pdf_paths (list): A list of paths to the input PDF files.
+        input_paths (list): A list of paths to the input PDF or image files.
         output_pdf_path (str): Path to save the connected PDF file.
     """
     output_doc = fitz.open()  # Create a new empty PDF document
 
     processed_any_file = False
-    for pdf_path in input_pdf_paths:
-        input_doc = None  # Initialize input_doc to None
-        if not os.path.exists(pdf_path):
-            print(f"Error: Input PDF file not found - {pdf_path}")
+    for file_path in input_paths:
+        if not os.path.exists(file_path):
+            print(f"Error: Input file not found - {file_path}")
             continue
         
         try:
-            input_doc = fitz.open(pdf_path)
-            output_doc.insert_pdf(input_doc)  # Append all pages from input_doc
-            input_doc.close()
-            print(f"Successfully added: {pdf_path}")
-            processed_any_file = True
+            file_ext = os.path.splitext(file_path)[1].lower()
+            
+            if file_ext == '.pdf':
+                with fitz.open(file_path) as input_doc:
+                    output_doc.insert_pdf(input_doc)
+                print(f"Successfully added PDF: {file_path}")
+                processed_any_file = True
+            elif file_ext in ['.jpg', '.jpeg', '.png']:
+                with fitz.open(file_path) as img_doc:
+                    pdf_bytes = img_doc.convert_to_pdf()
+                with fitz.open("pdf", pdf_bytes) as img_pdf:
+                    output_doc.insert_pdf(img_pdf)
+                print(f"Successfully added image: {file_path}")
+                processed_any_file = True
+            else:
+                print(f"Warning: Unsupported file type for {file_path}. Skipping.")
+
         except Exception as e:
-            print(f"Error processing {pdf_path}: {e}")
-            if input_doc: # Check if input_doc was successfully opened before trying to close
-                try:
-                    input_doc.close()
-                except:
-                    pass # Ignore errors on close if already problematic
+            print(f"Error processing {file_path}: {e}")
     
     if processed_any_file and len(output_doc) > 0:
         try:
             output_doc.save(output_pdf_path)
-            print(f"Successfully connected PDFs saved to: {output_pdf_path}")
+            print(f"Successfully connected files saved to: {output_pdf_path}")
         except Exception as e:
             print(f"Error saving output PDF {output_pdf_path}: {e}")
     elif not processed_any_file:
-        print("No input PDF files were processed. Output file not created.")
+        print("No input files were processed. Output file not created.")
     else: # processed_any_file is True but output_doc is empty (should not happen if processed_any_file is true)
         print("No pages were added to the output document. Output file not created.")
         
@@ -54,15 +67,15 @@ def connect_pdfs(input_pdf_paths, output_pdf_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Connect multiple PDF files into one.')
-    parser.add_argument('input_pdfs', nargs='+', 
-                        help='Paths to the input PDF files to connect.')
+    parser = argparse.ArgumentParser(description='Connect multiple PDF and image (JPG, PNG) files into one PDF.')
+    parser.add_argument('input_files', nargs='+', 
+                        help='Paths to the input PDF or image files to connect.')
     parser.add_argument('-o', '--output', default='00_connected.pdf', 
                         help='Output path for the connected PDF file (default: 00_connected.pdf)')
     
     args = parser.parse_args()
     
-    connect_pdfs(args.input_pdfs, args.output)
+    connect_files(args.input_files, args.output)
 
 if __name__ == "__main__":
     main()

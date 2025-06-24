@@ -14,6 +14,27 @@
 #
 #===============================================================================
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0") <FILENAME>"
+    echo "Extracts text content from various file types."
+    echo ""
+    echo "Supported file types (extensions):"
+    echo "  pptx, docx, rtf, doc, pdf, zip, lzh, rar"
+    echo ""
+    echo "Requirements depend on the file type:"
+    echo "  - Office files (pptx, docx, rtf, doc): 'textutil' (macOS) or 'unzip' and 'sed'."
+    echo "  - PDF: 'pdftotext' (from poppler-utils)."
+    echo "  - Archives (zip, lzh, rar): 'als' (Archive Listing Service)."
+    exit 0
+fi
+
+if [ -z "$1" ]; then
+    echo "Error: No filename specified."
+    echo "Usage: $(basename "$0") <FILENAME>"
+    echo "For more help, run: $(basename "$0") --help"
+    exit 1
+fi
+
 # set EXT to lower case extention
 # EXT="${1:e}"
 EXT="${1:e:l}"

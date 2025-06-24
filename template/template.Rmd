@@ -15,12 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 if (Sys.info()["sysname"] == "Darwin") {
   # for macOS
-  par(family = "HiraMaruProN-W3")
+  par(family = "HiraMaruProN-W4")
 }
-```
-
-## Common functions
-```{r}
 ```
 
 ### Load library
@@ -30,6 +26,12 @@ require(gtsummary)
 require(gtsummary)
 require(coin)
 require(exactRankTests)
+
+theme_set(theme_minimal(base_family = "HiraMaruProN-W4"))
+```
+
+## Common functions
+```{r}
 ```
 
 ## Load file

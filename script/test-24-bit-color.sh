@@ -8,14 +8,17 @@
 #   <r> <g> <b> range from 0 to 255 inclusive.
 #   The escape sequence ^[0m returns output to default
 
-setBackgroundColor()
-{
-    #printf '\x1bPtmux;\x1b\x1b[48;2;%s;%s;%sm' $1 $2 $3
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Displays a range of 24-bit colors in the terminal to demonstrate its functionality."
+    exit 0
+fi
+
+setBackgroundColor() {
     printf '\x1b[48;2;%s;%s;%sm' "$1" "$2" "$3"
 }
 
-resetOutput()
-{
+resetOutput() {
     echo -en "\x1b[0m\n"
 }
 
@@ -24,8 +27,7 @@ resetOutput()
 # Echoes "$red $green $blue" where
 # $red $green and $blue are integers
 # ranging between 0 and 255 inclusive
-rainbowColor()
-{ 
+rainbowColor() { 
     let h=$1/43
     let f=$1-43*$h
     let t=$f*255/43

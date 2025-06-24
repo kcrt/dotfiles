@@ -15,11 +15,32 @@
 
 source ${DOTFILES}/script/echo_color.sh
 
+# Help message function
+show_help() {
+    echo "Usage: $(basename "$0") <zone> <url>"
+    echo "Creates a temporary Google Cloud Platform VM and browses the specified URL via that VM."
+    echo ""
+    echo "Arguments:"
+    echo "  <zone>      The GCP zone to create the VM in (e.g., northamerica-northeast2-a)."
+    echo "  <url>       The URL to browse."
+    echo ""
+    echo "Example: $(basename "$0") northamerica-northeast2-a http://www.kcrt.net"
+    echo ""
+    echo "To list all available zones, run: gcloud compute zones list"
+    exit 0
+}
+
+# Check for help flag
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    show_help
+fi
+
 # Acquire the zone and url from the command line
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <zone> <url>"
-    echo "Example: $0 northamerica-northeast2-a http://www.kcrt.net"
+    echo "Usage: $(basename "$0") <zone> <url>"
+    echo "Example: $(basename "$0") northamerica-northeast2-a http://www.kcrt.net"
     echo "To list all the available zones, run: gcloud compute zones list"
+    echo "For more help, run: $(basename "$0") --help"
     exit 1
 fi
 ZONE=$1

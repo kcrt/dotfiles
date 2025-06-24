@@ -520,7 +520,6 @@ abbrev-alias mv='nocorrect mv'
 abbrev-alias cp='nocorrect cp'
 abbrev-alias mkdir='nocorrect mkdir'
 abbrev-alias w3m=' noglob _w3m'
-abbrev-alias exstrings='${DOTFILES}/script/exstrings.sh'
 abbrev-alias mutt='neomutt'
 abbrev-alias pv='pv -pterabT -i 0.3 -c -N Progress'
 
@@ -529,7 +528,6 @@ if [[ -x "$(command -v thefuck)" && -z "$THEFUCK_LOADED" ]]; then
     export THEFUCK_LOADED=1
     eval "$(thefuck --alias)"
 fi
-# TODO: croc
 # Check if croc command exists, if not, define a function using Docker
 if ! command -v croc &> /dev/null; then
     function croc() {
@@ -573,8 +571,10 @@ alias grep='grep --color=auto --binary-file=without-match --exclude-dir=.git --e
 alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 abbrev-alias wget-recursive="noglob wget -r -l5 --convert-links --random-wait --restrict-file-names=windows --adjust-extension --no-parent --page-requisites --quiet --show-progress -e robots=off"
 abbrev-alias youtube-dl='noglob yt-dlp'
-abbrev-alias whisper-jp="whisper --language Japanese --model large --device mps"
-abbrev-alias mlx_whisper-jp='mlx_whisper --language Japanese --model "mlx-community/whisper-large-v3-turbo" --output-format vtt'
+# abbrev-alias whisper-jp="whisper --language Japanese --model large --device mps"
+# abbrev-alias mlx_whisper-jp='mlx_whisper --language Japanese --model "mlx-community/whisper-large-v3-turbo" --output-format vtt'
+abbrev-alias parakeet-mlx-en="uv tool run parakeet-mlx"
+abbrev-alias parakeet-mlx-ja="uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja"
 abbrev-alias parallel="parallel --bar -j8"
 function ffmpeg_gif(){
 	ffmpeg -i "$1" -an -r 15 -pix_fmt rgb24 -f gif "${1:t:r}.gif"
@@ -766,11 +766,6 @@ for f in ${DOTFILES}/script/*; do
 	alias ${f:t:r}="$f"
 done
 
-# bin
-if [ -x ~/bin/imgcat ]; then
-	alias imgcat="~/bin/imgcat"
-fi
-
 # 便利コマンド
 abbrev-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum += \$1; }; END { print sum }'"
 abbrev-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
@@ -783,8 +778,8 @@ alias -s exe='wine_gameportingkit'
 alias -s txt='less'
 alias -s log='tail -f -n20'
 alias -s html='w3m'
-alias -s png='imgcat'
-alias -s jpg='imgcat'
+alias -s png='img2sixel'
+alias -s jpg='img2sixel'
 alias -s json='jq -C .'
 # use glow or bat for markdown files, if available
 if command -v glow &> /dev/null; then
@@ -904,6 +899,11 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 		source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 	fi
+
+	if [ -x "/Applications/draw.io.app/Contents/MacOS/draw.io" ]; then
+		alias draw.io=/Applications/draw.io.app/Contents/MacOS/draw.io
+	fi
+
 	end_of "macOS specific settings"
 fi
 

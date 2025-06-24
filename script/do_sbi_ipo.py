@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "selenium",
+# ]
+# ///
+
 # -*- coding: utf-8 -*-
 
 import os
@@ -29,6 +36,7 @@ def main():
     parser = argparse.ArgumentParser(description='SBI IPO application automation')
     parser.add_argument('--verbose', action='store_true', help='Enable verbose debug output')
     parser.add_argument('--gui', action='store_true', help='Run with GUI (non-headless mode)')
+    parser.add_argument('--call', action='store_true', help='Make a phone call before logging in')
     args = parser.parse_args()
     
     verbose = args.verbose
@@ -64,6 +72,17 @@ def main():
     time.sleep(3)
 
     assert "SBI証券" in driver.title
+
+    if args.call:
+        # assert it is macOS
+        assert sys.platform == "darwin", "This script is designed to run on macOS for making phone calls."
+        if verbose:
+            print("Making a phone call...")
+        os.system("open 'tel:0120-457-341'")
+        print("Waiting for 15 seconds to allow the call to connect...")
+        time.sleep(15)
+
+
     if verbose:
         print(f"Page title: {driver.title}")
         print("Logging in...")
@@ -73,6 +92,14 @@ def main():
     time.sleep(5)
     driver.find_element(by=By.NAME, value="ACT_login").click()
     time.sleep(3)
+
+    # check if "合言葉" is present
+    if "合言葉" in driver.page_source:
+        print("Found 合言葉, waiting for acceptance...")
+        print("Please accept the 合言葉 on the website and then press Enter to continue.")
+        input("")
+
+
     if verbose:
         print("Login successful")
 
@@ -99,7 +126,7 @@ def main():
         if verbose:
             print("Looking for IPO・PO link...")
         ipo_tag = [x for x in driver.find_elements(
-            by=By.CSS_SELECTOR, value="div.navi2M a") if x.text == "IPO・PO"][0]
+            by=By.CSS_SELECTOR, value="nav.slc-local-link-nav a") if x.text == "IPO・PO"][0]
         ipo_tag.click()
         time.sleep(5)
         if verbose:

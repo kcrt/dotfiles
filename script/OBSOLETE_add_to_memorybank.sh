@@ -14,6 +14,13 @@
 #
 #===============================================================================
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0") <INPUT_FILE>"
+    echo "Description: This script adds data to the memory bank. (~/Documents/memorybank)"
+    echo "THIS SCRIPT IS OBSOLETE."
+    exit 0
+fi
+
 if [ "$VIRTUAL_ENV" != "/Users/kcrt/venv" ]; then
     echo "Error: Please run this script under the correct virtual environment: /Users/kcrt/venv."
     exit 1

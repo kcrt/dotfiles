@@ -1,4 +1,4 @@
 text/html; w3m -dump %s ; nametemplate=%s.html; copiousoutput
 application/pdf; pdftotext '%s' -; nametemplate=%s.pdf; copiousoutput; description=PDF
-application/msword; ~/etc/script/exstrings.sh '%s' ; nametemplate=%s.doc; copiousoutput; description=Word
-application/vnd.openxmlformats-officedocument.wordprocessingml.document; ~/etc/script/exstrings.sh '%s' ; nametemplate=%s.docx; copiousoutput; description=Word
+application/msword; ~/etc/script/tomd.sh '%s' ; nametemplate=%s.doc; copiousoutput; description=Word
+application/vnd.openxmlformats-officedocument.wordprocessingml.document; ~/etc/script/tomd.sh '%s' ; nametemplate=%s.docx; copiousoutput; description=Word

@@ -6,6 +6,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import datetime
+import argparse
 
 # to install driver, run:
 #   brew install chromedriver (for Mac)
@@ -18,6 +19,9 @@ USER_PASS = os.environ.get("ODAKYU_USER_PASS")
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Checks and reports the Romancecar (Odakyu train) operating status for the next week.")
+    parser.add_argument('--debug', action='store_true', help="Run in non-headless mode for debugging Selenium.")
+    args = parser.parse_args()
 
     result_str = "来週のロマンスカー運行状況\n"
 
@@ -27,7 +31,7 @@ def main():
     # Run every monday
 
     options = webdriver.ChromeOptions()
-    if not os.environ.get("DEBUG"):
+    if not args.debug and not os.environ.get("DEBUG"): # Prioritize command line arg
         options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     driver.implicitly_wait(10)

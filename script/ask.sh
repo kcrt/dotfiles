@@ -15,25 +15,24 @@ showusage(){
 	echo "   1          Nが選ばれました"
 }
 
-
-if [ $# == 0 ]; then
-	showusage
-	exit
-elif [ $# == 1 ]; then
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ $# -eq 0 ]; then
+    showusage
+    exit 0
+elif [ $# -eq 1 ]; then
 	asktype='-y'
 	message=$1
-elif [ $# == 2 ]; then
+elif [ $# -eq 2 ]; then
 	case $1 in
 		-y|-n|-0)
 			asktype=$1
 			message=$2;;
 		*)
 			showusage
-			exit -1;;
+			exit 1;;
 	esac
 else
 	showusage
-	exit -1
+	exit 1
 fi
 
 while [ 1 ]; do
@@ -55,7 +54,6 @@ while [ 1 ]; do
 		if [ "$asktype" = '-n' ]; then line='n'; fi
 	fi
 	
-	
 	case $line in
 		y|Y)
 			ans='y'
@@ -65,6 +63,3 @@ while [ 1 ]; do
 			exit 1;;
 	esac
 done
-
-
-

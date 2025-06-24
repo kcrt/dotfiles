@@ -1,8 +1,18 @@
 #!/usr/bin/env zsh
 
-if [[ "$1" == "" ]]; then
-	echo "Usage: echo \"Hello world\" | $0 en|ja (target language)"
-	exit
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ $# -eq 0 ]; then
+    echo "Usage: echo \"Input text\" | $(basename "$0") <target_language_code>"
+    echo "Translates text piped from stdin to the specified target language using the DeepL API."
+    echo "Requires the DEEPL_API_KEY environment variable to be set."
+    echo ""
+    echo "Target language codes (examples):"
+    echo "  EN - English"
+    echo "  JA - Japanese"
+    echo "  DE - German"
+    echo "  FR - French"
+    echo "  ES - Spanish"
+    echo "  (See DeepL API documentation for a full list of supported languages)"
+    exit 0
 fi
 
 LANG=${(U)1}

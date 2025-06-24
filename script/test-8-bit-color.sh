@@ -2,6 +2,12 @@
 
 # Original is: https://tools.paco.bg/14/
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Displays a range of 8-bit foreground and background colors in the terminal."
+    exit 0
+fi
+
 for fgbg in 38 48 ; do # Foreground / Background
     for color in {0..255} ; do # Colors
         # Display the color

@@ -10,6 +10,13 @@
 #
 #===============================================================================
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Displays battery status information, suitable for use in status bars (e.g., tmux)."
+    echo "Output format varies based on battery state (charging, full, discharging, low)."
+    exit 0
+fi
+
 if [ -x "$(which ioreg)" ]; then
 	# macOS
 	BATSTR=$(ioreg -c AppleSmartBattery -r | \

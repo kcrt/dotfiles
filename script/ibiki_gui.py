@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "audioop-lts",
+#     "numpy",
+#     "pyaudio",
+#     "pydub",
+# ]
+# ///
 
 # This script is a GUI application that monitors audio input,
 # displays a history of volume levels, and allows playback of
@@ -11,14 +20,12 @@ import pyaudio
 import numpy as np
 import threading
 import time
-import datetime
 from collections import deque
 import queue
 import sys
 import os
 from pydub import AudioSegment
 from pydub.exceptions import CouldntDecodeError
-from zmq import device
 
 # --- Constants ---
 CHUNK = 1024

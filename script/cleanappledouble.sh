@@ -2,6 +2,14 @@
 
 #===============================================================================
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    echo "Usage: $(basename "$0")"
+    echo "Recursively finds and deletes .DS_Store files and AppleDouble files (._*)"
+    echo "in the current directory and its subdirectories."
+    echo "It checks the file type before deleting to avoid removing legitimate dotfiles."
+    exit 0
+fi
+
 for filename in **/.*; do
 	if [[ "$filename" =~ .*\.AppleDouble.* ]]; then
 		echo "Unknown $filename"

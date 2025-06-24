@@ -71,6 +71,11 @@ if [[ -d /Volumes/Backup/ ]]; then
     backup_directory_rsync ~/Pictures/ Pictures
     OSNotify "Zotero -> Qnap"
     backup_directory_rsync ~/Zotero/ Zotero
+    
+    # Because Parallels disk images are extremely large, we use a different method.
     OSNotify "Parallels -> Qnap"
-    backup_directory_rsync ~/Parallels/ Parallels
+    /opt/homebrew/bin/rsync -ahv \
+        --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
+        --inplace --partial --block-size=128K \
+        ~/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels"
 fi

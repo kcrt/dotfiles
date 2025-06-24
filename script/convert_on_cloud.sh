@@ -1,8 +1,11 @@
 #!/usr/bin/env zsh
 
-if [ $# = 0 ]; then
-	echo "need file and opt"
-	exit
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ $# -eq 0 ]; then
+    echo "Usage: $(basename "$0") <input_video_file>"
+    echo "Converts the input video file using ffmpeg running in a Docker container on a GCP VM ('krypton')."
+    echo "The output is resized to 1440x810, H.264 video, AAC audio (128k)."
+    echo "The converted file is saved in a 'converted' subdirectory with the same name as the input."
+    exit 0
 fi
 
 echo "converting $1..."
