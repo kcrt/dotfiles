@@ -48,10 +48,8 @@ if [[ -d /Volumes/Private/Recording/ ]]; then
     fi
     for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
         if [ ! -e "${i:r}.txt" ]; then
-            echo "Whisper: $i"
-            # Skip this temporary
-            # whisper --language Japanese --model large -f txt "$i"
-            # zmv -W "/Volumes/Private/Recording/VoiceMemo/*.m4a.txt" "/Volumes/Private/Recording/VoiceMemo/*.txt"
+            uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja "$i"
         fi
     done
+    zmv -W '/Volumes/Private/Recording/VoiceMemo/*.srt' '/Volumes/Private/Recording/VoiceMemo/*.txt'
 fi

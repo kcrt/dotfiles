@@ -15,11 +15,11 @@ MESSAGE=$(pbpaste)
 if [[ $MESSAGE =~ [ぁ-んァ-ン] ]]; then
     LANGUAGE="ja"
     ORDER="下記のようなメールを受け取りました。これに対して適切な返信を教えてください。返信以外の内容は出力しなくてよいです。また、署名も不要です。\n ただし、相手の所属と名前 + 敬称を先頭に書いてください。 敬称は相手が医師の場合は先生、それ以外は様でお願いします。"
-    MODEL="elyza:jp8b"
+    MODEL="gemma3:27b-it-qat"
 else
     LANGUAGE="en"
     ORDER="I received an e-mail like the following. Please let me know the appropriate reply. You don't need to output anything other than the reply message."
-    MODEL="llama3.2:latest"
+    MODEL="gemma3:27b-it-qat"
 fi
 
 if [ -e ~/my_profile_${LANGUAGE}.txt ]; then

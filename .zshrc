@@ -12,8 +12,10 @@
 # To check loading time, run `bench-zsh`
 if [[ -n "$BENCHMARK_ZSHRC" ]]; then
 	function date_in_ms(){
-		if [[ "$OSTYPE" = darwin* ]]; then
-			gdate +%s%3N
+		if [[ "$OSTYPE" = darwin* ]] && command -v udate >/dev/null 2>&1; then
+			udate +%s
+		elif [[ "$OSTYPE" = darwin* ]]; then
+			date +%s000
 		else
 			date +%s%3N
 		fi
@@ -710,6 +712,7 @@ abbrev-alias eee='noglob zmv -v "([a-e|s|g|x])(*\(*\) \[*\]*).zip" "/Volumes/eee
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
+abbrev-alias ccusage-live="npx ccusage@latest blocks --live"
 
 abbrev-alias docker_busybox="docker run -it --rm busybox"
 abbrev-alias docker_busybox_mount_home="docker run -it --rm -v $HOME:/root busybox"
@@ -781,6 +784,7 @@ alias -s html='w3m'
 alias -s png='img2sixel'
 alias -s jpg='img2sixel'
 alias -s json='jq -C .'
+alias -s zst='~/dotfiles/script/tar-zstd-expand.sh'
 # use glow or bat for markdown files, if available
 if command -v glow &> /dev/null; then
 	alias -s md='glow -p'
