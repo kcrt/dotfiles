@@ -8,30 +8,6 @@
 #
 #===============================================================================
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    echo "Usage: source $(basename "$0")"
-    echo "This script provides functions for echoing text in various ANSI colors."
-    echo "It is intended to be sourced by other scripts, not run directly."
-    echo ""
-    echo "Example functions available after sourcing:"
-    echo "  echo_red \"This is red\""
-    echo "  echo_green \"This is green\""
-    echo "  echo_blue \"This is blue\""
-    echo "  echo_yellow \"This is yellow\""
-    echo "  echo_aqua \"This is aqua\""
-    echo "  echo_mazenda \"This is magenta\""
-    echo "  echo_white \"This is white\""
-    echo "  echo_black \"This is black\""
-    echo "  echo_brightred, echo_brightgreen, etc. for bright versions."
-    echo "  echo_error, echo_info, echo_ok for semantic coloring."
-    echo "  echo_colortest - Displays a test of all available colors."
-    echo ""
-    echo "Example of sourcing in another script:"
-    echo "  source /path/to/$(basename "$0")"
-    echo "  echo_error \"Something went wrong!\""
-    exit 0
-fi
-
 function echo_color(){
 
 	echo -n "[$1m"

@@ -1,5 +1,50 @@
 #!/bin/bash
 
+# Show help message
+show_help() {
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Unprotect all encrypted PDF files in the current directory by removing their encryption.
+
+This script:
+1. Scans all PDF files in the current directory for encryption
+2. Lists any encrypted PDFs found
+3. Asks for user confirmation before proceeding  
+4. Creates backups (.org files) before unprotecting
+5. Uses qpdf to remove encryption from the PDFs
+
+OPTIONS:
+    -h, --help    Show this help message and exit
+
+REQUIREMENTS:
+    - qpdf: Install with 'brew install qpdf' (macOS) or 'sudo apt-get install qpdf' (Ubuntu)
+    - pdfinfo: Install with 'brew install poppler' (macOS) or 'sudo apt-get install poppler-utils' (Ubuntu)
+
+EXAMPLES:
+    $(basename "$0")           # Unprotect all encrypted PDFs in current directory
+    $(basename "$0") --help    # Show this help message
+
+NOTE: Original files are backed up with .org extension before modification.
+EOF
+}
+
+# Parse command line arguments
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    "")
+        # No arguments, proceed normally
+        ;;
+    *)
+        echo "Error: Unknown option '${1}'"
+        echo "Use --help for usage information."
+        exit 1
+        ;;
+esac
+
 # Find all PDF files in the current directory
 pdf_files=(*.pdf)
 

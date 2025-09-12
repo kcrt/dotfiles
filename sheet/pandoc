@@ -1,0 +1,9 @@
+pandoc -f from_format -t to_format -o output_file
+    format: markdown, html, latex, docx, pdf
+e.g.  pandoc -f markdown -t html input.md -o output.html
+
+--toc: generate table of contents
+--template=:template_file: use a custom template
+--css=:css_file: link a CSS file
+--highlight-style=:style: use a specific syntax highlighting style
+--metadata title="Title": set the document title

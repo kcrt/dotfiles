@@ -25,18 +25,8 @@ case $HOST in
 
 		. "${DOTFILES}/routine/macos_brew_upgrade.sh"
 		
-		OSNotify "Anti-virus database updating..."
-		freshclam
-		OSNotify "Scanning system. This may take a while..."
-		# clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+		. "${DOTFILES}/routine/generic_clamscan_update_and_scan.sh"
 
-		# if command fails, pause and wait for user to press enter
-		if [[ $? -ne 0 ]]; then
-			OSError "!!! Virus found !!!"
-			echo "Please check message. Press Enter key to continue..."
-			read
-		fi
-		 
 		# Before sending server, find Cargo.toml and execute cargo clean
 		OSNotify "Cleaning up Rust projects..."
 		cd ~/prog
@@ -96,7 +86,7 @@ echo_info "vim update"
 vim -c "PluginInstall!" -c "qall"
 
 
-. "${DOTFILES}/routine/r_install_packages.sh"
+. "${DOTFILES}/routine/generic_r_install_packages.sh"
 
 echo_info "Google cloud command update"
 if [ -x `which gcloud` ]; then

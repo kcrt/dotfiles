@@ -260,7 +260,8 @@ function print_test(){
 }
 
 # ----- zplug
-if [[ -r ~/.zplug/init.zsh ]]; then
+# Skip zplug entirely when in Claude Code
+if [[ -r ~/.zplug/init.zsh && -z "$CLAUDECODE" ]]; then
 	source ~/.zplug/init.zsh
 	
 	# Essential plugins
@@ -367,7 +368,7 @@ if [[ -x ${DOTFILES}/script/have_mail.sh ]]; then
 else
 	PROMPT_MAILCHECK=''
 fi
-PROMPT_SHARP=' %# '
+PROMPT_SHARP='%# '
 PROMPT_RESETCOLOR='%{$reset_color%}'
 PROMPT="${PROMPT_SUBSTLV}${PROMPT_COLOR}[${PROMPT_USER}@${PROMPT_HOST}]${PROMPT_MAILCHECK}${PROMPT_SHARP}${PROMPT_RESETCOLOR}"
 
@@ -376,7 +377,8 @@ RPROMPT_BGJOB='%(1j.(bg: %j).)'
 RPROMPT_SETCOLOR=' %{%(?.$fg[cyan].$bg[cyan]$fg[black])%}'
 RPROMPT_DIR=' [%(5~|%-2~/.../%2~|%~)] '
 RPROMPT_PLATFORM='($(uname -m)) '
-RPROMPT="${RPROMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_RESETCOLOR}"
+PROMPT_TIME='%F{8}%D{%H:%M:%S}%f '
+RPROMPT="${RPROMPT}${RPROMPT_BGJOB}${RPROMPT_SETCOLOR}${RPROMPT_DIR}${RPROMPT_PLATFORM}${PROMPT_TIME}${PROMPT_RESETCOLOR}"
 
 # ----- キー
 bindkey -v
@@ -467,6 +469,7 @@ typeset -U path PATH
 [[ -d "$HOME/.cargo/bin" ]] && path=($path "$HOME/.cargo/bin")
 [[ -d "/snap/bin" ]] && path=($path "/snap/bin")
 [[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
+[[ -d "$HOME/.local/bin" ]] && path=($path "$HOME/.local/bin")
 
 # ----- 関数
 function _w3m(){
@@ -700,6 +703,9 @@ abbrev-alias cls='clear'
 abbrev-alias ...='cd ../..'
 abbrev-alias ....='cd ../../..'
 abbrev-alias .....='cd ../../../..'
+abbrev-alias 医療='cd ~/Documents/医療'
+abbrev-alias 研究='cd ~/Documents/医療/研究'
+abbrev-alias 依頼='cd ~/Documents/医療/依頼'
 function vimman(){
 	vim -c "Man $1" -c "only"
 }
@@ -712,7 +718,8 @@ abbrev-alias eee='noglob zmv -v "([a-e|s|g|x])(*\(*\) \[*\]*).zip" "/Volumes/eee
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
-abbrev-alias ccusage-live="npx ccusage@latest blocks --live"
+abbrev-alias ccusage-live="npx ccusage@latest blocks --live -t 30000"
+# abbrev-alias gemini="npx https://github.com/google-gemini/gemini-cli"
 
 abbrev-alias docker_busybox="docker run -it --rm busybox"
 abbrev-alias docker_busybox_mount_home="docker run -it --rm -v $HOME:/root busybox"
@@ -807,19 +814,6 @@ if [[ $USER != 'root' ]] ; then
 	alias updatedb="sudo updatedb; beep"
 fi
 
-alias :package_update="${DOTFILES}/maintain.sh"
-
-if [[ -x /usr/bin/yum ]] ; then
-	alias :package_update="sudo yum update"
-	alias :package_install="sudo yum install"
-	alias :package_file="yum provides"
-elif [[ -x /usr/bin/apt ]] ; then
-	alias :package_update="sudo apt update; sudo apt upgrade"
-	alias :package_install="sudo apt install"
-	alias :package_list=""
-	alias :package_search="sudo apt show"
-	alias :package_file="apt-file search"
-fi
 end_of "alias definitions"
 
 
@@ -1135,3 +1129,5 @@ fi
 if (which zprof > /dev/null 2>&1); then
 	zprof
 fi
+
+alias claude="/Users/kcrt/.claude/local/claude"

@@ -46,10 +46,24 @@ if [[ -d /Volumes/Private/Recording/ ]]; then
             mv -v "$m4afile" "/Volumes/Private/Recording/VoiceMemo/${RECORDINGDATE}_${m4afile:t}"
         done
     fi
+    echo "Starting transcription..."
     for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
         if [ ! -e "${i:r}.txt" ]; then
-            uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja "$i"
+            uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja "$i" --output-dir /Volumes/Private/Recording/VoiceMemo/
+            # Use srt format and rename to txt after transcription
+            mv "${i:r}.srt" "${i:r}.txt"
         fi
     done
-    zmv -W '/Volumes/Private/Recording/VoiceMemo/*.srt' '/Volumes/Private/Recording/VoiceMemo/*.txt'
+    # zmv -W '/Volumes/Private/Recording/VoiceMemo/*.srt' '/Volumes/Private/Recording/VoiceMemo/*.txt'
+
+    # Transcript one mp3 file at a time
+    for i in /Volumes/Private/Recording/Recorder/*.MP3; do
+        if [ ! -e "${i:r}.txt" ]; then
+            uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja "$i" --output-dir /Volumes/Private/Recording/Recorder/
+            mv "${i:r}.srt" "${i:r}.txt"
+            # exit for
+            break
+        fi
+    done
+
 fi

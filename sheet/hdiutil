@@ -1,0 +1,18 @@
+hdiutil create <OPTIONS> image.dmg
+<OPTIONS>:
+    -srcfolder /path/
+    -size 100m
+    -fs UDF | MS-DOS FAT32 | ExFAT | HFS+ | APFS
+    -format UZRW    # Read/Write
+            UDRO    # Read-Only
+            UDZO    # zlib compressed
+            ULFO    # lzfse compressed (recommended)
+            UDSP    # Sparse disk image
+            UDSB    # Sparse bundle disk image
+    -volname "VolumeName"
+    -ov             # Overwrite
+hdiutil convert input.dmg -format UDZO -o output.dmg
+hdiutil info								# show mounted images
+hdiutil resize -size 200m image.dmg			# resize
+hdiutil burn|verify|imageinfo image.dmg
+hdiutil makehybrid -o output.dmg /path/to/folder			# create hybrid

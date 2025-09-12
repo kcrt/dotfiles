@@ -174,6 +174,10 @@ elseif has("unix")
 endif
 autocmd InsertLeave * set nopaste
 
+" ----- 差分 -------------------------------------
+set diffopt+=algorithm:patience,indent-heuristic
+
+
 " ----- screen関係の設定 -------------------------
 if &term =~ "screen.*"
 	augroup IsTerminal
@@ -568,7 +572,7 @@ set t_ZH=[3m
 set t_ZR=[23m
 
 
-" ===== スペルチェッ==============================
+" ===== スペルチェック============================
 set spellfile=~/dotfiles/vimspell_en.utf-8.add 
 
 " ===== 以下、関数 ===============================

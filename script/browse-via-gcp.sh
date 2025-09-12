@@ -35,6 +35,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     show_help
 fi
 
+
 # Acquire the zone and url from the command line
 if [ $# -ne 2 ]; then
     echo "Usage: $(basename "$0") <zone> <url>"
@@ -88,7 +89,7 @@ gcloud compute instances create proxy-machine \
     --instance-termination-action=STOP \
     --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
     --enable-display-device \
-    --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/ubuntu-os-cloud/global/images/ubuntu-2404-noble-amd64-v20250313,mode=rw,size=10,type=projects/$PROJECT/zones/$ZONE/diskTypes/pd-balanced \
+    --create-disk=auto-delete=yes,boot=yes,device-name=instance-1,image=projects/ubuntu-os-cloud/global/images/ubuntu-2404-noble-amd64-v20250709,mode=rw,size=10,type=projects/$PROJECT/zones/$ZONE/diskTypes/pd-balanced \
     --no-shielded-secure-boot \
     --shielded-vtpm \
     --shielded-integrity-monitoring \
@@ -149,6 +150,7 @@ if [ "$VIRTUALMACHINE_IP" != "$CONNECTION_IP" ]; then
 else
     # browse via the virtual machine (use chrome)
     echo_info "Browsing via the virtual machine [proxy-machine]"
+    echo_green "Please close Google Chrome to terminate the ssh tunnel and virtual machine."
     /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --proxy-server="localhost:8888" $URL
 fi
 
@@ -160,3 +162,13 @@ lsof -ti:8888 | xargs kill -9
 # terminate the virtual machine
 echo_info "Terminating the virtual machine [proxy-machine]"
 gcloud compute instances delete proxy-machine --zone=$ZONE --quiet
+
+# check if proxy-machine exists
+gcloud compute instances describe proxy-machine --zone=$ZONE
+if [ $? -eq 0 ]; then
+    echo_error "Virtual machine [proxy-machine] is still running!!!"
+    echo_error "Please terminate and delete it to avoid unnecessary charges."
+    echo_error "To terminate and delete the virtual machine, run: "
+    echo_error "gcloud compute instances delete proxy-machine --zone=$ZONE"
+    exit 1
+fi
