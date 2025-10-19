@@ -71,6 +71,9 @@ if [[ -d /Volumes/Backup/ ]]; then
     backup_directory_rsync ~/Pictures/ Pictures
     OSNotify "Zotero -> Qnap"
     backup_directory_rsync ~/Zotero/ Zotero
+    OSNotify "Mail -> Qnap"
+    backup_directory_rsync ~/Library/Mail/ Mail
+
     
     # Because Parallels disk images are extremely large, we use a different method.
     OSNotify "Parallels -> Qnap"

@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(echo $SHELL)"
+      "Bash(echo $SHELL)",
+      "Bash(chmod:*)",
+      "Bash(/Users/kcrt/dotfiles/script/kana_to_roman.py)"
     ],
     "deny": []
   }

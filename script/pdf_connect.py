@@ -12,15 +12,25 @@ import fitz  # PyMuPDF
 import argparse
 import os
 
-def connect_files(input_paths, output_pdf_path):
+def connect_files(input_paths: list[str], output_pdf_path: str, ignore_00_files: bool = True, sort_files: bool = True):
     """
     Connects multiple PDF and image (JPG, PNG) files into a single PDF file.
 
     Args:
         input_paths (list): A list of paths to the input PDF or image files.
         output_pdf_path (str): Path to save the connected PDF file.
+        ignore_00_files (bool): Whether to ignore files that begin with '00_' (default: True).
+        sort_files (bool): Whether to sort files alphabetically before processing (default: True).
     """
     output_doc = fitz.open()  # Create a new empty PDF document
+
+    # Filter out files beginning with '00_' if ignore_00_files is True
+    if ignore_00_files:
+        input_paths = [path for path in input_paths if not os.path.basename(path).startswith('00_')]
+
+    # Sort files alphabetically if sort_files is True
+    if sort_files:
+        input_paths = sorted(input_paths)
 
     processed_any_file = False
     for file_path in input_paths:
@@ -68,14 +78,18 @@ def connect_files(input_paths, output_pdf_path):
 
 def main():
     parser = argparse.ArgumentParser(description='Connect multiple PDF and image (JPG, PNG) files into one PDF.')
-    parser.add_argument('input_files', nargs='+', 
+    parser.add_argument('input_files', nargs='+',
                         help='Paths to the input PDF or image files to connect.')
-    parser.add_argument('-o', '--output', default='00_connected.pdf', 
+    parser.add_argument('-o', '--output', default='00_connected.pdf',
                         help='Output path for the connected PDF file (default: 00_connected.pdf)')
-    
+    parser.add_argument('--no-ignore-00', action='store_true',
+                        help='Do not ignore files that begin with "00_" (default: ignore them)')
+    parser.add_argument('--no-sort', action='store_true',
+                        help='Do not sort files alphabetically before processing (default: sort them)')
+
     args = parser.parse_args()
-    
-    connect_files(args.input_files, args.output)
+
+    connect_files(args.input_files, args.output, ignore_00_files=not args.no_ignore_00, sort_files=not args.no_sort)
 
 if __name__ == "__main__":
     main()

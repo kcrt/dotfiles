@@ -6,13 +6,13 @@ set use_from="yes"
 # set hostname="kcrt.net"
 
 # メールボックスの設定
-set folder="imaps://imap.gmail.com"
-set imap_user="kcrtjp@gmail.com"
 source "gpg -d ~/dotfiles/no_git/muttpassword.asc |"
-set smtp_url = "smtp://kcrt@kcrt.net@kcrt.sakura.ne.jp:587/"
+set ssl_force_tls=yes
+set ssl_starttls=yes
 set spoolfile="=INBOX"
-set record="=[Gmail]/送信済みメール"
-set postponed="=[Gmail]/下書き"
+set record="=INBOX.Sent"
+set postponed="=INBOX.Draft"
+mailboxes =INBOX
 set timeout=600
 set mail_check=600
 #set imap_checkinterval=600
@@ -23,7 +23,7 @@ set beep_new=yes
 
 # 文字コード(日本語)関係
 set charset="utf-8"
-set send_charset="us-ascii:iso-2022-jp:utf-8"
+set send_charset="us-ascii:utf-8"
 #set strict_mime=no
 set assumed_charset="iso-2022-jp:shift_jis:utf-8"
 set thorough_search=yes
@@ -67,7 +67,6 @@ bind index,pager N search-opposite
 bind index s flag-message
 bind index g noop
 macro index gi "<change-folder>=INBOX<enter>" "Go to inbox"
-macro index ga "<change-folder>=[Gmail]/すべてのメール<enter>" "Go to all mail"
 
 
 # 色の設定
