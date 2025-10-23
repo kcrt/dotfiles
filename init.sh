@@ -76,13 +76,13 @@ echo_aqua "ok"
 
 
 echo_aqua "(1/5) : Creating default directories ----------------"
-[ ! -d ~/dotfiles ] && mkdir ~/dotfiles
-[ ! -d ~/bin ] && mkdir ~/bin
-[ ! -d ~/src ] && mkdir ~/src
-[ ! -d ~/prog ] && mkdir ~/prog
-[ ! -d ~/tmp ] && mkdir ~/tmp
-[ ! -d ~/.backup ] && mkdir ~/.backup
-[ ! -d ~/.trash ] && mkdir ~/.trash
+mkdir -p ~/dotfiles
+mkdir -p ~/bin
+mkdir -p ~/src
+mkdir -p ~/prog
+mkdir -p ~/tmp
+mkdir -p ~/.backup
+mkdir -p ~/.trash
 echo_aqua "ok."
 
 echo_aqua "(2/5) : Application Installation --------------------"
