@@ -191,6 +191,15 @@ elif [ -x /usr/bin/apt ]; then
 	sudo apt install curl make nodejs make g++
 	sudo apt install ffmpeg
 	echo "Current hostname is: $(hostname)"
+	echo_aqua "Do you want to install and enable openssh-server? (y/N): "
+	read -r ans
+	if [ "$ans" = "y" ] ; then
+		sudo apt install openssh-server
+		sudo systemctl enable ssh
+		sudo systemctl start ssh
+		echo_aqua "SSH server installed and started. Current status:"
+		sudo systemctl status ssh --no-pager
+	fi
 	echo_aqua "Do you install and enable avahi-daemon? (y/N): "
 	read -r ans
 	if [ "$ans" = "y" ] ; then
