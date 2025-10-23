@@ -76,13 +76,13 @@ echo_aqua "ok"
 
 
 echo_aqua "(1/5) : Creating default directories ----------------"
-mkdir ~/dotfiles
-mkdir ~/bin
-mkdir ~/src
-mkdir ~/prog
-mkdir ~/tmp
-mkdir ~/.backup
-mkdir ~/.trash
+[ ! -d ~/dotfiles ] && mkdir ~/dotfiles
+[ ! -d ~/bin ] && mkdir ~/bin
+[ ! -d ~/src ] && mkdir ~/src
+[ ! -d ~/prog ] && mkdir ~/prog
+[ ! -d ~/tmp ] && mkdir ~/tmp
+[ ! -d ~/.backup ] && mkdir ~/.backup
+[ ! -d ~/.trash ] && mkdir ~/.trash
 echo_aqua "ok."
 
 echo_aqua "(2/5) : Application Installation --------------------"
@@ -185,7 +185,7 @@ elif [ -x /usr/bin/apt ]; then
 	sudo apt install locales
 	sudo dpkg-reconfigure locales
 	sudo apt install perl w3m zsh clamav tmux less ntpdate rsync vim vim-common wget iputils-ping net-tools
-	sudo apt install cron-apt locales manpages-ja nmap netcat tcpdump fping atool lsof
+	sudo apt install cron-apt locales manpages-ja nmap tcpdump fping atool lsof
 	sudo apt install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
 	sudo apt install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
 	sudo apt install curl make nodejs make g++
