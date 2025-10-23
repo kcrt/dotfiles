@@ -8,7 +8,8 @@ import os
 def main():
     parser = argparse.ArgumentParser(description="Calculate the average file size in a ZIP archive.")
     parser.add_argument("zip_filepath", help="Path to the ZIP file.")
-    parser.add_argument("--min_size_mb", type=float, default=0, help="Minimum average size in MB to print the result.")
+    parser.add_argument("--min-size-mb", type=float, default=0, help="Minimum average size in MB to print the result.")
+    parser.add_argument("--ignore-smaller-than-mb", type=float, default=0, help="Ignore files smaller than this size (in MB) when calculating average.")
     args = parser.parse_args()
 
     if not os.path.exists(args.zip_filepath):
@@ -21,14 +22,17 @@ def main():
 
     total_size_bytes = 0
     num_files = 0
+    ignore_threshold_bytes = args.ignore_smaller_than_mb * 1024 * 1024
 
     try:
         with zipfile.ZipFile(args.zip_filepath, 'r') as zf:
             for member in zf.infolist():
                 # Skip directories
                 if not member.is_dir():
-                    total_size_bytes += member.file_size
-                    num_files += 1
+                    # Skip files smaller than the ignore threshold
+                    if member.file_size >= ignore_threshold_bytes:
+                        total_size_bytes += member.file_size
+                        num_files += 1
     except zipfile.BadZipFile:
         print(f"Error: Could not read ZIP file {args.zip_filepath}. It may be corrupted.")
         return

@@ -71,7 +71,7 @@ class IbikiMonitorApp:
         self.start_audio_processing()
 
         # --- Handle Closing ---
-        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.master.protocol( "WM_DELETE_WINDOW", self.on_closing)
 
         # --- Start GUI Update Loop ---
         self.master.after(GUI_UPDATE_INTERVAL_MS, self.update_graph)
@@ -127,7 +127,7 @@ class IbikiMonitorApp:
             self.wakeup_sound_data = sound.raw_data
             print(f"Wakeup sound loaded successfully ({len(self.wakeup_sound_data)} bytes).")
         except CouldntDecodeError:
-             print(f"Error: Could not decode wakeup sound file. Is ffmpeg installed and in PATH?", file=sys.stderr)
+             print("Error: Could not decode wakeup sound file. Is ffmpeg installed and in PATH?", file=sys.stderr)
              self.status_label.config(text="Error: Failed to load wakeup sound (decode).")
         except FileNotFoundError:
             print(f"Error: Wakeup sound file not found at {wakeup_path}", file=sys.stderr)
@@ -311,11 +311,16 @@ class IbikiMonitorApp:
             y1 = CANVAS_HEIGHT - bar_height
 
             # Determine color based on volume thresholds
-            if vol < 0.01: color = "green"
-            elif vol < 0.03: color = "cyan"
-            elif vol < 0.05: color = "yellow"
-            elif vol < 0.2: color = "orange"
-            else: color = "red"
+            if vol < 0.01:
+                color = "green"
+            elif vol < 0.03:
+                color = "cyan"
+            elif vol < 0.05:
+                color = "yellow"
+            elif vol < 0.2:
+                color = "orange"
+            else:
+                color = "red"
 
             bar_id = self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="black", tags="volume_bar")
             # Use lambda with default argument capture for correct data binding

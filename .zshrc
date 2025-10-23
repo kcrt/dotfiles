@@ -768,7 +768,11 @@ alias -g N='; OSNotify "shell" "operation finished"'
 
 # 思い出し用
 for f in `find ${DOTFILES}/sheet -maxdepth 1 -mindepth 1 -type f`; do
-	alias :howto${f:t}="cat `realpath $f`"
+	if [[ ${f:e} == "md" ]] && command -v glow &> /dev/null; then
+		alias :howto${f:t:r}="glow -p $f"
+	else
+		alias :howto${f:t:r}="cat $f"
+	fi
 done
 
 # scriptフォルダ

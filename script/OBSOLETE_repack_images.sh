@@ -37,6 +37,10 @@ while [[ $# -gt 0 ]]; do
             MAX_SIZE="${1#*=}"
             shift
             ;;
+        --resize-max)
+            RESIZE_MODE="max"
+            shift
+            ;;
         --quality=*)
             QUALITY="${1#*=}"
             shift
@@ -125,17 +129,15 @@ echo "Converting PNG to JPEG done."
 # Process JPEG files (resize and/or set quality) in a single operation
 if [[ "$RESIZE_MODE" == "half" ]]; then
     echo "Resizing images to 50% with quality $QUALITY..."
-    # find "$TEMP_DIR" -name "*.jpg" | parallel --progress -j 4 "magick mogrify -resize 50% -quality $QUALITY \"{}\""
     find "$TEMP_DIR" -name "*.jpg" | while read i; do
         echo "  $i"
-        magick mogrify -resize 50% -quality $QUALITY "$i"
+        magick mogrify -filter Lanczos -resize 50% -quality $QUALITY "$i"
     done
 elif [[ "$RESIZE_MODE" == "max" ]]; then
     echo "Resizing images to maximum dimension ${MAX_SIZE}x${MAX_SIZE} with quality $QUALITY..."
-    # find "$TEMP_DIR" -name "*.jpg" | parallel --progress -j 4 "magick mogrify -resize \"${MAX_SIZE}x${MAX_SIZE}>\" -quality $QUALITY \"{}\""
     find "$TEMP_DIR" -name "*.jpg" | while read i; do
         echo "  $i"
-        magick mogrify -resize "${MAX_SIZE}x${MAX_SIZE}>" -quality $QUALITY "$i"
+        magick mogrify -filter Lanczo -resize "${MAX_SIZE}x${MAX_SIZE}>" -quality $QUALITY "$i"
     done
 elif [[ "$QUALITY" != "90" ]]; then
     # Only set quality if it's different from the default and no resize is needed

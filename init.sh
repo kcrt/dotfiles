@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # --------------------------------------------------------------
 # Init script - set up my environment after OS clean installation
@@ -6,22 +7,32 @@
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)"
 # --------------------------------------------------------------
 
-brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost boost-python boxofsnoo-fairmount burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld mendeley mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl soundflower sourcetree sqlite suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim virtualbox vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm youtube-dl zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters )
+brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld zotero mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl blackhole-16ch sourcetree sqlite suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm yt-dlp zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters docker bat ripgrep rustup bun deno uv pipx )
 mas_packages=( 1206246482 1024640650 414855915 420874236 424389933 425424353 434290957 445189367 484757536 504700302 539883307 549083868 634148309 634159523 824171161 824183456 462054704 462058435 462062816 881418622 1547912640 921923693 451732904 1444383602 405399194 1342896380 504700302 414855915 441258766  928871589)
 
 # --------------------------------------------------------------
 
-function echo_color(){
-	# built-in echo in MacOS doesn't accept '-n' option
-	/bin/echo -n "[$1m"
+echo_color(){
+	printf "\033[%sm" "$1"
 	shift
-	/bin/echo "$@"
-	/bin/echo -n "[0m"
+	printf "%s\033[0m\n" "$*"
 }
-function echo_red(){ echo_color "31" "$@"; }
-function echo_brightred(){ echo_color "01;31" "$@"; }
-function echo_aqua(){ echo_color "36" "$@"; }
-function echo_brightaqua(){ echo_color "01;36" "$@"; }
+echo_red(){ echo_color "31" "$@"; }
+echo_brightred(){ echo_color "01;31" "$@"; }
+echo_aqua(){ echo_color "36" "$@"; }
+echo_brightaqua(){ echo_color "01;36" "$@"; }
+
+# Function to show whiptail selection dialog and return selected packages
+# Usage: selected=$(select_packages_dialog "Title" pkg_info_array[@])
+# Returns: space-separated list of selected packages
+select_packages_dialog(){
+	local title="$1"
+	shift
+	local pkg_info=("$@")
+
+	selected=$(whiptail --title "$title" --checklist "Please select packages to install." 0 0 0 "${pkg_info[@]}" 3>&1 1>&2 2>&3)
+	echo "${selected//\"/}"
+}
 
 # --------------------------------------------------------------
 
@@ -55,7 +66,7 @@ if [ "$ans" != "y" ] ; then
 fi
 
 echo_aqua "Testing 'sudo'..."
-if [ "$(sudo echo 'test')" != 'test' ] ; then
+if ! sudo -v ; then
 	echo "'sudo' failed. "
 	echo "Please re-check /etc/sudoers and try again."
 	exit
@@ -97,7 +108,7 @@ elif [ -x "$(which brew)" ]; then
 	echo_aqua "Gathering information of brew packages.... This will take a few minutes."
 	declare -a brew_info	# associative array doesn't work on macOS bash (because it's ver. 3)
 	for p in "${brew_packages[@]}"; do
-		if ! brew info "$p"; then
+		if ! brew info "$p" >/dev/null 2>&1; then
 			echo_red "$p is not available."
 		else
 			info=$(brew info "$p" | head -n2 | tail -n1)
@@ -107,8 +118,9 @@ elif [ -x "$(which brew)" ]; then
 		fi
 	done
 
-	selected=$(whiptail --title "Homebrew packages" --checklist "Please select packages to install." 0 0 0  "${brew_info[@]}" 3>&1 1>&2 2>&3)
-	selected=($(echo "$selected" |  sed s/'"'//g))
+	selected=$(select_packages_dialog "Homebrew packages" "${brew_info[@]}")
+	# shellcheck disable=SC2206
+	selected=($selected)
 	for p in "${selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
 		brew install "$p"
@@ -117,7 +129,7 @@ elif [ -x "$(which brew)" ]; then
 	echo "Do you want to install fonts? (Y/n)"
 	read -r ans
 	if [ "$ans" != "n" ] ; then
-		brew install homebrew/cask-fonts/font-fira-code
+		brew install font-fira-code
 		brew install font-ipaexfont
 	fi
 	
@@ -139,24 +151,25 @@ elif [ -x "$(which brew)" ]; then
 	declare -a mas_info	# associative array doesn't work on macOS bash (because it's ver. 3)
 	for p in "${mas_packages[@]}"; do
 		ret=$(mas info "$p")
-		if [ $? -ne 0 ]; then
+		if [ "$?" -ne 0 ]; then
 			echo_red "$p is not available."
 		else
 			info=$(echo "$ret" | head -n1)
-			mas_info+=( $p )
+			mas_info+=( "$p" )
 			mas_info[${#mas_info[*]}]="${info}"
 			mas_info+=( 1 )
 		fi
 	done
 
-	selected=$(whiptail --title "Mac App Store packages" --checklist "Please select packages to install." 0 0 0  "${mas_info[@]}" 3>&1 1>&2 2>&3)
-	selected=($(echo $selected |  sed s/'"'//g))
+	selected=$(select_packages_dialog "Mac App Store packages" "${mas_info[@]}")
+	# shellcheck disable=SC2206
+	selected=($selected)
 	for p in "${selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
 		mas install "$p"
 	done 
 
-elif [ $(uname) = "Darwin" ]; then
+elif [ "$(uname)" = "Darwin" ]; then
 	echo_aqua "Homebrew not found!"
 	echo_aqua "Please install homebrew first."
 	open "https://brew.sh"
@@ -177,16 +190,29 @@ elif [ -x /usr/bin/apt ]; then
 	sudo apt install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
 	sudo apt install curl make nodejs make g++
 	sudo apt install ffmpeg
-	sudo apt install unattended-upgrades
-	sudo dpkg-reconfigure -plow unattended-upgrades
-	echo_aqua "Please set e-mail address for information of unattended upgrades."
-	echo_aqua "And set Automatic-Reboot to true if required."
+	echo "Current hostname is: $(hostname)"
+	echo_aqua "Do you install and enable avahi-daemon? (y/N): "
 	read -r ans
-	sudo vim /etc/apt/apt.conf.d/50unattended-upgrades
+	if [ "$ans" = "y" ] ; then
+		sudo apt install avahi-daemon
+		sudo systemctl enable avahi-daemon
+		sudo systemctl start avahi-daemon
+	fi
+
+	echo_aqua "Do you want to set up unattended-upgrades? (y/N): "
+	read -r ans
+	if [ "$ans" = "y" ] ; then
+		sudo apt install unattended-upgrades apt-listchanges
+		sudo dpkg-reconfigure -plow unattended-upgrades
+		echo_aqua "Please set e-mail address for information of unattended upgrades."
+		echo_aqua "And set Automatic-Reboot to true if required."
+		read -r ans
+		sudo vim /etc/apt/apt.conf.d/50unattended-upgrades
+	fi
 	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "
 	read -r ans
 	if [ "$ans" = "y" ] ; then
-		sudo apt install ssmpt
+		sudo apt install ssmtp
 		sudo vim /etc/ssmtp/ssmtp.conf
 		echo_aqua "Test mail? (Your address): "
 		read -r ans
@@ -222,19 +248,6 @@ else
 	exit
 fi
 
-if [ -x "$(which pyenv)" ]; then
-	echo "pyenv:"
-	pyenv install --list
-	echo "Which environment do you want to install? (Package Name / n)"
-	read -r ans
-	if [ "$ans" != "n" ] ; then
-		eval "$(pyenv init -)"
-		pyenv install $ans
-	fi
-elif [ -x "$(which python3)" ]; then
-	python3 -m ensurepip --upgrade
-fi
-
 echo_aqua "(3/5) : Downloading and setting dot files -----------"
 if [ -f ~/.ssh/id_ed25519 ]; then
 	echo_aqua "key found."
@@ -242,18 +255,16 @@ else
 	echo_aqua "generation public/secret keys..."
 	ssh-keygen -t ed25519
 fi
-echo_aqua "Please add this public key to gitolite of kcrt.net and github"
+echo_aqua "Please add this public key to github"
 echo_aqua "-----"
 cat ~/.ssh/id_ed25519.pub
 echo_aqua "-----"
-echo_aqua "( add to keydir, and commit push to the repository )"
 echo_aqua "push Enter to proceed."
 read -r pause
 
 cd ~
 git clone --depth=1 https://github.com/kcrt/dotfiles.git
 ~/dotfiles/script/link_dots.sh
-
 
 # neovim
 mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
