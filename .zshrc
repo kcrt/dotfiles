@@ -165,6 +165,12 @@ if [[ "$OSTYPE" = darwin* ]]; then
 	fi
 fi
 
+# Add ~/.local/bin to PATH
+if [[ -d "$HOME/.local/bin" ]]; then
+	typeset -U path PATH
+	path=($path "$HOME/.local/bin")
+fi
+
 # ----- autoloadたち
 autoload -Uz is-at-least		# versionによる判定
 # autoload -U +X bashcompinit && bashcompinit
@@ -480,7 +486,6 @@ typeset -U path PATH
 [[ -d "$HOME/.cargo/bin" ]] && path=($path "$HOME/.cargo/bin")
 [[ -d "/snap/bin" ]] && path=($path "/snap/bin")
 [[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
-[[ -d "$HOME/.local/bin" ]] && path=($path "$HOME/.local/bin")
 
 # ----- 関数
 function _w3m(){

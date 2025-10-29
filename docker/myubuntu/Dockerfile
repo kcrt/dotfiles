@@ -34,7 +34,7 @@ RUN git clone --depth=1 https://github.com/kcrt/dotfiles.git /home/${USER}/dotfi
     chown -R ${USER}:${USER} /home/${USER}/dotfiles
 
 # Install sheldon (plugin manager for zsh) and set up dotfiles
-RUN curl --proto '=https' -fLsS https://rossmacarthur.github.io/sheldon/install.sh | bash && \
+RUN curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to /home/${USER}/.local/bin && \
     mkdir -p /home/${USER}/.config/sheldon && \
     ln -sf /home/${USER}/dotfiles/sheldon/plugins.toml /home/${USER}/.config/sheldon/plugins.toml && \
     /home/${USER}/.local/bin/sheldon lock --update && \
