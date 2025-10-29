@@ -319,9 +319,14 @@ if [[ -r ~/.zplug/init.zsh && -z "$CLAUDECODE" ]]; then
 	
 	# Install plugins if not already installed
 	if ! zplug check; then
-		printf "Install missing zplug plugins? [y/N]: "
-		if read -q; then
-			echo; zplug install
+		if [[ -n "$INSTALL_ZPLUG_PLUGIN" ]]; then
+			echo "Installing zplug plugins automatically..."
+			zplug install
+		else
+			printf "Install missing zplug plugins? [y/N]: "
+			if read -q; then
+				echo; zplug install
+			fi
 		fi
 	fi
 	

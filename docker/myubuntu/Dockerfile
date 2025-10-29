@@ -32,7 +32,11 @@ ENV TERM=xterm-256color
 ENV ZPLUG_HOME=/home/${USER}/.zplug
 ENV LANG=ja_JP.UTF-8
 ENV LC_ALL=ja_JP.UTF-8
+
 RUN git clone https://github.com/zplug/zplug $ZPLUG_HOME
 RUN ~/dotfiles/script/link_dots.sh
+
+# Install zplug plugins during build
+RUN INSTALL_ZPLUG_PLUGIN=1 /usr/bin/zsh -c "exit"
 
 CMD ["/usr/bin/zsh"]
