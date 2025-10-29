@@ -13,7 +13,8 @@ RUN apt-get update && \
         zsh \
         curl \
         vim \
-        locales && \
+        locales \
+        unzip && \
     rm -rf /var/lib/apt/lists/* && \
     locale-gen ja_JP.UTF-8 && \
     update-locale LANG=ja_JP.UTF-8
@@ -23,20 +24,20 @@ RUN useradd -m -s /usr/bin/zsh ${USER} && \
     echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER} && \
     chmod 0440 /etc/sudoers.d/${USER}
 
-RUN git clone https://github.com/kcrt/dotfiles.git /home/${USER}/dotfiles && \
-    chown -R ${USER}:${USER} /home/${USER}/dotfiles
-
 USER ${USER}
 WORKDIR /home/${USER}
 ENV TERM=xterm-256color
-ENV ZPLUG_HOME=/home/${USER}/.zplug
 ENV LANG=ja_JP.UTF-8
 ENV LC_ALL=ja_JP.UTF-8
 
-RUN git clone https://github.com/zplug/zplug $ZPLUG_HOME
-RUN ~/dotfiles/script/link_dots.sh
+RUN git clone --depth=1 https://github.com/kcrt/dotfiles.git /home/${USER}/dotfiles && \
+    chown -R ${USER}:${USER} /home/${USER}/dotfiles
 
-# Install zplug plugins during build
-RUN INSTALL_ZPLUG_PLUGIN=1 /usr/bin/zsh -c "exit"
+# Install sheldon (plugin manager for zsh) and set up dotfiles
+RUN curl --proto '=https' -fLsS https://rossmacarthur.github.io/sheldon/install.sh | bash && \
+    mkdir -p /home/${USER}/.config/sheldon && \
+    ln -sf /home/${USER}/dotfiles/sheldon/plugins.toml /home/${USER}/.config/sheldon/plugins.toml && \
+    /home/${USER}/.local/bin/sheldon lock --update && \
+    ~/dotfiles/script/link_dots.sh
 
 CMD ["/usr/bin/zsh"]

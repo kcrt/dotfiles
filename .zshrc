@@ -153,6 +153,10 @@ if [[ "$OSTYPE" = darwin* ]]; then
 	fi
 	alias brew="$BIN_HOMEBREW"
 
+	# Set up Homebrew environment early (needed for sheldon and other tools)
+	unset HOMEBREW_SHELLENV_PREFIX # dirty hack to prevent duplicate PATH entries
+	eval $($BIN_HOMEBREW shellenv)
+
 	# Load homebrew completions early to avoid conflicts
 	# Cache brew prefix to avoid multiple calls
 	local brew_prefix="$($BIN_HOMEBREW --prefix)"
@@ -293,62 +297,30 @@ function print_test(){
 	for i in {16..21} {21..16} ; do echo -en "\e[38;5;${i}m#\e[0m" ; done ; echo
 }
 
-# ----- zplug
-# Skip zplug entirely when in Claude Code
-if [[ -r ~/.zplug/init.zsh && -z "$CLAUDECODE" ]]; then
-	source ~/.zplug/init.zsh
-	
-	# Essential plugins
-	zplug "zsh-users/zsh-syntax-highlighting", defer:2
-	zplug "zsh-users/zsh-history-substring-search", defer:2
-	zplug "zsh-users/zsh-completions", defer:2
-	zplug "zsh-users/zsh-autosuggestions", defer:2
-	
-	# Conditional plugins
-	if [[ -n "$BIN_HOMEBREW" ]]; then
-		zplug "plugins/brew", from:oh-my-zsh, defer:2
-	fi
-	
-	# Navigation and utility plugins
-	zplug "rupa/z", use:z.sh, defer:2
-	zplug "b4b4r07/enhancd", use:init.sh, defer:2
-	zplug "momo-lab/zsh-abbrev-alias", defer:2
-	
-	end_of "zplug 1"
+# ----- sheldon (plugin manager)
+# Skip sheldon entirely when in Claude Code
+if [[ -x "$(command -v sheldon)" && -z "$CLAUDECODE" ]]; then
+	eval "$(sheldon source)"
+	end_of "sheldon"
+
+	# Environment variables for enhancd
 	export ENHANCED_FILTER=fzy:fzf:peco
-	
-	# Install plugins if not already installed
-	if ! zplug check; then
-		if [[ -n "$INSTALL_ZPLUG_PLUGIN" ]]; then
-			echo "Installing zplug plugins automatically..."
-			zplug install
-		else
-			printf "Install missing zplug plugins? [y/N]: "
-			if read -q; then
-				echo; zplug install
-			fi
-		fi
-	fi
-	
-	zplug load
-	end_of "zplug 2"
-	
+
 	# Configure zsh-history-substring-search keybindings
-	if zplug check "zsh-users/zsh-history-substring-search"; then
-		bindkey '^[[A' history-substring-search-up
-		bindkey '^[[B' history-substring-search-down
-		bindkey -M vicmd 'k' history-substring-search-up
-		bindkey -M vicmd 'j' history-substring-search-down
-	fi
-	
+	bindkey '^[[A' history-substring-search-up
+	bindkey '^[[B' history-substring-search-down
+	bindkey -M vicmd 'k' history-substring-search-up
+	bindkey -M vicmd 'j' history-substring-search-down
+
 	# Configure zsh-autosuggestions
-	if zplug check "zsh-users/zsh-autosuggestions"; then
-		ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-		ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
-		ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
-	fi
+	ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+	ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+	ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 else
-	echo "Please execute 'curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh' to install zplug"
+	if [[ -z "$(command -v sheldon)" ]]; then
+		echo "Please install sheldon: https://sheldon.cli.rs/Installation.html"
+		echo "For example: brew install sheldon"
+	fi
 	function abbrev-alias(){
 		# skip this command
 	}
@@ -881,12 +853,9 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	[[ -d "/usr/local/opt/llvm/bin" ]] && path=("/usr/local/opt/llvm/bin" $path)
 	[[ -d "$HOME/Library/Android/sdk/platform-tools" ]] && path=($path "$HOME/Library/Android/sdk/platform-tools")
 	
-	# Set up Homebrew environment
+	# Set up common library flags for compilation
+	# Note: Homebrew environment is already set up earlier in the file
 	if [[ -n "$BIN_HOMEBREW" ]] ; then
-		unset HOMEBREW_SHELLENV_PREFIX # dirty hack
-		eval $($BIN_HOMEBREW shellenv)
-		
-		# Set up common library flags for compilation
 		# Cache each library's prefix to avoid multiple brew calls
 		for libname in readline zlib openssl@3 portaudio; do
 			local lib_prefix="$($BIN_HOMEBREW --prefix $libname 2>/dev/null)"

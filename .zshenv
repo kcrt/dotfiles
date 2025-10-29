@@ -10,4 +10,8 @@ else
 	export DOTFILES="${HOME}/dotfiles"
 fi
 
+if [ -d "${DOTFILES}/sheldon" ]; then
+	export SHELDON_CONFIG_DIR="${DOTFILES}/sheldon"
+fi
+
 export GOPATH="$HOME/go"
