@@ -88,10 +88,10 @@ set whichwrap=[,],>,<,b,s		" 行末でLeft/Right 押しても次の行へ
 set timeout timeoutlen=100 ttimeoutlen=100
 map <F1> K
 map K \K
-map [A <Up>
-map [B <Down>
-map [C <Right>
-map [D <Left>
+" map <Esc>[A <Up>
+" map <Esc>[B <Down>
+" map <Esc>[C <Right>
+" map <Esc>[D <Left>
 inoremap jjj <ESC>jjj
 nnoremap <UP> gk
 nnoremap <DOWN> gj
@@ -160,7 +160,6 @@ nmap "*yy	V"*y
 if has("win32unix")				" cygwinの事です
 	nnoremap "*p :r!getclip<CR>
 	vnoremap "*y :!putclip<CR>u:echo 'copyed'<CR>
-	imap  <BS>
 elseif has("mac")
 	" do nothing. everything will work.
 elseif has("unix")
@@ -182,8 +181,8 @@ set diffopt+=algorithm:patience,indent-heuristic
 if &term =~ "screen.*"
 	augroup IsTerminal
 		autocmd!
-		autocmd VimLeave * silent! exe '!echo -n "k' .  &shell . '\\"'
-		autocmd BufEnter * silent! exe '!echo -n "k' . "vim:%:t" . '\\"'
+		autocmd VimLeave * silent! exe '!echo -n "\ek' .  &shell . '\e\\"'
+		autocmd BufEnter * silent! exe '!echo -n "\ek' . "vim:%:t" . '\e\\"'
 	augroup END
 endif
 
@@ -272,21 +271,18 @@ Plugin 'sudo.vim'						" Enable vi sudo:file.txt
 Plugin 'tpope/vim-surround'				" Enable additional text-object like s(
 " --- color scheme
 Plugin 'w0ng/vim-hybrid'				" Good color scheme based on Solarized
-Plugin 'vim-scripts/AnsiEsc.vim'		" apply escape sequense like: [36mHello[0m , :AnsiEsc
+Plugin 'vim-scripts/AnsiEsc.vim'		" apply escape sequense like: <Esc>[36mHello<Esc>[0m , :AnsiEsc
 Plugin 'chrisbra/Colorizer'				" :ColorHighLight
+" --- Encryption
+Plugin 'jamessan/vim-gnupg'
 " --- development
-" Plugin 'vim-syntastic/syntastic'		" file syntax error check
 Plugin 'thinca/vim-quickrun'
-Plugin 'Taglist.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
-" Plugin 'davidhalter/jedi-vim'
 Plugin 'majutsushi/tagbar'
 Plugin 'luochen1990/rainbow'
 Plugin 'rhysd/devdocs.vim'
-" Plugin 'zxqfl/tabnine-vim'
 Plugin 'editorconfig/editorconfig-vim'
-" Plugin 'Valloric/YouCompleteMe'
 " --- Language server protocol
 Plugin 'prabirshrestha/async.vim'
 Plugin 'prabirshrestha/vim-lsp'
@@ -302,23 +298,19 @@ Plugin 'hotwatermorning/auto-git-diff'
 " --- julia
 Plugin 'JuliaEditorSupport/julia-vim'
 " --- go
-" Plugin 'fatih/vim-go'
-" Plugin 'vim-jp/vim-go-extra'
 " --- LaTeX
-Plugin 'nuclearsandwich/vim-latex'
+Plugin 'lervag/vimtex'
 " --- HTML
 Plugin 'gregsexton/MatchTag'		" Highlight matched html/xml tag
 Plugin 'othree/html5.vim'
 Plugin 'alvan/vim-closetag'
 " --- JavaScript
-Plugin 'Galooshi/vim-import-js'
 Plugin 'MaxMEllon/vim-jsx-pretty'				" JSX highlight
 Plugin 'moll/vim-node'
 Plugin 'othree/es.next.syntax.vim'				" ES Stage-9 syntax highlight
 Plugin 'othree/javascript-libraries-syntax.vim'
 Plugin 'othree/yajs.vim'						" ES6 Highlight
 Plugin 'pangloss/vim-javascript'
-Plugin 'ternjs/tern_for_vim'
 " --- Dart, flatter
 Plugin 'dart-lang/dart-vim-plugin'
 " --- TypeScript
@@ -327,7 +319,7 @@ Plugin 'peitalin/vim-jsx-typescript'
 " --- CSV
 Plugin 'mechatroner/rainbow_csv'
 " --- Other programming
-Plugin 'vim-scripts/Vim-R-plugin'
+Plugin 'jalvesaq/Nvim-R'
 Plugin 'tpope/vim-endwise'
 Plugin 'sudar/vim-arduino-syntax'
 " --- Japanese
@@ -339,20 +331,10 @@ Plugin 'https://github.com/github/copilot.vim'
 call vundle#end()
 
 
-" ----- QuickRun and Syntastic -------------------
-let g:syntastic_enable_signs = 1
-"  let g:syntastic_auto_loc_list = 1
-let g:syntastic_always_populate_toc_list = 1
-let g:syntastic_loc_list_height = 8
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_python_flake8_args = '--ignore="E501,E741"'
-
+" ----- QuickRun -------------------
 " use clang and C++11 for default, if available
 let g:quickrun_config = {}
 if executable("clang++")
-	let g:syntastic_cpp_compiler = 'clang++'
-	let g:syntastic_cpp_compiler_options = '--std=c++14 --stdlib=libc++'
 	let g:quickrun_config['cpp/clang++11'] = {'cmdopt': '-O --std=c++11 --stdlib=libc++', 'type': 'cpp/clang++'}
 	let g:quickrun_config['cpp/clang++14'] = {'cmdopt': '-O --std=c++14 --stdlib=libc++', 'type': 'cpp/clang++'}
 	let g:quickrun_config['cpp/clang++17'] = {'cmdopt': '-O --std=c++17 --stdlib=libc++', 'type': 'cpp/clang++'}
@@ -360,7 +342,6 @@ if executable("clang++")
 endif
 " javascript and jsx
 let $NODE_ENV="development"
-let g:syntastic_javascript_checkers = ['eslint']
 let g:vim_jsx_pretty_colorful_config = 1
 let g:used_javascript_libs = 'react,redx'
 let b:javascript_lib_use_react = 1
@@ -370,14 +351,7 @@ autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescript.tsx
 if executable("stack")
 	let g:quickrun_config['haskell'] = {'command': 'stack', 'cmdopt': 'runghc'}
 endif
-
-" python
-" if executable("flake8")
-"	let g:syntastic_python_checkers = ["flake8"]
-" endif
-" let g:jedi#force_py_version = 3
 " go
-let g:syntastic_go_checkers = ['golint', 'go']
 let g:go_version_warning = 0
 " R
 let vimrplugin_assign=0
@@ -395,62 +369,6 @@ let g:lsp_signs_hint = {'text':'ℹ', 'icon': expand('~/etc/icons/win/msg_inform
 " let g:lsp_signs_warning = {'text': '‼'}
 " let g:lsp_signs_information = {'text':'ℹ'}
 " let g:lsp_signs_hint = {'text':'ℹ'}
-if executable('pyls')
-	au User lsp_setup call lsp#register_server({
-		\ 'name': 'pyls',
-		\ 'cmd': {server_info->['pyls']},
-		\ 'whitelist': ['python'],
-		\ })
-endif
-if executable('go-langserver')
-	au User lsp_setup call lsp#register_server({
-		\ 'name': 'go-langserver',
-		\ 'cmd': {server_info->['go-langserver', '-mode', 'stdio']},
-		\ 'whitelist': ['go'],
-		\ })
-endif
-if executable('clangd')
-	au User lsp_setup call lsp#register_server({
-		\ 'name': 'clangd',
-		\ 'cmd': {server_info->['clangd']},
-		\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp'],
-		\ })
-	autocmd FileType cpp setlocal omnifunc=lsp#complete
-endif
-if executable('flow')
-	au User lsp_setup call lsp#register_server({
-		\ 'name': 'flow',
-		\ 'cmd': {server_info->['flow', 'lsp']},
-		\ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), '.flowconfig'))},
-		\ 'whitelist': ['javascript', 'javascript.jsx'],
-		\ })
-endif
-if executable('julia')
-	autocmd User lsp_setup call lsp#register_server({
-		\ 'name': 'julia',
-		\ 'cmd': {server_info->['julia', '--startup-file=no', '--history-file=no', '-e', '
-		\       import LanguageServer;
-		\       import Pkg;
-		\       import StaticLint;
-		\       import SymbolServer;
-		\       env_path = dirname(Pkg.Types.Context().env.project_file);
-		\       server = LanguageServer.LanguageServerInstance(stdin, stdout, false, env_path, "", Dict());
-		\       server.runlinter = true;
-		\       run(server)
-		\	']},
-		\ 'whitelist': ['julia'],
-		\ })
-endif
-	
-" augroup Check_LSP
-" 	autocmd!
-" 	function! s:pyls_check()
-" 		if !executable('pyls')
-" 			echo "pyls not found: pip install python-language-server "
-" 		endif
-" 	endfunction
-" 	autocmd FileType python call s:pyls_check()
-" augroup END
 
 " ----- NERDTree ---------------------------------
 let NERDTreeShowHidden = 1

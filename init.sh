@@ -199,6 +199,18 @@ elif [ -x /usr/bin/apt ]; then
 		sudo systemctl start ssh
 		echo_aqua "SSH server installed and started. Current status:"
 		sudo systemctl status ssh --no-pager
+		echo_aqua ""
+		echo_aqua "Do you want to add GitHub keys from https://github.com/kcrt.keys"
+		echo_aqua "to authorized_keys? (y/N): "
+		echo_red "Be careful! This will allow kcrt to access this machine via SSH."
+		read -r ans
+		if [ "$ans" = "y" ] ; then
+			mkdir -p ~/.ssh
+			chmod 700 ~/.ssh
+			curl -fsSL https://github.com/kcrt.keys >> ~/.ssh/authorized_keys
+			chmod 600 ~/.ssh/authorized_keys
+			echo_aqua "GitHub keys from https://github.com/kcrt.keys added to authorized_keys."
+		fi
 	fi
 	echo_aqua "Do you install and enable avahi-daemon? (y/N): "
 	read -r ans
@@ -276,9 +288,9 @@ git clone --depth=1 https://github.com/kcrt/dotfiles.git
 ~/dotfiles/script/link_dots.sh
 
 # neovim
-mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
-ln -s ~/.vim "$XDG_CONFIG_HOME"/nvim
-ln -s ~/.vimrc "$XDG_CONFIG_HOME"/nvim/init.vim
+# mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
+# ln -s ~/.vim "$XDG_CONFIG_HOME"/nvim
+# ln -s ~/.vimrc "$XDG_CONFIG_HOME"/nvim/init.vim
 
 echo_aqua "(4/5) : Changing Default Shell ----------------------"
 chsh -s $(which zsh)
@@ -288,7 +300,7 @@ echo_aqua "Do you want to install vim plugin manager Vundle? (Y/n): "
 read -r ans
 if [ "$ans" != "n" ] ; then
 	mkdir ~/.vim
-	git clone https://github.com/gmarik/vundle.git ~/.vim/bundle/Vundle.git
+	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 	vim -c ':PluginInstall' -c ':qall'
 fi
 

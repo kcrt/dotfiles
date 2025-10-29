@@ -13,7 +13,7 @@
 if [[ -n "$BENCHMARK_ZSHRC" ]]; then
 	function date_in_ms(){
 		if [[ "$OSTYPE" = darwin* ]] && command -v udate >/dev/null 2>&1; then
-			udate +%s
+			udate +%s%3N
 		elif [[ "$OSTYPE" = darwin* ]]; then
 			date +%s000
 		else
@@ -41,8 +41,8 @@ fi
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
-if [ -f ${DOTFILES}/no_git/secrets.sh ]; then
-	source ${DOTFILES}/no_git/secrets.sh
+if [ -f ${DOTFILES}/no_git/secrets.sh.asc ]; then
+	eval "$(gpg -d ${DOTFILES}/no_git/secrets.sh.asc 2>/dev/null)"
 fi
 end_of "source"
 
@@ -68,6 +68,8 @@ hostcolors=(
 	lithium yellow
 	aluminum blue aluminum.local blue
 	beryllium yellow beryllium.local yellow
+	myubuntu green
+	mykali red
 )
 hostblacks=(
 	kcrt.net 001111
@@ -75,14 +77,19 @@ hostblacks=(
 	lithium 001111
 	aluminum 000011 aluminum.local 000011
 	beryllium 001111 beryllium.local 001111
+	myubuntu 000000
+	mykali 000000
 )
-if (( ${hostcolor[(i)${HOST}]} )); then
-	# Not found: Default color
-	hostcolor="magenda"
-	hostblack="000000"
-else
+# Check if HOST exists in hostcolors associative array
+# For associative arrays, check if the value is non-empty
+if [[ -n "${hostcolors[$HOST]}" ]]; then
+	# Found: Use the color defined for this host
 	hostcolor=$hostcolors[$HOST]
 	hostblack=$hostblacks[$HOST]
+else
+	# Not found: Use default color
+	hostcolor="magenta"
+	hostblack="000000"
 fi
 if [[ "$TERM" == (screen*|xterm*) && "$SSH_CONNECTION" == "" ]]; then
 	# Set palette color
@@ -145,10 +152,12 @@ if [[ "$OSTYPE" = darwin* ]]; then
 		export BIN_HOMEBREW="/usr/local/bin/brew"
 	fi
 	alias brew="$BIN_HOMEBREW"
-	
+
 	# Load homebrew completions early to avoid conflicts
-	if [[ -d "$($BIN_HOMEBREW --prefix)/share/zsh/site-functions" ]]; then
-		FPATH="$($BIN_HOMEBREW --prefix)/share/zsh/site-functions:${FPATH}"
+	# Cache brew prefix to avoid multiple calls
+	local brew_prefix="$($BIN_HOMEBREW --prefix)"
+	if [[ -d "$brew_prefix/share/zsh/site-functions" ]]; then
+		FPATH="$brew_prefix/share/zsh/site-functions:${FPATH}"
 	fi
 fi
 
@@ -162,15 +171,40 @@ if [[ -d "$HOME/.cargo" && -x "$HOME/.cargo/bin/rustc" ]]; then
 	fi
 fi
 if [[ $UID -ne 0 ]]; then
-	# Only regenerate completions once per day
+	# Regenerate completions once per day to improve shell startup performance
 	autoload -Uz compinit
 	if [[ -n "$ZSH_COMPDUMP" ]]; then
+		# If ZSH_COMPDUMP is already set, use
 		compinit -d "$ZSH_COMPDUMP"
 	else
-		ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump-${ZSH_VERSION}"
-		if [[ -f "$ZSH_COMPDUMP" && $(date +'%j') != $(stat -f '%Sm' -t '%j' "$ZSH_COMPDUMP") ]]; then
+		# Set default completion dump file path
+		ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump-zsh${ZSH_VERSION}"
+
+		# Regenerate completion dump if:
+		#  - File doesn't exist
+		#  - File was NOT modified today
+		local should_regenerate=false
+
+		if [[ ! -f "$ZSH_COMPDUMP" ]]; then
+			should_regenerate=true
+		else
+			local today=$(date +'%j')
+			local file_day
+			if [[ "$OSTYPE" = darwin* ]]; then
+				file_day=$(stat -f '%Sm' -t '%j' "$ZSH_COMPDUMP" 2>/dev/null)
+			else
+				file_day=$(stat -c '%y' "$ZSH_COMPDUMP" 2>/dev/null | date -f - +'%j' 2>/dev/null)
+			fi
+			if [[ "$today" != "$file_day" ]]; then
+				should_regenerate=true
+			fi
+		fi
+
+		if [[ "$should_regenerate" = true ]]; then
+			# Regenerate completion dump
 			compinit -d "$ZSH_COMPDUMP"
 		else
+			# Skip regeneration (-C flag skips security check for faster loading)
 			compinit -C -d "$ZSH_COMPDUMP"
 		fi
 	fi
@@ -723,15 +757,16 @@ abbrev-alias ccusage-live="npx ccusage@latest blocks --live -t 30000"
 
 abbrev-alias docker_busybox="docker run -it --rm busybox"
 abbrev-alias docker_busybox_mount_home="docker run -it --rm -v $HOME:/root busybox"
+abbrev-alias docker_busybox_mount_home_readonly="docker run -it --rm -v $HOME:/root:ro busybox"
 abbrev-alias docker_alpine="docker run -it --rm alpine"
 abbrev-alias docker_alpine_mount_home="docker run -it --rm -v $HOME:/root alpine"
+abbrev-alias docker_alpine_mount_home_readonly="docker run -it --rm -v $HOME:/root:ro alpine"
 abbrev-alias docker_ubuntu="docker run -it --rm ubuntu"
 abbrev-alias docker_ubuntu_x86="docker run -it --platform linux/amd64 --rm ubuntu"
 abbrev-alias docker_ubuntu_mount_home="docker run -it --rm -v $HOME:/root ubuntu"
 abbrev-alias docker_mykali="docker build --tag mykali ${DOTFILES}/docker/mykali/; docker run -it --rm --hostname='mykali' --name='mykali' -v ~/.ssh/:/home/$USER/.ssh/:ro -v ${DOTFILES}/:/home/$USER/dotfiles:ro mykali"
-abbrev-alias docker_myubuntu="docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v ~/.ssh/:/home/$USER/.ssh/:ro -v $HOME:/mnt/home myubuntu"
+abbrev-alias docker_myubuntu="nocorrect docker build --tag myubuntu ${DOTFILES}/docker/myubuntu/; docker run -it --rm --hostname='myubuntu' --name='myubuntu' -v $HOME:/container:ro -v $HOME/workspace:/workspace myubuntu"
 abbrev-alias docker_secretlint='docker run -v `pwd`:`pwd` -w `pwd` --rm -it secretlint/secretlint secretlint "**/*"'
-abbrev-alias docker_carbonyl='docker run -ti fathyb/carbonyl --rm '
 abbrev-alias docker_lazydocker='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -v /yourpath:/.config/jesseduffield/lazydocker lazyteam/lazydocker'
 
 export WINEPREFIX="$HOME/.wine"
@@ -847,10 +882,12 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		eval $($BIN_HOMEBREW shellenv)
 		
 		# Set up common library flags for compilation
+		# Cache each library's prefix to avoid multiple brew calls
 		for libname in readline zlib openssl@3 portaudio; do
-			if [[ -d "$($BIN_HOMEBREW --prefix $libname 2>/dev/null)" ]]; then
-				export LDFLAGS="-L$($BIN_HOMEBREW --prefix $libname)/lib $LDFLAGS"
-				export CFLAGS="-I$($BIN_HOMEBREW --prefix $libname)/include $CFLAGS"
+			local lib_prefix="$($BIN_HOMEBREW --prefix $libname 2>/dev/null)"
+			if [[ -d "$lib_prefix" ]]; then
+				export LDFLAGS="-L$lib_prefix/lib $LDFLAGS"
+				export CFLAGS="-I$lib_prefix/include $CFLAGS"
 			fi
 		done
 	fi
@@ -1014,6 +1051,7 @@ function CheckCommandTime_preexec(){
 
 }
 function CheckCommandTime_precmd(){
+	# Will execute before each prompt display
 
 	# --- notify long command
 	IsError=$?
@@ -1022,8 +1060,6 @@ function CheckCommandTime_precmd(){
 		d=`expr $d - $COMMAND_TIME`
 		# if the command takes more than 30 seconds, notify with terminal
 		if [[ "$d" -ge "30" ]] ; then
-			# if the command takes more than 30 minutes, notify with slack
-
 			# ignore zsh, tmux, ssh, mosh
 			if [[ "$COMMAND" =~ ^(zsh|tmux|ssh|mosh) ]]; then
 				return
@@ -1033,7 +1069,7 @@ function CheckCommandTime_precmd(){
 			#  $COMMAND without double quotes
 			#  First 20 character
 			local COMMAND_INFO=`echo $COMMAND | sed -e 's/^"//' -e 's/"$//' | cut -c 1-20`
-			if [[ IsError -ne 0 ]]; then
+			if [[ $IsError -ne 0 ]]; then
 				OSError "$COMMAND_INFO" "took $d seconds and finally failed."
 			else
 				OSNotify "$COMMAND_INFO" "took $d seconds and finally finished."
@@ -1063,12 +1099,18 @@ add-zsh-hook precmd  CheckCommandTime_precmd
 add-zsh-hook preexec CheckCommandTime_preexec
 end_of "hooks"
 
+# ===== Develop
 if [[ $OSTYPE = *darwin* ]] ; then
-	if [ -f $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh ]; then
-		source $($BIN_HOMEBREW --prefix)/opt/asdf/libexec/asdf.sh
-		export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
+	# mise (formerly rtx) - faster alternative to asdf
+	if command -v mise >/dev/null 2>&1; then
+		eval "$(mise activate zsh)"
+
+		# Note: RUBY_CONFIGURE_OPTS is disabled because brew --prefix is very slow (~20s)
+		# Uncomment only if you need to build Ruby from source:
+		# export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
 	fi
 fi
+end_of "mise"
 
 # Set up Perl paths if they exist
 [[ -d "$HOME/perl5/lib/perl5" ]] && export PERL5LIB=~/perl5/lib/perl5
