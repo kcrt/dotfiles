@@ -70,6 +70,7 @@ hostcolors=(
 	beryllium yellow beryllium.local yellow
 	myubuntu green
 	mykali red
+	aries yellow aries.local yello
 )
 hostblacks=(
 	kcrt.net 001111
@@ -79,6 +80,7 @@ hostblacks=(
 	beryllium 001111 beryllium.local 001111
 	myubuntu 000000
 	mykali 000000
+	aries 001111 aries.local 001111
 )
 # Check if HOST exists in hostcolors associative array
 # For associative arrays, check if the value is non-empty
@@ -1165,3 +1167,5 @@ fi
 if (which zprof > /dev/null 2>&1); then
 	zprof
 fi
+
+alias claude="/home/kcrt/.claude/local/claude"
