@@ -41,6 +41,7 @@ fi
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
+export GPG_TTY=$(tty)
 if [ -f ${DOTFILES}/no_git/secrets.sh.asc ]; then
 	eval "$(gpg -d ${DOTFILES}/no_git/secrets.sh.asc 2>/dev/null)"
 fi
@@ -50,7 +51,6 @@ end_of "source"
 export LANG=ja_JP.UTF-8
 export EDITOR="vim"
 export COLOR="tty"
-export GPG_TTY=$(tty)
 export PYTHONSTARTUP=${DOTFILES}/pythonrc.py
 export GOOGLE_APPLICATION_CREDENTIALS="`echo ~/secrets/kcrtjp-google-serviceaccount.json`"
 stty stop undef					# ^Sとかを無効にする
@@ -324,8 +324,12 @@ if [[ -x "$(command -v sheldon)" && -z "$CLAUDECODE" ]]; then
 	ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 else
 	if [[ -z "$(command -v sheldon)" ]]; then
-		echo "Please install sheldon: https://sheldon.cli.rs/Installation.html"
-		echo "For example: brew install sheldon"
+		echo "Please install sheldon for zsh plugins: https://sheldon.cli.rs/Installation.html"
+		if [[ "$OSTYPE" = darwin* ]]; then
+			echo "For example: brew install sheldon"
+		elif [[ "$OSTYPE" = linux* ]]; then
+			echo "For example: cargo bininstall sheldon"
+		fi
 	fi
 	function abbrev-alias(){
 		# skip this command
@@ -763,22 +767,20 @@ abbrev-alias :checkjpeg='find . -name "*.jpg" -or -name "*.JPG" -exec jpeginfo -
 abbrev-alias :howmanyfiles='find . -print | wc -l'
 abbrev-alias serve_http_here='python3 -m http.server'
 
-abbrev-alias openai_image='openai api image.create -n 1 -p'
-abbrev-alias openai_chatgpt='openai api chat_completions.create -m o1-preview --max-tokens 3500 -g user'
-function openai_whatisthisfile(){
-	FILENAME="$1"
-	FILESIZE=`wc -c < "$FILENAME"`
-	if [ $FILESIZE -ge 2048 ]; then
-		echo "File too large."
-	else
-		openai api chat_completions.create -m o1-preview --max-tokens 1000 -g user "$(cat <(echo "下記のファイルの内容を説明してください。"; echo '```'; cat "$1"; echo '```'; ))"
-	fi
-}
-abbrev-alias ollama-llama3.1='ollama run llama3.1:latest'
-abbrev-alias ollama-llama3.2='ollama run llama3.2:latest'
-abbrev-alias ollama-jp='ollama run 7shi/tanuki-dpo-v1.0'
+OLLAMA_MY_HEAVY_MODEL='gemma3:27b-it-qat'
+OLLAMA_MY_DEFAULT_MODEL='gemma3:12b-it-qat'
+OLLAMA_MY_FAST_MODEL='gemma3:4b-it-qat'
+OLLAMA_MY_VISION_MODEL='qwen3-vl:latest'
+OLLAMA_MY_OCR_MODEL='deepseek-ocr:latest'
 abbrev-alias ollama-update="ollama list | tail -n +2 | tr -s ' ' | cut -d ' ' -f1 | xargs -n1 ollama pull"
+abbrev-alias ollama-heavy-model="ollama run $OLLAMA_MY_HEAVY_MODEL"
+abbrev-alias ollama-default-model="ollama run $OLLAMA_MY_DEFAULT_MODEL"
+abbrev-alias ollama-fast-model="ollama run $OLLAMA_MY_FAST_MODEL"
+abbrev-alias ollama-vision-model="ollama run $OLLAMA_MY_VISION_MODEL Please describe the image:"
+abbrev-alias ollama-ocr-model="ollama run $OLLAMA_MY_OCR_MODEL"
+abbrev-alias How="noglob ollama run $OLLAMA_MY_DEFAULT_MODEL 'I am using zsh on macOS. I want to ask how to perform following operations on console. Please respond with simple answer. How'"
 
+abbrev-alias claude-git-commit='claude "/git-commit"'
 
 # global alias
 alias -g N='; OSNotify "shell" "operation finished"'
@@ -821,7 +823,16 @@ elif command -v bat &> /dev/null; then
 else
 	alias -s md='cat'
 fi
-alias -s docx='~/dotfiles/script/tomd_and_show.sh'
+if command -v doxx &> /dev/null; then
+	alias -s docx='doxx --images --color'
+else
+	alias -s docx='~/dotfiles/script/tomd_and_show.sh'
+fi
+if command -v xleak &> /dev/null; then
+	alias -s xlsx='xleak -i'
+	alias -s xls='xleak -i'
+	alias -s odt='xleak -i'
+fi
 
 
 # ----- コマンドライン引数
@@ -1100,8 +1111,8 @@ if [ -x /opt/homebrew/bin/difft ]; then
 fi
 
 # Set JAVA_HOME if zulu-17 is installed
-if [ -d /Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home ]; then
-	export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+if [ -d /Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home ]; then
+	export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home
 fi
 
 # --- Rust
@@ -1109,7 +1120,7 @@ alias cargo\ test="nocorrect cargo test"
 
 if [ -x "`which gh`" ]; then
 	# eval "$(gh copilot alias -- zsh)"
-	alias "??"="gh copilot suggest -t shell"
+	alias "??"="copilot -p"
 fi
 end_of "dev settings"
 
@@ -1154,5 +1165,3 @@ fi
 if (which zprof > /dev/null 2>&1); then
 	zprof
 fi
-
-alias claude="/Users/kcrt/.claude/local/claude"

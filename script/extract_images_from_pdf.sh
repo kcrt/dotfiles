@@ -35,14 +35,12 @@ EOF
 extract_images_from_pdf() {
     local pdf_file="$1"
     
-    # Check if PDF file is provided
     if [ -z "$pdf_file" ]; then
         echo "Error: No PDF file provided"
         echo "Usage: extract_images_from_pdf <pdf_file>"
         return 1
     fi
     
-    # Check if PDF file exists
     if [ ! -f "$pdf_file" ]; then
         echo "Error: PDF file not found - $pdf_file"
         return 1
@@ -60,7 +58,7 @@ extract_images_from_pdf() {
     
     # Extract images using pdfimages
     echo "Extracting images from $pdf_file..."
-    if pdfimages -all --print-filenames "$pdf_file" "$output_prefix"; then
+    if pdfimages -all -print-filenames "$pdf_file" "$output_prefix"; then
         echo "Image extraction completed successfully."
         return 0
     else

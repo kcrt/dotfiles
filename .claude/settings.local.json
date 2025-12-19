@@ -6,5 +6,6 @@
       "Bash(/Users/kcrt/dotfiles/script/kana_to_roman.py)"
     ],
     "deny": []
-  }
+  },
+  "outputStyle": "default"
 }

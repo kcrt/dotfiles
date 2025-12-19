@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "pillow",
+#     "tqdm",
+# ]
+# ///
 
 import glob
 from statistics import median
@@ -8,7 +15,7 @@ from PIL import Image
 (width, height) = (-1, -1)
 pixlist = []
 
-for filename in tqdm(glob.glob("*.jpg"), ascii=True):
+for filename in tqdm(glob.glob("*.png"), ascii=True):
     print("loading " + filename)
     im = Image.open(filename)
     if(width == -1 or height == -1):

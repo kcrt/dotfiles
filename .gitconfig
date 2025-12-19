@@ -66,6 +66,7 @@
 	edit-history = rebase -i HEAD~10
 	commit-without-sign = commit --no-gpg-sign
 	shallow-clone = clone --depth=1
+	commit-claude = "!claude '/git-commit'"
 [diff "totext"]
 	textconv = ~/dotfiles/script/totext.sh
 [diff "tomd"]

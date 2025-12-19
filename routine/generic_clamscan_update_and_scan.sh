@@ -7,7 +7,7 @@ freshclam
 
 OSNotify "Scanning system. This may take a while..."
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
+    # clamscan --infected --cross-fs=no --recursive ~/Downloads # ~/Documents ~/Desktop
 else
     clamscan --infected --cross-fs=no --recursive "$HOME"
 fi

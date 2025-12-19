@@ -15,3 +15,8 @@ if [ -d "${DOTFILES}/sheldon" ]; then
 fi
 
 export GOPATH="$HOME/go"
+
+# Activate mise for all shells (including non-interactive)
+if command -v mise &> /dev/null; then
+	eval "$(mise activate zsh)"
+fi

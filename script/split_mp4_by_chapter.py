@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
 
 # Split mp4 audio file into multiple files by chapters
 
@@ -9,9 +9,7 @@ import subprocess
 import re
 import argparse
 from typing import Any
-
-from attr import dataclass
-from nbformat import from_dict
+from dataclasses import dataclass
 
 @dataclass
 class Format:
