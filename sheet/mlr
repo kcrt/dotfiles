@@ -1,0 +1,13 @@
+mlr --csv cut -f name,age,email input.csv
+mlr --csv filter '10 <= $age && $age <= 30' input.csv
+mlr --csv filter '$name =~ "Takahashi" || $name == "Kyohei"' input.csv
+mlr --csv filter 'is_present($email)' input.csv	# 欠損の有無
+mlr --csv put '$bmi = $weight / ($height * $height)' input.csv
+mlr --csv sort -f|-r age input.csv	# -f: 昇順, -r: 降順
+mlr --csv filter '$age >= 20' \
+	then cut -f name,age,department \
+	then sort -f age \
+	input.csv
+mlr --csv rename old_name,new_name input.csv
+
+mlr --c2j cat input.csv > output.json (CSV -> JSON) # --cst: CSV -> TSV

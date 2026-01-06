@@ -1,36 +1,59 @@
 #!/usr/bin/env Rscript
 
-# Data Analysis Script for Excel File
-# This script explores the structure and contents of Excel files
-# Usage: Rscript tidydata_to_md <excel_file_path>
+# Data Analysis Script for Excel and CSV Files
+# This script explores the structure and contents of Excel and CSV files
+# Usage: Rscript tidydata_to_md <file_path>
 
 # Load required libraries
 suppressPackageStartupMessages({
   library(tidyverse)
   library(readxl)
+  library(readr)
 })
 
-# Function to safely discover Excel file structure
-discover_excel_structure <- function(file_path) {
+# Function to detect file type
+detect_file_type <- function(file_path) {
+  ext <- tolower(tools::file_ext(file_path))
+  if (ext %in% c("xlsx", "xls")) {
+    "excel"
+  } else if (ext == "csv") {
+    "csv"
+  } else {
+    stop("Unsupported file type: ", ext, ". Supported types: xlsx, xls, csv")
+  }
+}
+
+# Function to safely discover file structure
+discover_file_structure <- function(file_path, file_type) {
   tryCatch({
-    # Get all sheet names
-    sheet_names <- excel_sheets(file_path)
-    cat("Found", length(sheet_names), "sheet(s):\n", file = stderr())
-    for (i in seq_along(sheet_names)) {
-      cat(sprintf("  %d. %s\n", i, sheet_names[i]), file = stderr())
+    if (file_type == "csv") {
+      # CSV files have a single "sheet" (the file itself)
+      sheet_names <- "Data"
+      cat("CSV file detected (single table)\n", file = stderr())
+    } else {
+      # Get all sheet names for Excel files
+      sheet_names <- excel_sheets(file_path)
+      cat("Found", length(sheet_names), "sheet(s):\n", file = stderr())
+      for (i in seq_along(sheet_names)) {
+        cat(sprintf("  %d. %s\n", i, sheet_names[i]), file = stderr())
+      }
     }
     sheet_names
   }, error = function(e) {
-    cat("Error accessing Excel file:", e$message, "\n", file = stderr())
+    cat("Error accessing file:", e$message, "\n", file = stderr())
     NULL
   })
 }
 
-# Function to analyze a single sheet
-analyze_sheet <- function(file_path, sheet_name) {
+# Function to analyze a single sheet or CSV file
+analyze_sheet <- function(file_path, sheet_name, file_type) {
   tryCatch({
-    # Read the sheet
-    data <- read_excel(file_path, sheet = sheet_name)
+    # Read the data based on file type
+    if (file_type == "csv") {
+      data <- read_csv(file_path, show_col_types = FALSE)
+    } else {
+      data <- read_excel(file_path, sheet = sheet_name)
+    }
 
     # Basic information
     sheet_info <- list(
@@ -56,8 +79,8 @@ analyze_sheet <- function(file_path, sheet_name) {
 
     list(info = sheet_info)
   }, error = function(e) {
-    cat("Error reading sheet", sheet_name, ":", e$message, "\n",
-        file = stderr())
+    cat("Error reading", ifelse(file_type == "csv", "CSV file", "sheet"),
+        sheet_name, ":", e$message, "\n", file = stderr())
     NULL
   })
 }
@@ -97,23 +120,28 @@ generate_sheet_summary <- function(sheet_data, sheet_name) {
 
 # Main analysis function
 main_analysis <- function(file_path) {
-  cat("=== Excel File Structure Analysis ===\n\n", file = stderr())
+  cat("=== Data File Structure Analysis ===\n\n", file = stderr())
   cat("Analyzing file:", file_path, "\n\n", file = stderr())
 
-  # Discover Excel structure
-  sheet_names <- discover_excel_structure(file_path)
+  # Detect file type
+  file_type <- detect_file_type(file_path)
+  cat("File type:", toupper(file_type), "\n\n", file = stderr())
+
+  # Discover file structure
+  sheet_names <- discover_file_structure(file_path, file_type)
 
   if (is.null(sheet_names)) {
     cat("Analysis terminated due to file access error.\n", file = stderr())
     invisible(NULL)
   } else {
-    # Analyze each sheet
+    # Analyze each sheet (or the single CSV table)
     all_sheets <- list()
     sheet_summaries <- list()
 
     for (sheet_name in sheet_names) {
-      cat("\nAnalyzing sheet:", sheet_name, "...\n", file = stderr())
-      sheet_data <- analyze_sheet(file_path, sheet_name)
+      cat("\nAnalyzing", ifelse(file_type == "csv", "data", "sheet"),
+          ":", sheet_name, "...\n", file = stderr())
+      sheet_data <- analyze_sheet(file_path, sheet_name, file_type)
 
       if (!is.null(sheet_data)) {
         all_sheets[[sheet_name]] <- sheet_data
@@ -131,6 +159,7 @@ main_analysis <- function(file_path) {
     # Return comprehensive results
     list(
       file_path = file_path,
+      file_type = file_type,
       sheet_names = sheet_names,
       sheet_data = all_sheets,
       sheet_summaries = sheet_summaries
@@ -144,12 +173,19 @@ generate_markdown_content <- function(results) {
     ""
   } else {
     # Create markdown content
+    file_type_label <- ifelse(results$file_type == "csv",
+                              "CSV file", "Excel file")
+    sheet_label <- ifelse(results$file_type == "csv",
+                          "table", "sheet(s)")
+
     md_content <- paste0(
       "# Data Structure Analysis\n\n",
       "**File:** ", results$file_path, "\n",
+      "**File Type:** ", toupper(results$file_type), "\n",
       "**Analysis Date:** ", Sys.Date(), "\n\n",
       "## Overview\n\n",
-      "The Excel file contains ", length(results$sheet_names), " sheet(s):\n"
+      "The ", file_type_label, " contains ", length(results$sheet_names),
+      " ", sheet_label, ":\n"
     )
 
     for (i in seq_along(results$sheet_names)) {
@@ -185,8 +221,9 @@ if (!interactive()) {
   args <- commandArgs(trailingOnly = TRUE)
   
   if (length(args) == 0) {
-    cat("Usage: Rscript analyze_datafile.R <excel_file_path>\n",
+    cat("Usage: Rscript tidydata_to_md.R <file_path>\n",
         file = stderr())
+    cat("Supported formats: .xlsx, .xls, .csv\n", file = stderr())
     quit(status = 1)
   }
   

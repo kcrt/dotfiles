@@ -132,8 +132,25 @@ def generate_image(
             "Try increasing timeout with --timeout option."
         )
     except requests.RequestException as e:
-        if hasattr(e, 'response') and e.response is not None and hasattr(e.response, 'text'):
-            error_msg = f"API request failed: {e.response.text}"
+        if hasattr(e, 'response') and e.response is not None:
+            # Try to parse JSON error response for detailed information
+            try:
+                error_data = e.response.json()
+                if 'error' in error_data:
+                    error_info = error_data['error']
+                    error_msg = "Failed to generate image:\n\n"
+                    error_msg += f"Status Code: {e.response.status_code}\n"
+                    error_msg += f"Error Type: {error_info.get('type', 'N/A')}\n"
+                    error_msg += f"Message: {error_info.get('message', 'N/A')}\n"
+                    if 'param' in error_info and error_info['param']:
+                        error_msg += f"Parameter: {error_info['param']}\n"
+                    if 'code' in error_info and error_info['code']:
+                        error_msg += f"Code: {error_info['code']}\n"
+                else:
+                    error_msg = f"API request failed: {e.response.text}"
+            except Exception:
+                # Fallback if JSON parsing fails
+                error_msg = f"API request failed: {e.response.text}"
         else:
             error_msg = f"API request failed: {str(e)}"
         raise requests.RequestException(error_msg)
@@ -279,8 +296,25 @@ def edit_image(
             "Try increasing timeout with --timeout option."
         )
     except requests.RequestException as e:
-        if hasattr(e, 'response') and e.response is not None and hasattr(e.response, 'text'):
-            error_msg = f"API request failed: {e.response.text}"
+        if hasattr(e, 'response') and e.response is not None:
+            # Try to parse JSON error response for detailed information
+            try:
+                error_data = e.response.json()
+                if 'error' in error_data:
+                    error_info = error_data['error']
+                    error_msg = "Failed to generate image:\n\n"
+                    error_msg += f"Status Code: {e.response.status_code}\n"
+                    error_msg += f"Error Type: {error_info.get('type', 'N/A')}\n"
+                    error_msg += f"Message: {error_info.get('message', 'N/A')}\n"
+                    if 'param' in error_info and error_info['param']:
+                        error_msg += f"Parameter: {error_info['param']}\n"
+                    if 'code' in error_info and error_info['code']:
+                        error_msg += f"Code: {error_info['code']}\n"
+                else:
+                    error_msg = f"API request failed: {e.response.text}"
+            except Exception:
+                # Fallback if JSON parsing fails
+                error_msg = f"API request failed: {e.response.text}"
         else:
             error_msg = f"API request failed: {str(e)}"
         raise requests.RequestException(error_msg)

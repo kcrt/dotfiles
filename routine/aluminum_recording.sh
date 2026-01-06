@@ -33,15 +33,15 @@ fi
 
 # Start backup of recording files
 if [[ -d /Volumes/Private/Recording/ ]]; then
-    n=`ls $HOME/nosync/RecordingToSend/*.MP3 | wc -l`
+    n=`ls /Volumes/nosync/RecordingToSend/*.MP3 | wc -l`
     echo "There are $n mp3 file(s)."
     if [[ "$n" -ge 1 ]]; then
-        zmv -v "$HOME/nosync/RecordingToSend/*_(*)_(*)A0.MP3" '/Volumes/Private/Recording/Recorder/$1_$2.MP3'
+        zmv -v "/Volumes/nosync/RecordingToSend/*_(*)_(*)A0.MP3" '/Volumes/Private/Recording/Recorder/$1_$2.MP3'
     fi
-    n=`ls $HOME/nosync/RecordingToSend/*.m4a | wc -l`
+    n=`ls /Volumes/nosync/RecordingToSend/*.m4a | wc -l`
     echo "There are $n m4a file(s)."
     if [[ "$n" -ge 1 ]]; then
-        for m4afile in ~/nosync/RecordingToSend/*.m4a; do
+        for m4afile in /Volumes/nosync/RecordingToSend/*.m4a; do
             RECORDINGDATE=`ffprobe -loglevel quiet -of json -show_entries stream "$m4afile" | jq -r '.streams[0].tags.creation_time' | cut -c 1-19 | sed 's/:/-/g'`
             mv -v "$m4afile" "/Volumes/Private/Recording/VoiceMemo/${RECORDINGDATE}_${m4afile:t}"
         done

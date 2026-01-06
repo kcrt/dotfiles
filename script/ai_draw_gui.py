@@ -419,7 +419,25 @@ class ImageGeneratorApp:
             json=payload,
             timeout=timeout
         )
-        response.raise_for_status()
+
+        # Enhanced error handling with detailed API response
+        if not response.ok:
+            error_detail = f"HTTP {response.status_code}: {response.reason}"
+            try:
+                error_json = response.json()
+                if "error" in error_json:
+                    error_info = error_json["error"]
+                    if isinstance(error_info, dict):
+                        error_msg = error_info.get("message", str(error_info))
+                        error_type = error_info.get("type", "unknown")
+                        error_detail = f"HTTP {response.status_code}: {error_msg} (type: {error_type})"
+                    else:
+                        error_detail = f"HTTP {response.status_code}: {error_info}"
+            except Exception:
+                # If we can't parse JSON, include raw response text
+                error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
+
+            raise requests.exceptions.HTTPError(error_detail, response=response)
 
         data = response.json()
         if "data" not in data:
@@ -483,7 +501,26 @@ class ImageGeneratorApp:
                 files=files,
                 timeout=timeout
             )
-            response.raise_for_status()
+
+            # Enhanced error handling with detailed API response
+            if not response.ok:
+                error_detail = f"HTTP {response.status_code}: {response.reason}"
+                try:
+                    error_json = response.json()
+                    if "error" in error_json:
+                        error_info = error_json["error"]
+                        if isinstance(error_info, dict):
+                            error_msg = error_info.get("message", str(error_info))
+                            error_type = error_info.get("type", "unknown")
+                            error_detail = f"HTTP {response.status_code}: {error_msg} (type: {error_type})"
+                        else:
+                            error_detail = f"HTTP {response.status_code}: {error_info}"
+                except Exception:
+                    # If we can't parse JSON, include raw response text
+                    error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
+
+                raise requests.exceptions.HTTPError(error_detail, response=response)
+
         finally:
             for _, file_tuple in files:
                 if hasattr(file_tuple[1], 'close'):

@@ -73,6 +73,8 @@ if [[ -d /Volumes/Backup/ ]]; then
     backup_directory_rsync ~/Zotero/ Zotero
     OSNotify "Mail -> Qnap"
     backup_directory_rsync ~/Library/Mail/ Mail
+    OSNotify "nosync -> Qnap"
+    backup_directory_rsync /Volumes/nosync/ nosync
 
     
     # Because Parallels disk images are extremely large, we use a different method.

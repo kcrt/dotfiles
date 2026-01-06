@@ -101,6 +101,7 @@ div.gpt-ad{
 }
 
 /* twitter  */
+/*
 article[data-testid="tweet"]:has([data-testid="placementTracking"]) {
     background-color: #111 !important;
     border: 1px solid #e1e8ed !important;
@@ -144,7 +145,7 @@ div[dir="ltr"]:contains("プロモーション") {
     font-weight: bold !important;
     font-size: 12px !important;
     display: inline-block !important;
-}
+}*/
 
 /* やらかし防止策 */
 /* 悲しい過去に基づいている */

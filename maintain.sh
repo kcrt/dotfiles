@@ -57,7 +57,6 @@ case $HOST in
 		
 		OSNotify "Cleaning Caches..."
 		hdfreebefore=`df -h / | grep / | awk '{print $4}'`
-		cd ~/prog
 		cd ~
 		rm -rf ~/Library/Developer/Xcode/DerivedData/*
 		rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*
@@ -65,10 +64,12 @@ case $HOST in
 		rm -rf ~/Library/Caches/com.apple.dt.Xcode/*
 		rm -rf ~/Library/Developer/CoreSimulator/Caches/dyld/*
 		xcrun simctl delete unavailable
-		brew cleanup
-		brew cleanup -s
+		brew autoremove
+		brew cleanup -s --prune=1
 		rm -rf /Users/kcrt/Library/Caches/Cypress/*
 		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
+		nix-collect-garbage -d && nix-store --optimise
+		pip3 cache purge
 		OSNotify "Cleaned. Free space: $hdfreebefore -> $hdfreeafter"
 
 		

@@ -740,7 +740,7 @@ abbrev-alias eee='noglob zmv -v "([a-e|s|g|x])(*\(*\) \[*\]*).zip" "/Volumes/eee
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
 abbrev-alias pdb="`which env` python -m pdb"
-abbrev-alias ccusage-live="npx ccusage@latest blocks --live -t 30000"
+abbrev-alias ots="pipx run --spec opentimestamps-client ots"
 # abbrev-alias gemini="npx https://github.com/google-gemini/gemini-cli"
 
 abbrev-alias docker_busybox="docker run -it --rm busybox"
@@ -806,7 +806,7 @@ abbrev-alias dirsizeinbyte="find . -type f -print -exec wc -c {} \; | awk '{ sum
 abbrev-alias finddups="find * -type f -exec shasum \{\} \; | sort | tee /tmp/shasumlist | cut -d' ' -f 1 | uniq -d > /tmp/duplist; while read DUPID; do grep \$DUPID /tmp/shasumlist; done < /tmp/duplist"
 abbrev-alias iconv-nfdtonfc="iconv -f UTF-8-MAC -t UTF-8"
 abbrev-alias iconv-nfctonfd="iconv -f UTF-8 -t UTF-8-MAC"
-abbrev-alias verynice="nice -n 20"
+abbrev-alias verynice="nice -n 20 "
 
 # ----- suffix alias
 alias -s exe='wine_gameportingkit'
@@ -834,6 +834,14 @@ if command -v xleak &> /dev/null; then
 	alias -s xlsx='xleak -i'
 	alias -s xls='xleak -i'
 	alias -s odt='xleak -i'
+fi
+if command -v Rscript &> /dev/null; then
+	alias -s R='Rscript'
+	function render_rmarkdown_and_open(){
+		Rscript -e "rmarkdown::render('$1')"
+		browseURL("${1:r}.html")
+	}
+	alias -s Rmd='render_rmarkdown_and_open'
 fi
 
 
