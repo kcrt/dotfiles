@@ -325,7 +325,7 @@ if [[ -x "$(command -v sheldon)" && -z "$CLAUDECODE" ]]; then
 	ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 	ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 else
-	if [[ -z "$(command -v sheldon)" ]]; then
+	if [[ -x "$(command -v sheldon)" ]]; then
 		echo "Please install sheldon for zsh plugins: https://sheldon.cli.rs/Installation.html"
 		if [[ "$OSTYPE" = darwin* ]]; then
 			echo "For example: brew install sheldon"
