@@ -49,6 +49,7 @@ DEFAULT_EXCLUDES = [
     "/proc", "/sys", "/dev", "/run", "/tmp", "/var/tmp", "/var/cache", "/var/log",
     # macOS specific
     "/System", "/Library", "/private/var", "/.Spotlight-V100", "/.fseventsd", "/.Trashes",
+    "~/Library/CloudStorage/",
 
     # Version control
     "**/.git", "**/.svn", "**/.hg",
@@ -453,9 +454,8 @@ Examples:
     )
     parser.add_argument(
         'paths',
-        nargs='*',
-        default=[str(Path.home())],
-        help='Directories to scan (default: ~)'
+        nargs='+',
+        help='Directories to scan (at least one required)'
     )
     parser.add_argument(
         '--version',

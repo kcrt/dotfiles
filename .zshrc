@@ -330,7 +330,7 @@ else
 		if [[ "$OSTYPE" = darwin* ]]; then
 			echo "For example: brew install sheldon"
 		elif [[ "$OSTYPE" = linux* ]]; then
-			echo "For example: cargo bininstall sheldon"
+			echo "For example: cargo binstall sheldon"
 		fi
 	fi
 	function abbrev-alias(){
@@ -1175,5 +1175,3 @@ fi
 if (which zprof > /dev/null 2>&1); then
 	zprof
 fi
-
-alias claude="/home/kcrt/.claude/local/claude"
