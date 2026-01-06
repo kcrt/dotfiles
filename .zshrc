@@ -375,6 +375,8 @@ if [[ "$TERM_PROGRAM" = "vscode" ]]; then
 	SUBSTLV=$[SUBSTLV-3]
 elif [[ -n "$TMUX" ]]; then
 	SUBSTLV=$[SUBSTLV-1]
+elif [[ -n "$ZELLIJ" ]]; then
+	SUBSTLV=$[SUBSTLV-1]
 fi
 if [[ $SUBSTLV -gt 1 ]]; then
 	for (( i=2; i<=$SUBSTLV; i++ )); do
