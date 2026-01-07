@@ -7,7 +7,7 @@ set -e
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)"
 # --------------------------------------------------------------
 
-brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld zotero mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl blackhole-16ch sourcetree sqlite suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm yt-dlp zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters docker bat ripgrep rustup bun deno uv pipx )
+brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld zotero mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl blackhole-16ch sourcetree sqlite stow suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm yt-dlp zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters docker bat ripgrep rustup bun deno uv pipx )
 mas_packages=( 1206246482 1024640650 414855915 420874236 424389933 425424353 434290957 445189367 484757536 504700302 539883307 549083868 634148309 634159523 824171161 824183456 462054704 462058435 462062816 881418622 1547912640 921923693 451732904 1444383602 405399194 1342896380 504700302 414855915 441258766  928871589)
 
 # --------------------------------------------------------------
@@ -285,7 +285,8 @@ read -r pause
 
 cd ~
 git clone --depth=1 https://github.com/kcrt/dotfiles.git
-~/dotfiles/script/link_dots.sh
+cd ~/dotfiles
+stow R asdf git mutt nethack screen tmux vim zsh cloudshell
 
 # neovim
 # mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
