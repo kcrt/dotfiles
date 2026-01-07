@@ -311,9 +311,6 @@ if [[ -x "$(command -v sheldon)" && -z "$CLAUDECODE" ]]; then
 	eval "$(sheldon source)"
 	end_of "sheldon"
 
-	# Environment variables for enhancd
-	export ENHANCED_FILTER=fzy:fzf:peco
-
 	# Configure zsh-history-substring-search keybindings
 	bindkey '^[[A' history-substring-search-up
 	bindkey '^[[B' history-substring-search-down
@@ -337,6 +334,15 @@ else
 		# skip this command
 	}
 fi
+
+# ----- zoxide (smarter cd command)
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh --cmd cd)"
+	# --cmd cd: make zoxide override cd command (same as `alias cd='zoxide`, but better`)
+else
+	echo "Warning: zoxide is not installed. Use brew or cargo to install zoxide."
+fi
+end_of "zoxide"
 
 # ----- Version Control(svn, git)のブランチなどを表示
 RPROMPT=""
@@ -741,7 +747,7 @@ abbrev-alias clang++20='clang++ -O --std=c++20 -Wall --pedantic-errors --stdlib=
 abbrev-alias eee='noglob zmv -v "([a-e|s|g|x])(*\(*\) \[*\]*).zip" "/Volumes/eee/comics/\${(U)1}/\$2.zip"'
 abbrev-alias textlintjp="textlint --preset preset-japanese --rule spellcheck-tech-word --rule joyo-kanji --rule @textlint-rule/textlint-rule-no-unmatched-pair"
 abbrev-alias decryptpdf="gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=unencrypted.pdf -c 3000000 setvmthreshold -f"
-abbrev-alias pdb="`which env` python -m pdb"
+abbrev-alias pdb="env python -m pdb"
 abbrev-alias ots="pipx run --spec opentimestamps-client ots"
 # abbrev-alias gemini="npx https://github.com/google-gemini/gemini-cli"
 
@@ -960,7 +966,7 @@ else
 	alias :tailf_apachelog='sudo tail -f /var/log/apache2/error.log /var/log/apache2/access.log | ccze'
 fi
 
-# ----- ssh and vscode
+# ----- ssh, remote ls, and vscode
 # `code_<hostname> <path>` to run `code --remote ssh-remote+<hostname> <path>`
 # Analyze ~/.ssh/config to get the hostname
 if [[ -f ~/.ssh/config ]]; then
@@ -970,6 +976,9 @@ if [[ -f ~/.ssh/config ]]; then
 			continue
 		fi
 		eval "alias code_$host=\"code --remote ssh-remote+$host\""
+		eval "alias ls_$host=\"ssh $host ls\""
+		eval "alias ll_$host=\"ssh $host ls -l \""
+		eval "alias la_$host=\"ssh $host ls -a \""
 	done
 fi
 
@@ -1019,7 +1028,7 @@ function ShowTitle_preexec(){
 		ls|pwd)
 			Title=`dirs -p | sed -e"1p" -e"d"`
 			;;
-		cd|__enhancd::cd)
+		cd|z|_z)
 			Title=$cmd[2]
 			;;
 		sudo)
@@ -1130,17 +1139,23 @@ fi
 # --- Rust
 alias cargo\ test="nocorrect cargo test"
 
-if [ -x "`which gh`" ]; then
+if command -v gh &> /dev/null; then
 	# eval "$(gh copilot alias -- zsh)"
 	alias "??"="copilot -p"
 fi
 end_of "dev settings"
 
-if [[ -x `which tmux` ]]; then
-	if [[ `expr $TERM : screen` -eq 0 ]]; then
+if command -v zellij &> /dev/null; then
+	if [[ -z "$ZELLIJ" ]]; then
+		echo " --- zellij sessions --- "
+		zellij ls
+		echo " ----------------------- "
+	fi
+elif command -v tmux &> /dev/null; then
+	if [[ -z "$TMUX" ]]; then
 		tmux ls
 	fi
-elif [[ -x `which screen` ]]; then
+elif command -v screen &> /dev/null; then
 	if [[ `expr $TERM : screen` -eq 0 ]]; then
 		# sleep 1
 		screen -r
@@ -1157,12 +1172,12 @@ fi
 end_of "zcompile"
 
 # finally, execute fortune.
-if [[ -x `which fortune` ]]; then
+if command -v fortune &> /dev/null; then
 	echo ""
 	STARTUP_FORTUNE=`fortune`
 	echo -n "\e[$color[$hostcolor]m"
 	echo $STARTUP_FORTUNE
-	if [[ -x `which ollama` ]]; then
+	if command -v ollama &> /dev/null; then
 		echo -n "\e[2;97m"
 		echo "Run \e[4mwhat_is_this_fortune\e[24m to know the meaning of this fortune."
 		echo -n "\e[0m"
@@ -1174,6 +1189,6 @@ if [[ -x `which fortune` ]]; then
 	end_of "fortune"
 fi
 
-if (which zprof > /dev/null 2>&1); then
+if command -v zprof > /dev/null 2>&1; then
 	zprof
 fi

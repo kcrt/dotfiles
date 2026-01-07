@@ -38,9 +38,5 @@ dir = "plugins/brew"
 github = "rupa/z"
 use = ["z.sh"]
 
-[plugins.enhancd]
-github = "babarot/enhancd"
-use = ["init.sh"]
-
 [plugins.zsh-abbrev-alias]
 github = "momo-lab/zsh-abbrev-alias"
