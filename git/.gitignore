@@ -1,0 +1,45 @@
+
+### OS X ###
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+._*
+.Spotlight-V100
+.Trashes
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+### Develop ###
+*.slo
+*.lo
+*.so
+*.dylin
+*.lai
+*.la
+*.a
+*.o
+a.out
+tags
+__pycache__
+*.pyc
+*.mo
+node_modules
+*.swp
+.vscode
+
+### Office ###
+*のバックアップ
+~$*
+*のバックアップ
+
+
+### Other ###
+no_git
+.tmp.driveupload
+trck.png
