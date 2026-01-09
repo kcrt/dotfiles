@@ -42,9 +42,9 @@ elif [[ "$1" == "tmux" ]]; then
 	fi
 elif [[ "$1" == "zjstatus" ]]; then
 	if [[ $loadavg -gt 6 ]]; then
-		echo "#[fg=#f5e0e0]$result"
+		echo "#[bg=#d74242, fg=#F5E0E0]$result"
 	elif [[ $loadavg -gt 4 ]]; then
-		echo "#[fg=#f2e9d9]$result"
+		echo "#[fg=#D7A042]$result"
 	else
 		echo "#[fg=#eaf0f6]$result"
 	fi

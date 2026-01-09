@@ -4,7 +4,7 @@ layout {
 			plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
 				format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | "
 				format_center "{tabs}"
-				format_right  "{command_cpuload} {datetime}"
+				format_right  "{command_batteryinfo} {command_cpuload} {datetime}"
 				format_space  "#[bg=#677589] "
 
 				border_enabled  "false"
@@ -31,10 +31,15 @@ layout {
 				command_hostinfo_format  "{stdout}"
 				command_hostinfo_interval 0
 				command_hostinfo_rendermode "static"
+				
+				command_batteryinfo_command "bash -c \"$HOME/dotfiles/script/battery_info.sh\""
+				command_batteryinfo_format  "{stdout}"
+				command_batteryinfo_interval 60
+				command_batteryinfo_rendermode "static"
 
 				command_cpuload_command "bash -c \"$HOME/dotfiles/script/cpuload.sh zjstatus\""
 				command_cpuload_format  "{stdout}{stderr}"
-				command_cpuload_interval 10
+				command_cpuload_interval 15
 				command_cpuload_rendermode "dynamic"
 
 				datetime        "#[bg=#677589,fg=#eaf0f6,bold]{format}"

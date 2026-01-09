@@ -337,11 +337,14 @@ else
 fi
 
 # ----- zoxide (smarter cd command)
-if command -v zoxide &> /dev/null; then
+# Skip zoxide when in Claude Code
+if [[ -z "$CLAUDECODE" ]] && command -v zoxide &> /dev/null; then
     eval "$(zoxide init zsh --cmd cd)"
 	# --cmd cd: make zoxide override cd command (same as `alias cd='zoxide`, but better`)
 else
-	echo "Warning: zoxide is not installed. Use brew or cargo to install zoxide."
+	if [[ -z "$CLAUDECODE" ]] && ! command -v zoxide &> /dev/null; then
+		echo "Warning: zoxide is not installed. Use brew or cargo to install zoxide."
+	fi
 fi
 end_of "zoxide"
 
