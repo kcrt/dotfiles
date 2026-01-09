@@ -726,20 +726,19 @@ function quit_command() {
     exit
   fi
 }
-abbrev-alias :q='quit_command'
-abbrev-alias :q!='exit'
+alias :q='quit_command'
+alias cls='clear'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias 医療='cd ~/Documents/医療'
+alias 研究='cd ~/Documents/医療/研究'
+alias 依頼='cd ~/Documents/医療/依頼'
+alias beep='print "\a"'
 abbrev-alias su='su -s =zsh'
 abbrev-alias od='od -Ax -tx1 -c'
 abbrev-alias hexdump="hexdump -C"
 abbrev-alias hex2bin="xxd -r -p"
-abbrev-alias beep='print "\a"'
-abbrev-alias cls='clear'
-abbrev-alias ...='cd ../..'
-abbrev-alias ....='cd ../../..'
-abbrev-alias .....='cd ../../../..'
-abbrev-alias 医療='cd ~/Documents/医療'
-abbrev-alias 研究='cd ~/Documents/医療/研究'
-abbrev-alias 依頼='cd ~/Documents/医療/依頼'
 function vimman(){
 	vim -c "Man $1" -c "only"
 }
