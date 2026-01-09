@@ -1,0 +1,195 @@
+{
+  "name": "kcrt palette",
+  "version": "2.0",
+  "description": "kcrt's color palette",
+  "baseColor": {
+    "hex": "#488DC7"
+  },
+  "colors": [
+    {
+      "name": "Primary",
+      "category": "primary",
+      "hex": "#458EC9"
+    },
+    {
+      "name": "Primary Dark",
+      "category": "primary",
+      "hex": "#2E6C9E"
+    },
+    {
+      "name": "Primary Light",
+      "category": "primary",
+      "hex": "#9CC3E2"
+    },
+    {
+      "name": "Primary Pale",
+      "category": "primary",
+      "hex": "#EAF0F6"
+    },
+    {
+      "name": "Secondary Orange",
+      "category": "accent",
+      "hex": "#E28C36"
+    },
+    {
+      "name": "Accent Green",
+      "category": "accent",
+      "hex": "#3DB88B"
+    },
+    {
+      "name": "Text Primary",
+      "category": "neutral",
+      "hex": "#1C293B"
+    },
+    {
+      "name": "Text Secondary",
+      "category": "neutral",
+      "hex": "#596678"
+    },
+    {
+      "name": "Border",
+      "category": "neutral",
+      "hex": "#CFD7E2"
+    },
+    {
+      "name": "Background",
+      "category": "neutral",
+      "hex": "#F4F7FA"
+    },
+    {
+      "name": "Gray 50",
+      "category": "gray",
+      "hex": "#F9FAFB"
+    },
+    {
+      "name": "Gray 100",
+      "category": "gray",
+      "hex": "#F3F4F7"
+    },
+    {
+      "name": "Gray 200",
+      "category": "gray",
+      "hex": "#E4E7EC"
+    },
+    {
+      "name": "Gray 300",
+      "category": "gray",
+      "hex": "#D0D5DD"
+    },
+    {
+      "name": "Gray 400",
+      "category": "gray",
+      "hex": "#99A4B2"
+    },
+    {
+      "name": "Gray 500",
+      "category": "gray",
+      "hex": "#677589"
+    },
+    {
+      "name": "Gray 600",
+      "category": "gray",
+      "hex": "#4B5768"
+    },
+    {
+      "name": "Gray 700",
+      "category": "gray",
+      "hex": "#374353"
+    },
+    {
+      "name": "Gray 800",
+      "category": "gray",
+      "hex": "#222C39"
+    },
+    {
+      "name": "Gray 900",
+      "category": "gray",
+      "hex": "#121A26"
+    },
+    {
+      "name": "Success",
+      "category": "semantic",
+      "hex": "#28BD87"
+    },
+    {
+      "name": "Warning",
+      "category": "semantic",
+      "hex": "#D7A042"
+    },
+    {
+      "name": "Error",
+      "category": "semantic",
+      "hex": "#D74242"
+    },
+    {
+      "name": "Info",
+      "category": "semantic",
+      "hex": "#2D9BD2"
+    },
+    {
+      "name": "Success Light",
+      "category": "semantic",
+      "hex": "#D9F2E9"
+    },
+    {
+      "name": "Warning Light",
+      "category": "semantic",
+      "hex": "#F2E9D9"
+    },
+    {
+      "name": "Error Light",
+      "category": "semantic",
+      "hex": "#F5E0E0"
+    },
+    {
+      "name": "Info Light",
+      "category": "semantic",
+      "hex": "#E0EEF5"
+    },
+    {
+      "name": "Chart Blue",
+      "category": "chart",
+      "hex": "#2688D9"
+    },
+    {
+      "name": "Chart Teal",
+      "category": "chart",
+      "hex": "#22C3B0"
+    },
+    {
+      "name": "Chart Amber",
+      "category": "chart",
+      "hex": "#DA9B2F"
+    },
+    {
+      "name": "Chart Rose",
+      "category": "chart",
+      "hex": "#DF4962"
+    },
+    {
+      "name": "Chart Purple",
+      "category": "chart",
+      "hex": "#8D67E4"
+    },
+    {
+      "name": "Chart Lime",
+      "category": "chart",
+      "hex": "#83C322"
+    },
+    {
+      "name": "Clinical White",
+      "category": "medical",
+      "hex": "#FBFCFE"
+    },
+    {
+      "name": "Trust Navy",
+      "category": "medical",
+      "hex": "#1F3B61"
+    },
+    {
+      "name": "Calm Sage",
+      "category": "medical",
+      "hex": "#7B9D87"
+    }
+  ]
+}

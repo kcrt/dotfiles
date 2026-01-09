@@ -6,17 +6,9 @@ set use_from="yes"
 # set hostname="kcrt.net"
 
 # メールボックスの設定
-source "gpg -d ~/dotfiles/no_git/muttpassword.asc |"
-set ssl_force_tls=yes
-set ssl_starttls=yes
-set spoolfile="=INBOX"
-set record="=INBOX.Sent"
-set postponed="=INBOX.Draft"
-mailboxes =INBOX
+source "gpg -d ~/dotfiles/no_git/mutt_account.asc |"
 set timeout=600
 set mail_check=600
-#set imap_checkinterval=600
-set ssl_force_tls=yes
 set beep_new=yes
 
 # PGPの設定
@@ -38,6 +30,7 @@ set pager_index_lines=6					# ページャー内のミニインデックス
 set sort=threads
 set sort_aux=reverse-date
 set tilde=yes
+set confirm_append = no # すぐに移動
 ignore *
 unignore Date From To Subject X-Mailer User-Agent Organization Received-SPF X-Face
 hdr_order Date From To Subject X-Mailer User-Agent Organization Received-SPF X-Face
@@ -67,6 +60,7 @@ bind index,pager N search-opposite
 bind index s flag-message
 bind index g noop
 macro index gi "<change-folder>=INBOX<enter>" "Go to inbox"
+macro index,pager e "<save-message>=INBOX.Archive<enter><sync-mailbox>" "Archive message"
 
 
 # 色の設定
@@ -122,6 +116,6 @@ my_hdr Return-Path: kcrt@kcrt.net
 my_hdr X-Face: \'UB\?Gde\-X\&OEjy0tN\>mXw7iEkmh\~V1IY\:\|S4VmpM\.wMevX\"bQ\`hfMplSFJT7\_4\(\?\$Gi\.\)or88DO\/uai0z\?S\_O\:\;LlV\+fdO\}\}nNj\_\_R6Vp\*\(\&bQZ\\B0BA\\z\%\&c9\!t0\'XSRF\|\*4hd\`\|H\{\_65\:\@\~cJycg\[y\&h\&vg2\^Q\#\#\=rQW\`\_\}\,\/PphVQ\,XM\/9\*l\-\`eX92FxA\_\*bC\/UDoD8DsV\'Re\`\,f\=u\|\~\_U\_BX\=\#\`br\"\*c\^zEG\[\^q\^y\*w5Ui8\`W\>\`\'E0\(x\#c0\'Y\:\.\-U\:q\/nSy
 
 # GPG
-my_hdr X-PGP-Key: http://profile.kcrt.net/public.asc
+my_hdr X-PGP-Key: https://keys.openpgp.org/search?q=kcrt@kcrt.net
 source ~/dotfiles/mutt/mutt_gpg.rc
 

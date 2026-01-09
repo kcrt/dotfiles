@@ -121,7 +121,7 @@ end_of "hostcolor"
 local title
 if [[ "$SSH_CONNECTION" != "" ]]; then
 	# ssh接続
-	title="$HOST (`echo -n $SSH_CONNECTION | sed -e 's/\(.*\) .* \(.*\) .*/\1 --> \2/g'`, ssh)"
+	title="$HOST (`echo -n $SSH_CONNECTION | sed -e 's/\(.*\) .* \(.*\) .*/\1 --> \2/g'`)"
 elif [[ "$REMOTEHOST" != "" ]]; then
 	# おそらくtelnet
 	title="$REMOTEHOST --> $HOST";
@@ -241,6 +241,7 @@ setopt NO_complete_in_word			# カーソル位置で補完する
 setopt list_packed					# 補完候補をできるだけつめて表示する
 setopt NO_list_beep					# 補完候補表示時にビープ音を鳴らす
 setopt list_types					# ファイル名のおしりに識別マークをつける
+setopt INTERACTIVE_COMMENTS			# インタラクティブモードでもコメントを許可
 
 # Advanced completion configuration
 zstyle ':completion:*' format '%B%d%b'
@@ -508,13 +509,13 @@ function _w3m(){
 	if [[ $IsScreen != 0 ]]; then
 		W3MOPT=-no-mouse
 	fi
-	:title w3m $1
+	set_title w3m $1
 	if [[ $1 == "" ]]; then
 		\w3m $W3MOPT http://www.google.co.jp
 	else
 		\w3m $W3MOPT $@
 	fi
-	:title $SHELL
+	set_title $SHELL
 }
 function testarchive(){
 	if [[ ${1:e} = "zip" ]]; then
@@ -847,7 +848,7 @@ if command -v Rscript &> /dev/null; then
 	alias -s R='Rscript'
 	function render_rmarkdown_and_open(){
 		Rscript -e "rmarkdown::render('$1')"
-		browseURL("${1:r}.html")
+		open "${1:r}.html"
 	}
 	alias -s Rmd='render_rmarkdown_and_open'
 fi
@@ -983,7 +984,7 @@ if [[ -f ~/.ssh/config ]]; then
 fi
 
 # ----- Hooks
-function :title(){
+function set_title(){
 
 	local Title=$1
 	if [[ $USER == "root" ]]; then
@@ -998,6 +999,10 @@ function :title(){
 
 	if [[ "$TERM_PROGRAM" == "tmux" ]]; then
 		tmux rename-window "$Title"
+	elif [[ -n "$ZELLIJ" ]]; then
+		# zellij
+		zellij action rename-tab "$Title"
+		echo -n "\e]0;$Title\e\\"
 	elif [[ -n $SSH_CLIENT ]]; then
 		# via ssh
 		echo -n "\e]2;$HOST:$Title\a"
@@ -1049,7 +1054,7 @@ function ShowTitle_preexec(){
 	if [[ ${#Title} -gt 15 ]]; then
 		Title="${Title: 0:5}...${Title: -5:5}"
 	fi
-	:title $Title
+	set_title $Title
 
 }
 local COMMAND=""

@@ -1,0 +1,50 @@
+layout {
+	default_tab_template {
+		pane size=1 borderless=true {
+			plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
+				format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | "
+				format_center "{tabs}"
+				format_right  "{command_cpuload} {datetime}"
+				format_space  "#[bg=#677589] "
+
+				border_enabled  "false"
+				border_char     "─"
+				border_format   "#[fg=#6C7086]{char}"
+				border_position "top"
+
+				hide_frame_for_single_pane "true"
+
+				mode_normal	"#[bg=#2E6C9E] "
+				mode_locked	"#[bg=#E28C36][LOCKED] "
+				mode_resize	"#[bg=#3DB88B][RESIZE] "
+				mode_pane	"#[bg=#3DB88B][PANE] "
+				mode_tab	"#[bg=#3DB88B][TAB] "
+				mode_scroll	"#[bg=#9CC3E2][SCROLL] "
+				mode_prompt	"#[bg=#E28C36][PROMPT] "
+				mode_tmux	"#[bg=#E28C36][{name}] "
+				mode_default_to_mode "tmux"
+
+				tab_normal   "#[fg=#45BEC9,bg=#677589]/ {name} \\"
+				tab_active   "#[bg=#45BEC9,bold]/ {name} \\"
+
+				command_hostinfo_command "bash -c \"$HOME/dotfiles/script/host_and_connect.sh\""
+				command_hostinfo_format  "{stdout}"
+				command_hostinfo_interval 0
+				command_hostinfo_rendermode "static"
+
+				command_cpuload_command "bash -c \"$HOME/dotfiles/script/cpuload.sh zjstatus\""
+				command_cpuload_format  "{stdout}{stderr}"
+				command_cpuload_interval 10
+				command_cpuload_rendermode "dynamic"
+
+				datetime        "#[bg=#677589,fg=#eaf0f6,bold]{format}"
+				datetime_format "%Y-%m-%d %H:%M:%S"
+				datetime_timezone "Asia/Tokyo"
+			}
+		}
+		children
+		pane size=2 borderless=true {
+			plugin location="zellij:status-bar"
+		}
+	}
+}

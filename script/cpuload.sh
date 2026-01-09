@@ -12,11 +12,12 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  heavy   - Only display if load average > 6."
     echo "  light   - Only display if load average <= 6."
     echo "  tmux    - Format output for tmux status bar with color coding based on load."
+	echo "  zjstatus- Format output for zjstats with color coding based on load."
     echo "If no argument is given, displays load and temperature normally."
     exit 0
 fi
 
-source ~/etc/script/echo_color.sh 
+source ~/dotfiles/script/echo_color.sh 
 
 loadavg=`uptime | sed 's/.*load average.*: //' | sed 's/,/ /' | awk '{printf($1)}'`
 
@@ -38,6 +39,14 @@ elif [[ "$1" == "tmux" ]]; then
 		echo "#[bg=color220, fg=black]$result#[default]"
 	else
 		echo "$result"
+	fi
+elif [[ "$1" == "zjstatus" ]]; then
+	if [[ $loadavg -gt 6 ]]; then
+		echo "#[fg=#f5e0e0]$result"
+	elif [[ $loadavg -gt 4 ]]; then
+		echo "#[fg=#f2e9d9]$result"
+	else
+		echo "#[fg=#eaf0f6]$result"
 	fi
 else
 	echo $result
