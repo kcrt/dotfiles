@@ -1154,9 +1154,13 @@ end_of "dev settings"
 
 if command -v zellij &> /dev/null; then
 	if [[ -z "$ZELLIJ" ]]; then
-		echo " --- zellij sessions --- "
-		zellij ls
-		echo " ----------------------- "
+		# Only show active sessions (filter out Exited sessions)
+		local active_sessions=$(zellij ls 2>/dev/null | grep -v "Exited" | grep -v "^$")
+		if [[ -n "$active_sessions" ]]; then
+			echo " --- zellij sessions --- "
+			echo "$active_sessions"
+			echo " ----------------------- "
+		fi
 	fi
 elif command -v tmux &> /dev/null; then
 	if [[ -z "$TMUX" ]]; then
