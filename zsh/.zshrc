@@ -41,9 +41,33 @@ fi
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh
 source ${DOTFILES}/script/miscs.sh
-export GPG_TTY=$(tty)
+
+# Set GPG_TTY for proper terminal handling
+# In non-TTY environments (like Claude Code), GPG will use the agent
+current_tty=$(tty 2>/dev/null)
+if [[ "$current_tty" != "not a tty" && -n "$current_tty" ]]; then
+	export GPG_TTY=$current_tty
+fi
+
+# Load encrypted secrets if available
 if [ -f ${DOTFILES}/no_git/secrets.sh.asc ]; then
-	eval "$(gpg -d ${DOTFILES}/no_git/secrets.sh.asc 2>/dev/null)"
+	if [[ -x "/opt/homebrew/bin/gpg" ]]; then
+		GPG_BIN="/opt/homebrew/bin/gpg"
+	elif [[ -x "/usr/local/bin/gpg" ]]; then
+		GPG_BIN="/usr/local/bin/gpg"
+	elif command -v gpg &> /dev/null; then
+		GPG_BIN="gpg"
+	else
+		GPG_BIN=""
+	fi
+
+	if [[ -n "$GPG_BIN" ]]; then
+		eval "$($GPG_BIN -d ${DOTFILES}/no_git/secrets.sh.asc 2>/dev/null)"
+	fi
+	unset GPG_BIN
+fi
+if [ -z "$SECRET_KEYS_SUCCESSFULLY_LOADED" ]; then
+	echo "Warning: Secret keys not loaded. Encrypted secrets.sh.asc file may be missing or GPG is not installed."
 fi
 end_of "source"
 
@@ -442,10 +466,10 @@ function ShowStatus(){
 	Cursor_X=$[COLUMNS-$StrLength]	# 場所はお好みで
 	Cursor_Y=1
 	echo -n "\e7"				# Save cursor position
-	# CSI echo -n "[s"			# push pos
+	# CSI echo -n "\e[s"			# push pos
 	echo -n "\e[$[$Cursor_Y];$[$Cursor_X]H"	# set pos
 	echo -n "\e[07;37m$1\e[m" # print
-	# CSI echo -n "[u"			# pop pos
+	# CSI echo -n "\e[u"			# pop pos
 	echo -n "\e8"				# Restore cursor position
 
 }
@@ -793,7 +817,29 @@ abbrev-alias ollama-vision-model="ollama run $OLLAMA_MY_VISION_MODEL Please desc
 abbrev-alias ollama-ocr-model="ollama run $OLLAMA_MY_OCR_MODEL"
 abbrev-alias How="noglob ollama run $OLLAMA_MY_DEFAULT_MODEL 'I am using zsh on macOS. I want to ask how to perform following operations on console. Please respond with simple answer. How'"
 
+# Claude related
 abbrev-alias claude-git-commit='claude "/git-commit"'
+function zai_on() {
+	# Check if ZAI_API_KEY is set
+	if [[ -z "$ZAI_API_KEY" ]]; then
+		echo "Error: ZAI_API_KEY environment variable is not set. Please set it to use Z.ai model."
+		return 1
+	fi
+	echo "Z.ai model enabled for Claude. (Use zai_off to disable)"
+	touch ~/use-zai
+	export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
+	export ANTHROPIC_AUTH_TOKEN=$ZAI_API_KEY
+}
+function zai_off() {
+	echo "Z.ai model disabled for Claude."
+	rm -f ~/use-zai
+	unset ANTHROPIC_BASE_URL
+	unset ANTHROPIC_AUTH_TOKEN
+}
+# if there is ~/use-zai file, use Z.ai model for Claude
+if [[ -f ~/use-zai ]]; then
+	zai_on
+fi
 
 # global alias
 alias -g N='; OSNotify "shell" "operation finished"'
@@ -1155,7 +1201,7 @@ end_of "dev settings"
 if command -v zellij &> /dev/null; then
 	if [[ -z "$ZELLIJ" ]]; then
 		# Only show active sessions (filter out Exited sessions)
-		local active_sessions=$(zellij ls 2>/dev/null | grep -v "Exited" | grep -v "^$")
+		local active_sessions=$(zellij ls 2>/dev/null | grep -v "EXITED" | grep -v "^$")
 		if [[ -n "$active_sessions" ]]; then
 			echo " --- zellij sessions --- "
 			echo "$active_sessions"

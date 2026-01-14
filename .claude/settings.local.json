@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(echo $SHELL)"
+      "Bash(echo $SHELL)",
+      "Bash(otool:*)"
     ],
     "deny": []
   },

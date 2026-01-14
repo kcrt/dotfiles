@@ -20,6 +20,26 @@ nix develop nixpkgs#python3	# dev shell with package
 nix build			        # build flake
 nix search nixpkgs python
 
+## FLAKE.NIX EXAMPLE
+{
+  description = "My project";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  };
+
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      packages.${system}.default = pkgs.hello;
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [ pkgs.python3 ];
+      };
+    };
+}
+
 ## GARBAGE COLLECTION & OPTIMIZATION
 nix-collect-garbage	 [-d]
 nix-store --gc|--optimize
