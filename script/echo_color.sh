@@ -37,6 +37,7 @@ function echo_brightwhite(){ echo_color "01;37" "$@"; }
 function echo_error(){ echo_red "$@"; }
 function echo_info(){ echo_aqua "$@"; }
 function echo_ok(){ echo_green "$@"; }
+function echo_warn(){ echo_yellow "$@"; }
 
 function echo_colortest(){
 	echo_black "black"

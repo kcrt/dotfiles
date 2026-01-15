@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(echo $SHELL)",
-      "Bash(otool:*)"
+      "Bash(otool:*)",
+      "Bash(BENCHMARK_ZSHRC=1 zsh:*)"
     ],
     "deny": []
   },
