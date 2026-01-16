@@ -1,5 +1,5 @@
 #
-#	001-startup.zsh
+#	0001-common.zsh
 #		Common utility functions for zsh configuration
 #
 

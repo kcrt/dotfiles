@@ -24,3 +24,10 @@ if command -v zoxide &> /dev/null; then
 else
 	echo_warn "Warning: zoxide is not installed. Use brew or cargo to install zoxide."
 fi
+
+# ----- direnv (directory-based environment variables)
+if command -v direnv &> /dev/null; then
+	eval "$(direnv hook zsh)"
+else
+	echo_warn "Warning: direnv is not installed. Use brew install direnv."
+fi
