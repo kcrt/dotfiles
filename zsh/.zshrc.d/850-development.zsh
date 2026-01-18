@@ -4,16 +4,7 @@
 #
 
 # ===== Develop
-if [[ $OSTYPE = *darwin* ]] ; then
-	# mise (formerly rtx) - faster alternative to asdf
-	if command -v mise >/dev/null 2>&1; then
-		eval "$(mise activate zsh)"
-
-		# Note: RUBY_CONFIGURE_OPTS is disabled because brew --prefix is very slow (~20s)
-		# Uncomment only if you need to build Ruby from source:
-		# export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$($BIN_HOMEBREW --prefix openssl@1.1)"
-	fi
-fi
+# mise is already activated in .zshenv
 
 # Set up Perl paths if they exist
 [[ -d "$HOME/perl5/lib/perl5" ]] && export PERL5LIB=~/perl5/lib/perl5

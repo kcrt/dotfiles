@@ -72,8 +72,8 @@ bindkey -M vicmd "a" Vi_AddNext
 bindkey -M vicmd "A" Vi_AddEol
 bindkey -M vicmd "c" Vi_Change
 bindkey -M vicmd "/" history-incremental-pattern-search-backward
-bindkey '^P' history-incremental-pattern-search-backward
-bindkey '^N' history-incremental-pattern-search-forward
+bindkey '^R' history-incremental-pattern-search-backward
+bindkey '^S' history-incremental-pattern-search-forward
 bindkey "^Q" self-insert
 # }}}
 

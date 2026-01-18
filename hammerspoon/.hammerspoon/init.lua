@@ -3,7 +3,7 @@
 -- Place this script at ~/.hammerspoon/init.lua
 
 logger = hs.logger.new("kcrt", "debug")
-secrets = hs.json.read(os.getenv("HOME") .. "/dotfiles/no_git/secrets.json")
+-- secrets = hs.json.read(os.getenv("HOME") .. "/dotfiles/no_git/secrets.json")
 
 function chomp(s)
 	if s == "" then
@@ -667,3 +667,6 @@ function checkStartup()
 	-- ask to proceed
 	-- hs.notify.new(mountDrives, {title="Start up", informativeText="Do you want to mount network and local drives?", actionButtonTitle="Yes!", hasActionButton=true, withdrawAfter=60}):send()
 end
+
+-- Load private/secret functions
+dofile(os.getenv("HOME") .. "/dotfiles/no_git/private.lua")

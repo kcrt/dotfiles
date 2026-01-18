@@ -15,6 +15,7 @@ import base64
 import os
 import sys
 import threading
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 import requests
@@ -24,18 +25,322 @@ from PIL import Image, ImageTk
 
 
 # --- Constants ---
+DEFAULT_PROVIDER = "openai"
 DEFAULT_MODEL = "gpt-image-1.5"
 DEFAULT_SIZE = "1024x1024"
 DEFAULT_TIMEOUT = 300
 DEBUG = False  # Will be set by command line argument
 
-VALID_SIZES = {
-    "gpt-image-1.5": ["1024x1024", "1536x1024", "1024x1536"],
-    "gpt-image-1": ["1024x1024", "1536x1024", "1024x1536"],
-    "gpt-image-1-mini": ["1024x1024", "1536x1024", "1024x1536"],
-    "dall-e-2": ["256x256", "512x512", "1024x1024"],
-    "dall-e-3": ["1024x1024", "1792x1024", "1024x1792"],
+
+# --- Provider Configuration ---
+class ProviderConfig:
+    """Configuration for an API provider."""
+    def __init__(self, name: str, models: dict[str, list[str]], api_key_env: str,
+                 org_id_env: Optional[str] = None):
+        self.name = name
+        self.models = models
+        self.api_key_env = api_key_env
+        self.org_id_env = org_id_env
+
+
+# Provider configurations
+PROVIDER_CONFIGS: dict[str, ProviderConfig] = {
+    "openai": ProviderConfig(
+        name="OpenAI",
+        models={
+            "gpt-image-1.5": ["1024x1024", "1536x1024", "1024x1536"],
+            "gpt-image-1": ["1024x1024", "1536x1024", "1024x1536"],
+            "gpt-image-1-mini": ["1024x1024", "1536x1024", "1024x1536"],
+            "dall-e-2": ["256x256", "512x512", "1024x1024"],
+            "dall-e-3": ["1024x1024", "1792x1024", "1024x1792"],
+        },
+        api_key_env="OPENAI_API_KEY",
+        org_id_env="OPENAI_ORG_ID"
+    ),
+    "zai": ProviderConfig(
+        name="Z.AI",
+        models={
+            "glm-image": ["1280x1280"],
+        },
+        api_key_env="ZAI_API_KEY",
+        org_id_env=None
+    ),
 }
+
+
+# --- API Provider Abstraction ---
+class ImageProvider(ABC):
+    """Abstract base class for image generation API providers."""
+
+    def __init__(self, config: ProviderConfig):
+        self.config = config
+
+    @abstractmethod
+    def get_supported_sizes(self, model: str) -> list[str]:
+        """Get supported image sizes for a model."""
+        pass
+
+    @abstractmethod
+    def generate_images(self, prompt: str, model: str, size: str, n: int,
+                        timeout: int, **kwargs) -> list[bytes]:
+        """Generate images using the API."""
+        pass
+
+    @abstractmethod
+    def edit_images(self, prompt: str, image_paths: list[str], model: str,
+                   size: str, n: int, timeout: int, mask_path: Optional[str] = None,
+                   **kwargs) -> list[bytes]:
+        """Edit images using the API."""
+        pass
+
+    def get_api_key(self) -> str:
+        """Get API key from environment."""
+        api_key = os.environ.get(self.config.api_key_env)
+        if not api_key:
+            raise ValueError(f"{self.config.api_key_env} environment variable is not set")
+        return api_key
+
+    def get_org_id(self) -> Optional[str]:
+        """Get organization ID from environment (if applicable)."""
+        if self.config.org_id_env:
+            return os.environ.get(self.config.org_id_env)
+        return None
+
+
+class OpenAIProvider(ImageProvider):
+    """OpenAI image generation provider."""
+
+    def get_supported_sizes(self, model: str) -> list[str]:
+        return self.config.models.get(model, [])
+
+    def generate_images(self, prompt: str, model: str, size: str, n: int,
+                        timeout: int, **kwargs) -> list[bytes]:
+        background = kwargs.get('background')
+        api_key = self.get_api_key()
+        org_id = self.get_org_id()
+
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "n": n,
+            "size": size
+        }
+
+        if model.startswith("gpt-image"):
+            payload["moderation"] = "low"
+            if background:
+                payload["background"] = background
+        else:
+            payload["response_format"] = "b64_json"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        if org_id:
+            headers["OpenAI-Organization"] = org_id
+
+        response = requests.post(
+            "https://api.openai.com/v1/images/generations",
+            headers=headers,
+            json=payload,
+            timeout=timeout
+        )
+
+        if not response.ok:
+            self._handle_error(response)
+
+        data = response.json()
+        if "data" not in data:
+            raise ValueError(f"Unexpected API response: {data}")
+
+        images = []
+        for item in data["data"]:
+            if "b64_json" not in item:
+                raise ValueError(f"No b64_json in response item: {item}")
+            image_data = base64.b64decode(item["b64_json"])
+            images.append(image_data)
+
+        return images
+
+    def edit_images(self, prompt: str, image_paths: list[str], model: str,
+                   size: str, n: int, timeout: int, mask_path: Optional[str] = None,
+                   **kwargs) -> list[bytes]:
+        background = kwargs.get('background')
+        api_key = self.get_api_key()
+        org_id = self.get_org_id()
+
+        # Validate
+        if model == "dall-e-2" and len(image_paths) > 1:
+            raise ValueError("dall-e-2 only supports editing one image at a time")
+        if model.startswith("gpt-image") and len(image_paths) > 16:
+            raise ValueError("gpt-image models support up to 16 images")
+
+        # Build multipart form data
+        files = []
+        for img_path in image_paths:
+            files.append(('image[]' if model.startswith("gpt-image") else 'image',
+                         (Path(img_path).name, open(img_path, 'rb'), 'image/png')))
+
+        if mask_path:
+            files.append(('mask', (Path(mask_path).name, open(mask_path, 'rb'), 'image/png')))
+
+        data = {
+            'prompt': prompt,
+            'model': model,
+            'n': str(n),
+            'size': size
+        }
+
+        if model.startswith("gpt-image"):
+            if background:
+                data['background'] = background
+        else:
+            data['response_format'] = 'b64_json'
+
+        headers = {"Authorization": f"Bearer {api_key}"}
+        if org_id:
+            headers["OpenAI-Organization"] = org_id
+
+        try:
+            response = requests.post(
+                "https://api.openai.com/v1/images/edits",
+                headers=headers,
+                data=data,
+                files=files,
+                timeout=timeout
+            )
+
+            if not response.ok:
+                self._handle_error(response)
+
+        finally:
+            for _, file_tuple in files:
+                if hasattr(file_tuple[1], 'close'):
+                    file_tuple[1].close()
+
+        result_data = response.json()
+        if "data" not in result_data:
+            raise ValueError(f"Unexpected API response: {result_data}")
+
+        images = []
+        for item in result_data["data"]:
+            if "b64_json" not in item:
+                raise ValueError(f"No b64_json in response item: {item}")
+            image_data = base64.b64decode(item["b64_json"])
+            images.append(image_data)
+
+        return images
+
+    def _handle_error(self, response: requests.Response) -> None:
+        """Handle API error response."""
+        error_detail = f"HTTP {response.status_code}: {response.reason}"
+        try:
+            error_json = response.json()
+            if "error" in error_json:
+                error_info = error_json["error"]
+                if isinstance(error_info, dict):
+                    error_msg = error_info.get("message", str(error_info))
+                    error_type = error_info.get("type", "unknown")
+                    error_detail = f"HTTP {response.status_code}: {error_msg} (type: {error_type})"
+                else:
+                    error_detail = f"HTTP {response.status_code}: {error_info}"
+        except Exception:
+            error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
+
+        raise requests.exceptions.HTTPError(error_detail, response=response)
+
+
+class ZAIProvider(ImageProvider):
+    """Z.AI image generation provider."""
+
+    def get_supported_sizes(self, model: str) -> list[str]:
+        return self.config.models.get(model, [])
+
+    def generate_images(self, prompt: str, model: str, size: str, n: int,
+                        timeout: int, **kwargs) -> list[bytes]:
+        api_key = self.get_api_key()
+
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "size": size
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+
+        response = requests.post(
+            "https://api.z.ai/api/paas/v4/images/generations",
+            headers=headers,
+            json=payload,
+            timeout=timeout
+        )
+
+        if not response.ok:
+            self._handle_error(response)
+
+        data = response.json()
+        if "data" not in data:
+            raise ValueError(f"Unexpected API response: {data}")
+
+        images = []
+        for item in data["data"]:
+            if "url" not in item:
+                raise ValueError(f"No url in response item: {item}")
+            # Download image from URL with authentication
+            img_response = requests.get(
+                item["url"],
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=timeout
+            )
+            if not img_response.ok:
+                raise ValueError(f"Failed to download image from {item['url']} (HTTP {img_response.status_code})")
+            images.append(img_response.content)
+
+        return images
+
+    def edit_images(self, prompt: str, image_paths: list[str], model: str,
+                   size: str, n: int, timeout: int, mask_path: Optional[str] = None,
+                   **kwargs) -> list[bytes]:
+        """Z.AI does not support image editing."""
+        raise NotImplementedError("Z.AI does not support image editing")
+
+    def _handle_error(self, response: requests.Response) -> None:
+        """Handle API error response."""
+        error_detail = f"HTTP {response.status_code}: {response.reason}"
+        try:
+            error_json = response.json()
+            # Z.AI might have different error structure
+            if "error" in error_json:
+                error_info = error_json["error"]
+                if isinstance(error_info, dict):
+                    error_msg = error_info.get("message", str(error_info))
+                    error_detail = f"HTTP {response.status_code}: {error_msg}"
+                else:
+                    error_detail = f"HTTP {response.status_code}: {error_info}"
+        except Exception:
+            error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
+
+        raise requests.exceptions.HTTPError(error_detail, response=response)
+
+
+# --- Provider Factory ---
+def get_provider(provider_id: str) -> ImageProvider:
+    """Get provider instance by ID."""
+    config = PROVIDER_CONFIGS.get(provider_id)
+    if not config:
+        raise ValueError(f"Unknown provider: {provider_id}")
+
+    if provider_id == "openai":
+        return OpenAIProvider(config)
+    elif provider_id == "zai":
+        return ZAIProvider(config)
+    else:
+        raise ValueError(f"Provider not implemented: {provider_id}")
 
 
 def debug_print(msg: str) -> None:
@@ -46,7 +351,7 @@ def debug_print(msg: str) -> None:
 
 class ImageGeneratorApp:
     """
-    A Tkinter application to generate or edit images using OpenAI's image API.
+    A Tkinter application to generate or edit images using various image generation APIs.
     """
 
     def __init__(self, master: tk.Tk) -> None:
@@ -94,6 +399,16 @@ class ImageGeneratorApp:
 
         row = 0
 
+        # Provider selection
+        ttk.Label(controls_frame, text="Provider:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        self.provider_var = tk.StringVar(value=DEFAULT_PROVIDER)
+        provider_names = [PROVIDER_CONFIGS[pid].name for pid in PROVIDER_CONFIGS]
+        self.provider_combo = ttk.Combobox(controls_frame, textvariable=self.provider_var,
+                                          state="readonly", values=provider_names)
+        self.provider_combo.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
+        self.provider_combo.bind("<<ComboboxSelected>>", self.on_provider_change)
+        row += 1
+
         # Mode selection
         ttk.Label(controls_frame, text="Mode:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.mode_var = tk.StringVar(value="draw")
@@ -115,7 +430,7 @@ class ImageGeneratorApp:
         ttk.Label(controls_frame, text="Model:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.model_var = tk.StringVar(value=DEFAULT_MODEL)
         self.model_combo = ttk.Combobox(controls_frame, textvariable=self.model_var, state="readonly",
-                                       values=list(VALID_SIZES.keys()))
+                                       values=[])
         self.model_combo.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
         self.model_combo.bind("<<ComboboxSelected>>", self.on_model_change)
         row += 1
@@ -124,7 +439,7 @@ class ImageGeneratorApp:
         ttk.Label(controls_frame, text="Size:").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.size_var = tk.StringVar(value=DEFAULT_SIZE)
         self.size_combo = ttk.Combobox(controls_frame, textvariable=self.size_var, state="readonly",
-                                      values=VALID_SIZES[DEFAULT_MODEL])
+                                      values=[])
         self.size_combo.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=5)
         row += 1
 
@@ -225,13 +540,51 @@ class ImageGeneratorApp:
                                       state=tk.DISABLED)
         self.next_button.pack(side=tk.RIGHT, padx=5)
 
-        # Initialize mode
+        # Initialize provider and mode
+        self.on_provider_change()
         self.on_mode_change()
+
+    def get_provider_id(self) -> str:
+        """Get provider ID from provider name."""
+        provider_name = self.provider_var.get()
+        for pid, config in PROVIDER_CONFIGS.items():
+            if config.name == provider_name:
+                return pid
+        return DEFAULT_PROVIDER
+
+    def on_provider_change(self, event: Optional[tk.Event] = None) -> None:
+        """Handle provider change to update available models."""
+        provider_id = self.get_provider_id()
+        config = PROVIDER_CONFIGS.get(provider_id)
+
+        if config:
+            models = list(config.models.keys())
+            self.model_combo['values'] = models
+
+            # Set first model if current model is not valid
+            if self.model_var.get() not in models:
+                self.model_var.set(models[0])
+
+            # Update sizes for the current model
+            self.on_model_change()
+
+            # Disable edit mode for providers that don't support it
+            if provider_id == "zai":
+                self.mode_var.set("draw")
+                self.on_mode_change()
 
     def on_mode_change(self) -> None:
         """Handle mode change (draw/edit)."""
         mode = self.mode_var.get()
+        provider_id = self.get_provider_id()
+
         if mode == "edit":
+            # Check if provider supports edit mode
+            if provider_id == "zai":
+                # Z.AI doesn't support edit mode, force draw mode
+                self.mode_var.set("draw")
+                return
+
             # Show edit-specific controls
             self.image_input_label.grid()
             self.image_input_button.grid()
@@ -255,13 +608,17 @@ class ImageGeneratorApp:
 
     def on_model_change(self, event: Optional[tk.Event] = None) -> None:
         """Handle model change to update available sizes."""
+        provider_id = self.get_provider_id()
+        config = PROVIDER_CONFIGS.get(provider_id)
         model = self.model_var.get()
-        sizes = VALID_SIZES.get(model, [DEFAULT_SIZE])
-        self.size_combo['values'] = sizes
 
-        # Reset to first size if current size is not valid
-        if self.size_var.get() not in sizes:
-            self.size_var.set(sizes[0])
+        if config:
+            sizes = config.models.get(model, [DEFAULT_SIZE])
+            self.size_combo['values'] = sizes
+
+            # Reset to first size if current size is not valid
+            if self.size_var.get() not in sizes:
+                self.size_var.set(sizes[0])
 
     def load_test_image(self) -> None:
         """Load and display a test image at startup."""
@@ -355,19 +712,23 @@ class ImageGeneratorApp:
     def _generate_image_thread(self, prompt: str, mode: str) -> None:
         """Background thread for image generation."""
         try:
+            provider_id = self.get_provider_id()
             model = self.model_var.get()
             size = self.size_var.get()
             n = self.count_var.get()
             timeout = self.timeout_var.get()
             background = self.background_var.get() if model.startswith("gpt-image") else None
 
-            debug_print(f"Starting generation: mode={mode}, model={model}, size={size}, n={n}")
+            debug_print(f"Starting generation: provider={provider_id}, mode={mode}, model={model}, size={size}, n={n}")
+
+            # Get provider instance
+            provider = get_provider(provider_id)
 
             if mode == "draw":
-                images = self._call_generate_api(prompt, model, size, n, background, timeout)
+                images = provider.generate_images(prompt, model, size, n, timeout, background=background)
             else:
-                images = self._call_edit_api(prompt, self.input_image_paths, model, size, n,
-                                            background, self.mask_image_path, timeout)
+                images = provider.edit_images(prompt, self.input_image_paths, model, size, n,
+                                             timeout, mask_path=self.mask_image_path, background=background)
 
             debug_print(f"Generation successful: received {len(images)} image(s)")
 
@@ -381,163 +742,6 @@ class ImageGeneratorApp:
                 traceback.print_exc()
             # Update UI in main thread
             self.master.after(0, self._on_generation_error, str(e))
-
-    def _call_generate_api(self, prompt: str, model: str, size: str, n: int,
-                          background: Optional[str], timeout: int) -> list[bytes]:
-        """Call the OpenAI image generation API."""
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-
-        org_id = os.environ.get("OPENAI_ORG_ID")
-
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "n": n,
-            "size": size
-        }
-
-        if model.startswith("gpt-image"):
-            payload["moderation"] = "low"
-            if background:
-                payload["background"] = background
-        else:
-            payload["response_format"] = "b64_json"
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
-
-        if org_id:
-            headers["OpenAI-Organization"] = org_id
-
-        response = requests.post(
-            "https://api.openai.com/v1/images/generations",
-            headers=headers,
-            json=payload,
-            timeout=timeout
-        )
-
-        # Enhanced error handling with detailed API response
-        if not response.ok:
-            error_detail = f"HTTP {response.status_code}: {response.reason}"
-            try:
-                error_json = response.json()
-                if "error" in error_json:
-                    error_info = error_json["error"]
-                    if isinstance(error_info, dict):
-                        error_msg = error_info.get("message", str(error_info))
-                        error_type = error_info.get("type", "unknown")
-                        error_detail = f"HTTP {response.status_code}: {error_msg} (type: {error_type})"
-                    else:
-                        error_detail = f"HTTP {response.status_code}: {error_info}"
-            except Exception:
-                # If we can't parse JSON, include raw response text
-                error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
-
-            raise requests.exceptions.HTTPError(error_detail, response=response)
-
-        data = response.json()
-        if "data" not in data:
-            raise ValueError(f"Unexpected API response: {data}")
-
-        images = []
-        for item in data["data"]:
-            if "b64_json" not in item:
-                raise ValueError(f"No b64_json in response item: {item}")
-            image_data = base64.b64decode(item["b64_json"])
-            images.append(image_data)
-
-        return images
-
-    def _call_edit_api(self, prompt: str, image_paths: list[str], model: str, size: str, n: int,
-                      background: Optional[str], mask_path: Optional[str], timeout: int) -> list[bytes]:
-        """Call the OpenAI image edit API."""
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is not set")
-
-        org_id = os.environ.get("OPENAI_ORG_ID")
-
-        # Validate
-        if model == "dall-e-2" and len(image_paths) > 1:
-            raise ValueError("dall-e-2 only supports editing one image at a time")
-        if model.startswith("gpt-image") and len(image_paths) > 16:
-            raise ValueError("gpt-image models support up to 16 images")
-
-        # Build multipart form data
-        files = []
-        for img_path in image_paths:
-            files.append(('image[]' if model.startswith("gpt-image") else 'image',
-                         (Path(img_path).name, open(img_path, 'rb'), 'image/png')))
-
-        if mask_path:
-            files.append(('mask', (Path(mask_path).name, open(mask_path, 'rb'), 'image/png')))
-
-        data = {
-            'prompt': prompt,
-            'model': model,
-            'n': str(n),
-            'size': size
-        }
-
-        if model.startswith("gpt-image"):
-            if background:
-                data['background'] = background
-        else:
-            data['response_format'] = 'b64_json'
-
-        headers = {"Authorization": f"Bearer {api_key}"}
-        if org_id:
-            headers["OpenAI-Organization"] = org_id
-
-        try:
-            response = requests.post(
-                "https://api.openai.com/v1/images/edits",
-                headers=headers,
-                data=data,
-                files=files,
-                timeout=timeout
-            )
-
-            # Enhanced error handling with detailed API response
-            if not response.ok:
-                error_detail = f"HTTP {response.status_code}: {response.reason}"
-                try:
-                    error_json = response.json()
-                    if "error" in error_json:
-                        error_info = error_json["error"]
-                        if isinstance(error_info, dict):
-                            error_msg = error_info.get("message", str(error_info))
-                            error_type = error_info.get("type", "unknown")
-                            error_detail = f"HTTP {response.status_code}: {error_msg} (type: {error_type})"
-                        else:
-                            error_detail = f"HTTP {response.status_code}: {error_info}"
-                except Exception:
-                    # If we can't parse JSON, include raw response text
-                    error_detail = f"HTTP {response.status_code}: {response.reason}\n\nResponse: {response.text}"
-
-                raise requests.exceptions.HTTPError(error_detail, response=response)
-
-        finally:
-            for _, file_tuple in files:
-                if hasattr(file_tuple[1], 'close'):
-                    file_tuple[1].close()
-
-        result_data = response.json()
-        if "data" not in result_data:
-            raise ValueError(f"Unexpected API response: {result_data}")
-
-        images = []
-        for item in result_data["data"]:
-            if "b64_json" not in item:
-                raise ValueError(f"No b64_json in response item: {item}")
-            image_data = base64.b64decode(item["b64_json"])
-            images.append(image_data)
-
-        return images
 
     def _on_generation_success(self, images: list[bytes]) -> None:
         """Handle successful image generation (called in main thread)."""
