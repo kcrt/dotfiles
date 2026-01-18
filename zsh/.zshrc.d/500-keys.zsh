@@ -71,9 +71,13 @@ bindkey -M vicmd "I" Vi_InsertFirst
 bindkey -M vicmd "a" Vi_AddNext
 bindkey -M vicmd "A" Vi_AddEol
 bindkey -M vicmd "c" Vi_Change
-bindkey -M vicmd "/" history-incremental-pattern-search-backward
-bindkey '^R' history-incremental-pattern-search-backward
-bindkey '^S' history-incremental-pattern-search-forward
+# Use fzf for history search if available, otherwise fall back to incremental search
+if zle -l fzf-history-widget 2>/dev/null; then
+	bindkey -M vicmd "/" fzf-history-widget
+else
+	bindkey -M vicmd "/" history-incremental-pattern-search-backward
+fi
+# ^R and ^S are now handled by fzf (see 490-fzf.zsh)
 bindkey "^Q" self-insert
 # }}}
 
