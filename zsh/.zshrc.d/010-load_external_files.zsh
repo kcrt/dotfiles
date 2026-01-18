@@ -4,9 +4,10 @@
 #
 
 # ----- load external files
+# Ensure DOTFILES is defined (should be set in .zshenv, but provide fallback)
 if [[ -z "$DOTFILES" ]]; then
-	echo "DOTFILES is not defined. Please define DOTFILES in .zshenv"
-	return 1
+	echo "*** DOTFILES not set, using default path. ***"
+	export DOTFILES="${HOME}/dotfiles"
 fi
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/echo_color.sh

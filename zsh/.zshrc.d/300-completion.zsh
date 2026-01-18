@@ -28,12 +28,18 @@ zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcach
 zstyle ':completion:*' completer _expand _complete _ignored _approximate
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' verbose yes                        # 詳細な情報を使う
+# Enable approximate completion when no matches found
+zstyle ':completion:*' max-errors 2                       # Allow 2 errors
+zstyle ':completion:*:corrections' format '%B%d (errors: %e)%b'
 zstyle ':completion:*' menu select=2                      # メニュー選択を有効化
 zstyle ':completion:sudo:*' environ PATH="$SUDO_PATH:$PATH" # sudo時にsudo用のパスも使う
 
 # プロセス補完のスタイル
 zstyle ':completion:*:processes' command 'ps x -o pid,args'  # kill <tab>での補完
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
+
+# ディレクトリジャンプ履歴（zoxideなどと連携）
+zstyle ':completion:*' recent-dirs-insert both
 
 # ------------------------------------------------------------------------------
 # Rust/Cargo 補完（キャッシュ付き）

@@ -31,3 +31,12 @@ if command -v direnv &> /dev/null; then
 else
 	echo_warn "Warning: direnv is not installed. Use brew install direnv."
 fi
+
+# ----- Bracketed paste
+# Enable bracketed paste magic for URL handling
+# (prevent http://www.kcrt.net?q=hello try to match local files
+autoload -Uz bracketed-paste-url-magic
+zle -N bracketed-paste bracketed-paste-url-magic
+
+# ----- zsh-syntax-highlighting configuration
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)

@@ -9,7 +9,7 @@
 # ----- fzf setup
 if command -v fzf &> /dev/null; then
 	# Find fzf installation directory
-	local fzf_dir=""
+	fzf_dir=""
 	if [[ -d /opt/homebrew/opt/fzf/shell ]]; then
 		fzf_dir="/opt/homebrew/opt/fzf/shell"
 	elif [[ -d /usr/share/fzf ]]; then
