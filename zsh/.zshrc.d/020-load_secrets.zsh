@@ -27,7 +27,7 @@ if [ -f ${DOTFILES}/secrets/secrets.sh.asc ]; then
 		# Use timeout to prevent hanging if pinentry can't display
 		# --batch fails fast if passphrase isn't cached in agent
 		if command -v timeout &> /dev/null; then
-			eval "$(timeout 2 $GPG_BIN --batch -d ${DOTFILES}/secrets/secrets.sh.asc 2>/dev/null)"
+			eval "$(timeout 6 $GPG_BIN --batch -d ${DOTFILES}/secrets/secrets.sh.asc 2>/dev/null)"
 		else
 			eval "$($GPG_BIN --batch -d ${DOTFILES}/secrets/secrets.sh.asc 2>/dev/null)"
 		fi
