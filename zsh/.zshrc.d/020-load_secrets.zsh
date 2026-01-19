@@ -25,9 +25,14 @@ if [ -f ${DOTFILES}/secrets/secrets.sh.asc ]; then
 
 	if [[ -n "$GPG_BIN" ]]; then
 		eval "$($GPG_BIN -d ${DOTFILES}/secrets/secrets.sh.asc 2>/dev/null)"
+	else
+		echo_warn "GPG not found. Cannot load encrypted secrets."
 	fi
 	unset GPG_BIN
-fi
-if [ -z "$SECRET_KEYS_SUCCESSFULLY_LOADED" ]; then
-	echo_warn "Warning: Secret keys not loaded. Encrypted secrets.sh.asc file may be missing or GPG is not installed."
+	if [ -z "$SECRET_KEYS_SUCCESSFULLY_LOADED" ]; then
+		echo_warn "Warning: Secret keys not loaded. Check setup and private GPG keys."
+	fi
+else
+	echo_info "No encrypted secrets file found at ${DOTFILES}/secrets/secrets.sh.asc"
+	echo_info "(You may need 'git submodule update --init --recursive' to fetch it.)"
 fi
