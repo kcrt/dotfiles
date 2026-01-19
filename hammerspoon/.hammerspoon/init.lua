@@ -3,7 +3,6 @@
 -- Place this script at ~/.hammerspoon/init.lua
 
 logger = hs.logger.new("kcrt", "debug")
--- secrets = hs.json.read(os.getenv("HOME") .. "/dotfiles/no_git/secrets.json")
 
 function chomp(s)
 	if s == "" then
@@ -668,5 +667,37 @@ function checkStartup()
 	-- hs.notify.new(mountDrives, {title="Start up", informativeText="Do you want to mount network and local drives?", actionButtonTitle="Yes!", hasActionButton=true, withdrawAfter=60}):send()
 end
 
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+--   GPG Decryption Helper
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+function loadGPGEncryptedLua(filepath)
+	-- Use full path to gpg since Hammerspoon doesn't inherit shell PATH
+	local gpgPath = "/opt/homebrew/bin/gpg"
+	local gpgCmd = string.format('"%s" --decrypt --quiet --yes "%s" 2>&1', gpgPath, filepath)
+	local content, status, _, rc = hs.execute(gpgCmd)
+
+	if status and content ~= nil and content ~= "" then
+		local chunk, err = load(content)
+		if chunk then
+			chunk()
+			logger.i("Successfully loaded and executed: " .. filepath)
+			return true
+		else
+			logger.e("Failed to load Lua chunk from: " .. filepath)
+			logger.e("Error: " .. tostring(err))
+			return false
+		end
+	else
+		logger.e("Failed to decrypt GPG file: " .. filepath)
+		logger.e("GPG output: " .. tostring(content))
+		hs.notify.new({
+			title="Hammerspoon GPG Error",
+			informativeText="Could not decrypt " .. filepath .. ". Please run: gpg --decrypt \"" .. filepath .. "\"",
+			withdrawAfter=30
+		}):send()
+		return false
+	end
+end
+
 -- Load private/secret functions
-dofile(os.getenv("HOME") .. "/dotfiles/no_git/private.lua")
+loadGPGEncryptedLua(os.getenv("HOME") .. "/dotfiles/secrets/private.lua.asc")

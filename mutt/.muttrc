@@ -6,7 +6,7 @@ set use_from="yes"
 # set hostname="kcrt.net"
 
 # メールボックスの設定
-source "gpg -d ~/dotfiles/no_git/mutt_account.asc |"
+source "gpg -d ~/dotfiles/secrets/mutt_account.asc |"
 set timeout=600
 set mail_check=600
 set beep_new=yes
@@ -49,7 +49,7 @@ set mime_forward=ask-yes				# 転送時に添付ファイルも送るか
 set attribution="On %d, %n wrote:\n"	# 返信時の引用文前に表示される
 set include=yes							# デフォルトで引用
 set abort_nosubject=yes					# タイトルのないメッセージを許可する
-set signature="~/dotfiles/no_git/signature"			# 署名
+set signature="gpg -d ~/dotfiles/secrets/signature.asc |"			# 署名
 
 # キーバインド設定
 bind editor <space> noop

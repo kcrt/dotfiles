@@ -12,7 +12,7 @@ if [[ "$current_tty" != "not a tty" && -n "$current_tty" ]]; then
 fi
 
 # Load encrypted secrets if available
-if [ -f ${DOTFILES}/no_git/secrets.sh.asc ]; then
+if [ -f ${DOTFILES}/secrets/secrets.sh.asc ]; then
 	if [[ -x "/opt/homebrew/bin/gpg" ]]; then
 		GPG_BIN="/opt/homebrew/bin/gpg"
 	elif [[ -x "/usr/local/bin/gpg" ]]; then
@@ -24,7 +24,7 @@ if [ -f ${DOTFILES}/no_git/secrets.sh.asc ]; then
 	fi
 
 	if [[ -n "$GPG_BIN" ]]; then
-		eval "$($GPG_BIN -d ${DOTFILES}/no_git/secrets.sh.asc 2>/dev/null)"
+		eval "$($GPG_BIN -d ${DOTFILES}/secrets/secrets.sh.asc 2>/dev/null)"
 	fi
 	unset GPG_BIN
 fi
