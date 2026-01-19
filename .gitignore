@@ -2,3 +2,4 @@
 ._*
 no_git
 secrets/*.asc
+.claude/
