@@ -4,7 +4,7 @@
 	#GPG: signingkey = A193875B
 	signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOPgJQcfABeJYG6ANq9VpyO/kcrt/V5gp7pcZpCtW6U kcrt@kcrt.net"
 [core]
-	excludesfile = /Users/kcrt/.gitignore
+	excludesfile = ~/.gitignore
 	attributesfile = ~/.gitattributes
 	quotepath = false
 	editor = vim
@@ -86,8 +86,7 @@
 	old = red
 	new = green
 [credential]
-	helper = osxkeychain
-	helper = cache --timeout 3600
+	helper = "!~/dotfiles/script/git-credential-helper.sh"
 [init]
 	defaultBranch = main
 [diff "lockb"]
