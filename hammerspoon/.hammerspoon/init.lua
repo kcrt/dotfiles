@@ -673,7 +673,7 @@ end
 function loadGPGEncryptedLua(filepath)
 	-- Use full path to gpg since Hammerspoon doesn't inherit shell PATH
 	local gpgPath = "/opt/homebrew/bin/gpg"
-	local gpgCmd = string.format('"%s" --decrypt --quiet --yes "%s" 2>&1', gpgPath, filepath)
+	local gpgCmd = string.format('"%s" --decrypt --batch --no-tty --quiet --yes "%s" 2>&1', gpgPath, filepath)
 	local content, status, _, rc = hs.execute(gpgCmd)
 
 	if status and content ~= nil and content ~= "" then
