@@ -257,78 +257,76 @@ augroup Binary
 augroup END
 
 " ===== プラグイン設定 ===========================
-" ----- Vundle -----------------------------------
-if !isdirectory(expand("~/.vim/bundle/Vundle.vim/"))
-	echo "You need to install Vundle!"
-	echo "Please execute 'git clone --depth=1 https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim'"
-	command -nargs=* Plugin echo
+" ----- vim-plug ---------------------------------
+if !filereadable(expand("~/.vim/autoload/plug.vim"))
+	echo "You need to install vim-plug!"
+	echo "Please execute: curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+	command -nargs=* Plug echo
 endif
-set rtp+=~/.vim/bundle/Vundle.vim/
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'			" Plugin management
+call plug#begin('~/.vim/plugged')
 " --- vim enviroment
-Plugin 'sudo.vim'						" Enable vi sudo:file.txt
-Plugin 'tpope/vim-surround'				" Enable additional text-object like s(
+Plug 'sudo.vim'						" Enable vi sudo:file.txt
+Plug 'tpope/vim-surround'				" Enable additional text-object like s(
 " --- color scheme
-Plugin 'w0ng/vim-hybrid'				" Good color scheme based on Solarized
-Plugin 'vim-scripts/AnsiEsc.vim'		" apply escape sequense like: <Esc>[36mHello<Esc>[0m , :AnsiEsc
-Plugin 'chrisbra/Colorizer'				" :ColorHighLight
+Plug 'w0ng/vim-hybrid'				" Good color scheme based on Solarized
+Plug 'vim-scripts/AnsiEsc.vim'		" apply escape sequense like: <Esc>[36mHello<Esc>[0m , :AnsiEsc
+Plug 'chrisbra/Colorizer'				" :ColorHighLight
 " --- Encryption
-Plugin 'jamessan/vim-gnupg'
+Plug 'jamessan/vim-gnupg'
 " --- development
-Plugin 'thinca/vim-quickrun'
-Plugin 'scrooloose/nerdtree'
-Plugin 'jistr/vim-nerdtree-tabs'
-Plugin 'majutsushi/tagbar'
-Plugin 'luochen1990/rainbow'
-Plugin 'rhysd/devdocs.vim'
-Plugin 'editorconfig/editorconfig-vim'
+Plug 'thinca/vim-quickrun'
+Plug 'scrooloose/nerdtree'
+Plug 'jistr/vim-nerdtree-tabs'
+Plug 'majutsushi/tagbar'
+Plug 'luochen1990/rainbow'
+Plug 'rhysd/devdocs.vim'
+Plug 'editorconfig/editorconfig-vim'
 " --- Language server protocol
-Plugin 'prabirshrestha/async.vim'
-Plugin 'prabirshrestha/vim-lsp'
-Plugin 'prabirshrestha/asyncomplete.vim'
-Plugin 'prabirshrestha/asyncomplete-lsp.vim'
-Plugin 'mattn/vim-lsp-settings'
+Plug 'prabirshrestha/async.vim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'mattn/vim-lsp-settings'
 " --- git
-Plugin 'gregsexton/gitv'
-Plugin 'tpope/vim-fugitive'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'Xuyuanp/nerdtree-git-plugin'
-Plugin 'hotwatermorning/auto-git-diff'
+Plug 'gregsexton/gitv'
+Plug 'tpope/vim-fugitive'
+Plug 'airblade/vim-gitgutter'
+Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'hotwatermorning/auto-git-diff'
 " --- julia
-Plugin 'JuliaEditorSupport/julia-vim'
+Plug 'JuliaEditorSupport/julia-vim'
 " --- go
 " --- LaTeX
-Plugin 'lervag/vimtex'
+Plug 'lervag/vimtex'
 " --- HTML
-Plugin 'gregsexton/MatchTag'		" Highlight matched html/xml tag
-Plugin 'othree/html5.vim'
-Plugin 'alvan/vim-closetag'
+Plug 'gregsexton/MatchTag'		" Highlight matched html/xml tag
+Plug 'othree/html5.vim'
+Plug 'alvan/vim-closetag'
 " --- JavaScript
-Plugin 'MaxMEllon/vim-jsx-pretty'				" JSX highlight
-Plugin 'moll/vim-node'
-Plugin 'othree/es.next.syntax.vim'				" ES Stage-9 syntax highlight
-Plugin 'othree/javascript-libraries-syntax.vim'
-Plugin 'othree/yajs.vim'						" ES6 Highlight
-Plugin 'pangloss/vim-javascript'
+Plug 'MaxMEllon/vim-jsx-pretty'				" JSX highlight
+Plug 'moll/vim-node'
+Plug 'othree/es.next.syntax.vim'				" ES Stage-9 syntax highlight
+Plug 'othree/javascript-libraries-syntax.vim'
+Plug 'othree/yajs.vim'						" ES6 Highlight
+Plug 'pangloss/vim-javascript'
 " --- Dart, flatter
-Plugin 'dart-lang/dart-vim-plugin'
+Plug 'dart-lang/dart-vim-plugin'
 " --- TypeScript
-Plugin 'leafgarland/typescript-vim'
-Plugin 'peitalin/vim-jsx-typescript'
+Plug 'leafgarland/typescript-vim'
+Plug 'peitalin/vim-jsx-typescript'
 " --- CSV
-Plugin 'mechatroner/rainbow_csv'
+Plug 'mechatroner/rainbow_csv'
 " --- Other programming
-Plugin 'jalvesaq/Nvim-R'
-Plugin 'tpope/vim-endwise'
-Plugin 'sudar/vim-arduino-syntax'
+Plug 'jalvesaq/Nvim-R'
+Plug 'tpope/vim-endwise'
+Plug 'sudar/vim-arduino-syntax'
 " --- Japanese
-Plugin 'haya14busa/vim-migemo'
-Plugin 'fuenor/JpFormat.vim'
+Plug 'haya14busa/vim-migemo'
+Plug 'fuenor/JpFormat.vim'
 " --- Copilot
-Plugin 'https://github.com/github/copilot.vim'
+Plug 'https://github.com/github/copilot.vim'
 
-call vundle#end()
+call plug#end()
 
 
 " ----- QuickRun -------------------
