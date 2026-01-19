@@ -1,4 +1,4 @@
 .DS_Store
 ._*
 no_git
-secrets/*
+secrets/*.asc
