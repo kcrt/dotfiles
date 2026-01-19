@@ -21,7 +21,7 @@ function set_title(){
 		tmux rename-window "$Title"
 	elif [[ -n "$ZELLIJ" ]]; then
 		# zellij
-		zellij action rename-tab "$Title"
+		zellij action rename-tab "$Title" 2>/dev/null
 		echo -n "\e]0;$Title\e\\"
 	elif [[ -n $SSH_CLIENT ]]; then
 		# via ssh
