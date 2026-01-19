@@ -265,7 +265,7 @@ if !filereadable(expand("~/.vim/autoload/plug.vim"))
 endif
 call plug#begin('~/.vim/plugged')
 " --- vim enviroment
-Plug 'sudo.vim'						" Enable vi sudo:file.txt
+" Plug 'sudo.vim'						" Enable vi sudo:file.txt
 Plug 'tpope/vim-surround'				" Enable additional text-object like s(
 " --- color scheme
 Plug 'w0ng/vim-hybrid'				" Good color scheme based on Solarized
