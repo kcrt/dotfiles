@@ -9,6 +9,8 @@
 
 abbrev-alias hist='history'
 abbrev-alias mutt='neomutt'
+abbrev-alias agh='ag --hidden'
+abbrev-alias rgh='rg --hidden'
 
 # ============================================================================
 # Directory Navigation

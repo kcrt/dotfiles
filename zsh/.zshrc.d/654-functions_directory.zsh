@@ -1,5 +1,5 @@
 #
-#	068-functions_cd.zsh
+#	068-functions_directory.zsh
 #		cd family function
 #
 
@@ -46,5 +46,20 @@ function lcd(){
 		fi
 		echo "cd to $dirname"
 		cd "$dirname"
+	fi
+}
+
+function lopen(){
+	# Find file/directory with mdfind and select with fzf, then open it
+	if [ $# -eq 0 ]; then
+		echo "example: `lopen document` will locate document and execute `open /path/to/document`"
+	elif [ $# -eq 1 ]; then
+		dirname=`mdfind "kMDItemContentType='public.folder' && kMDItemFSName == '*$1*'c" | fzf --height 40% --layout=reverse --border`
+		if [ "$dirname" = "" ]; then
+			echo "no such a file."
+			return 1
+		fi
+		echo "open $dirname"
+		open "$dirname"
 	fi
 }
