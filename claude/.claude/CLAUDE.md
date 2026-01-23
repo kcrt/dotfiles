@@ -4,6 +4,9 @@
 ### General
 - Be explicit and type-safe
 - Write self-documenting code with clear variable names
+- Avoid duplicated code (DRY principle)
+- If you think the function/code is reusable, write it in a separate function or file for reuse.
+- Check utility libraries in the project before implementing common functionality
 
 ### Language-Specific
 
@@ -40,6 +43,7 @@
 #### R:
 - Use `tidyverse` for data manipulation
 - Use `dbplyr` for database interactions, instead of raw SQL queries
+- If you need to investigate something, create `scratch` directory and put your code there. (YYYY-MM-DD-description.R)
 
 
 ### File operation
@@ -56,3 +60,7 @@
 - Cite sources when discussing medical facts
 - Understand statistical concepts (survival analysis, logistic regression)
 - Familiar with academic publishing workflows
+
+
+## Other information
+- use `npx agent-browser` to use agent-browser for web browsing tasks
