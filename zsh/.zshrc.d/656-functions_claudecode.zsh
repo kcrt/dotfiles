@@ -1,5 +1,5 @@
 #
-#	656-functions_zai.zsh
+#	656-functions_claudecode.zsh
 #		Z.ai API proxy for Claude
 #
 
@@ -135,7 +135,7 @@ if [[ -f "$config_file" ]]; then
 				echo_info "Z.ai proxy enabled for Claude."
 			fi
 			;;
-	kimi)
+		kimi)
 			if [[ -n "$MOONSHOT_API_KEY" ]]; then
 				_claude-code-set-env "kimi"
 				echo_info "Kimi (Moonshot AI) enabled for Claude."
