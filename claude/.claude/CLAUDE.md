@@ -14,6 +14,7 @@
 - Use strict mode
 - Prefer functional programming patterns
 - ES modules for all new code
+- When adding new dependencies, add information to README.md.
 
 #### Python:
 - Type hints required
@@ -35,6 +36,7 @@
 #### Rust:
 - Leverage type system for correctness
 - Prefer Result<T, E> over panics
+- When adding new dependencies, add information to README.md.
 
 #### Swift:
 - SwiftUI for UI code

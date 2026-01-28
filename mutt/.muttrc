@@ -28,7 +28,7 @@ set date_format="%y-%m-%d"
 set index_format="%4C %Z %[%m/%d %H:%m] %-15.15L (%?l?%4l&%4c?) %s"
 set pager_index_lines=6					# ページャー内のミニインデックス
 set sort=threads
-set sort_aux=reverse-date
+set sort_aux=reverse-last-date-received
 set tilde=yes
 set confirm_append = no # すぐに移動
 ignore *

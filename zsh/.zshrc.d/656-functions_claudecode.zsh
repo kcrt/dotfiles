@@ -12,24 +12,39 @@ function _claude-code-set-env() {
 		anthropic)
 			unset ANTHROPIC_BASE_URL
 			unset ANTHROPIC_AUTH_TOKEN
+			unset ANTHROPIC_MODEL
 			unset ANTHROPIC_DEFAULT_OPUS_MODEL
 			unset ANTHROPIC_DEFAULT_SONNET_MODEL
 			unset ANTHROPIC_DEFAULT_HAIKU_MODEL
+			unset CLAUDE_CODE_SUBAGENT_MODEL
 			;;
 		zai)
 			export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
 			export ANTHROPIC_AUTH_TOKEN=$ZAI_API_KEY
+			export ANTHROPIC_MODEL=GLM-4.7
 			export ANTHROPIC_DEFAULT_OPUS_MODEL=GLM-4.7
 			export ANTHROPIC_DEFAULT_SONNET_MODEL=GLM-4.7
 			export ANTHROPIC_DEFAULT_HAIKU_MODEL=GLM-4.5-Air
+			export CLAUDE_CODE_SUBAGENT_MODEL=GLM-4.7
+			;;
+		kimi)
+			export ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic
+			export ANTHROPIC_AUTH_TOKEN=${MOONSHOT_API_KEY}
+			export ANTHROPIC_MODEL=kimi-k2.5
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=kimi-k2.5
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=kimi-k2.5
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=kimi-k2.5
+			export CLAUDE_CODE_SUBAGENT_MODEL=kimi-k2.5
 			;;
 		ollama)
 			if [[ -n "$model" ]]; then
 				export ANTHROPIC_BASE_URL=http://localhost:11434
 				export ANTHROPIC_AUTH_TOKEN=ollama
+				export ANTHROPIC_MODEL=$model
 				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
 				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
 				export ANTHROPIC_DEFAULT_HAIKU_MODEL=$model
+				export CLAUDE_CODE_SUBAGENT_MODEL=$model
 			fi
 			;;
 	esac
@@ -52,11 +67,12 @@ function claude-code-to() {
 			local current=$(jq -r '.target // "anthropic"' "$config_file" 2>/dev/null)
 			echo "Current Claude Code target: $current"
 		else
-			echo "Usage: claude-code-to [anthropic|zai|ollama:MODEL]"
+			echo "Usage: claude-code-to [anthropic|zai|kimi|ollama:MODEL]"
 			echo ""
 			echo "Examples:"
 			echo "  claude-code-to anthropic          # Use Anthropic API directly"
 			echo "  claude-code-to zai                # Use Z.ai proxy"
+			echo "  claude-code-to kimi               # Use Kimi (Moonshot AI)"
 			echo "  claude-code-to ollama:qwen3-coder # Use Ollama with qwen3-coder"
 			echo "  claude-code-to ollama:gpt-oss:20b # Use Ollama with gpt-oss:20b"
 		fi
@@ -79,6 +95,15 @@ function claude-code-to() {
 			echo '{"target":"zai"}' > "$config_file"
 			_claude-code-set-env "zai"
 			;;
+		kimi)
+			if [[ -z "$MOONSHOT_API_KEY" ]]; then
+				echo "Error: MOONSHOT_API_KEY environment variable is not set. Please set it to use Kimi."
+				return 1
+			fi
+			echo_info "Kimi (Moonshot AI) enabled for Claude."
+			echo '{"target":"kimi"}' > "$config_file"
+			_claude-code-set-env "kimi"
+			;;
 		ollama:*)
 			local model="${target#ollama:}"
 			echo_info "Ollama ($model) enabled for Claude."
@@ -91,6 +116,7 @@ function claude-code-to() {
 			echo "Valid options:"
 			echo "  anthropic              - Use Anthropic API directly"
 			echo "  zai                    - Use Z.ai proxy"
+			echo "  kimi                   - Use Kimi (Moonshot AI)"
 			echo "  ollama:MODEL_NAME      - Use Ollama with specified model"
 			return 1
 			;;
@@ -107,6 +133,12 @@ if [[ -f "$config_file" ]]; then
 			if [[ -n "$ZAI_API_KEY" ]]; then
 				_claude-code-set-env "zai"
 				echo_info "Z.ai proxy enabled for Claude."
+			fi
+			;;
+	kimi)
+			if [[ -n "$MOONSHOT_API_KEY" ]]; then
+				_claude-code-set-env "kimi"
+				echo_info "Kimi (Moonshot AI) enabled for Claude."
 			fi
 			;;
 		ollama)

@@ -33,7 +33,14 @@
       "Bash(find -group *)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "Skill(agent-browser)",
+      "Skill(agent-browser:*)",
+      "Bash(npx agent-browser:*)",
+      "Bash(bc:*)",
+      "Bash(npm run test)"
     ],
     "ask": [
       "Bash(find *-exec*)",

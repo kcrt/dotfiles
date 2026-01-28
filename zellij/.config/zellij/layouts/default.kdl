@@ -43,7 +43,7 @@ layout {
 				command_cpuload_rendermode "dynamic"
 
 				datetime        "#[bg=#677589,fg=#eaf0f6,bold]{format}"
-				datetime_format "%Y-%m-%d %H:%M:%S"
+				datetime_format "%Y-%m-%d %H:%M"
 				datetime_timezone "Asia/Tokyo"
 			}
 		}
