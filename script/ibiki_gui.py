@@ -120,7 +120,7 @@ class IbikiMonitorApp:
             self.status_label.config(text="Error: PyAudio init failed.")
             return
         try:
-            wakeup_path = os.path.join(os.path.dirname(__file__), '..', 'audio', 'wakeup.m4a')
+            wakeup_path = os.path.join(os.path.dirname(__file__), '..', 'materials', 'audio', 'wakeup.m4a')
             print(f"Loading wakeup sound from: {wakeup_path}")
             sound = AudioSegment.from_file(wakeup_path)
             sound = sound.set_frame_rate(RATE).set_channels(CHANNELS).set_sample_width(self.pyaudio_instance.get_sample_size(FORMAT))
