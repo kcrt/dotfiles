@@ -92,3 +92,7 @@ bindkey -M vicmd 'j' history-substring-search-down
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
+
+# Fix "n" key in vi command mode - make it insert literally instead of vi-repeat-search
+# This prevents issues with interactive CLI tools (e.g., Claude Code) where "n" would close input prompts
+bindkey -M vicmd "n" self-insert

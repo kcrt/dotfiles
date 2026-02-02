@@ -29,3 +29,11 @@ fi
 if command -v dstat &> /dev/null; then
 	alias dstat='sudo dstat -t -cl --top-cpu -m -d --top-io -n'
 fi
+
+# ============================================================================
+# ghidra
+# ============================================================================
+
+if [[ -f "/opt/homebrew/opt/ghidra/libexec/ghidraRun" ]]; then
+	alias ghidra='/opt/homebrew/opt/ghidra/libexec/ghidraRun'
+fi

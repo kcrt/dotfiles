@@ -11,6 +11,7 @@ alias -s txt='less'
 alias -s log='tail -f -n20'
 alias -s html='w3m'
 alias -s json='jq -C .'
+alias -s asc='vim'
 
 # ============================================================================
 # Images

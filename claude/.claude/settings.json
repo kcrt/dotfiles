@@ -2,8 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(echo:*)",
-      "Bash(command:*)",
+      "Bash(command -v *)",
+      "Bash(bc:*)",
       "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(pwd:*)",
       "Bash(cat:*)",
       "Bash(head:*)",
       "Bash(tail:*)",
@@ -12,12 +15,10 @@
       "Bash(stat:*)",
       "Bash(which:*)",
       "Bash(type:*)",
-      "Bash(pwd:*)",
-      "Bash(tree:*)",
-      "Bash(test:*)",
-      "Bash([*:*)",
       "Bash(realpath:*)",
       "Bash(readlink:*)",
+      "Bash(test:*)",
+      "Bash([*:*)",
       "Bash(find -print *)",
       "Bash(find -name *)",
       "Bash(find -type *)",
@@ -31,33 +32,148 @@
       "Bash(find -perm *)",
       "Bash(find -user *)",
       "Bash(find -group *)",
-      "mcp__context7__resolve-library-id",
-      "mcp__context7__query-docs",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git tag:*)",
+      "Bash(git remote -v)",
+      "Bash(git config:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git describe:*)",
       "Bash(cargo build:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clippy:*)",
       "Bash(npm test:*)",
+      "Bash(npm run test*)",
       "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(rga:*)",
+      "Bash(jq:*)",
+      "Bash(yq:*)",
+      "Bash(docker ps)",
+      "Bash(docker images)",
+      "Bash(docker inspect:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose ps)",
+      "Bash(kubectl get:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl logs:*)",
       "Skill(agent-browser)",
       "Skill(agent-browser:*)",
-      "Bash(npx agent-browser:*)",
-      "Bash(bc:*)",
-      "Bash(npm run test)"
+      "Bash(agent-browser *)",
+      "Bash(npx agent-browser *)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(npx agent-browser)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(dd:*)"
     ],
     "ask": [
       "Bash(find *-exec*)",
       "Bash(find *-execdir*)",
-      "Bash(find *-delete)",
+      "Bash(find *-delete*)",
       "Bash(find *-ok*)",
       "Bash(rm:*)",
-      "Bash(*:rm *)",
-      "Bash(*:rm -rf*)",
-      "Bash(*:rm -f*)",
-      "Bash(*:rm -r*)"
+      "Bash(rmdir:*)",
+      "Bash(shred:*)",
+      "Bash(wipe:*)",
+      "Bash(*force*)",
+      "Bash(*recursive*)",
+      "Bash(dd:*)",
+      "Bash(mkfs:*)",
+      "Bash(format:*)",
+      "Bash(chmod 000*)",
+      "Bash(chown root:*)",
+      "Bash(git push*)",
+      "Bash(git reset*)",
+      "Bash(git clean*)",
+      "Bash(git rebase*)",
+      "Bash(git checkout -f)",
+      "Bash(docker rm*)",
+      "Bash(docker rmi*)",
+      "Bash(docker volume rm*)",
+      "Bash(kubectl delete*)",
+      "Bash(kubectl apply --force*)",
+      "Bash(kubectl delete -f*)",
+      "Bash(cargo clean)",
+      "Bash(npm cache clean)",
+      "Bash(pip uninstall*)",
+      "Bash(uv uninstall*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(rsync:*)"
     ]
   },
   "model": "opusplan",
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Context window is full. Compacting.\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Done.\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\" &"
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "bunx -y ccstatusline@latest",
     "padding": 0
+  },
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
+    },
+    "zotero-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "zotero-mcp"
+      ],
+      "env": {},
+      "disabled": true
+    }
   }
 }

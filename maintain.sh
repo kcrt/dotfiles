@@ -67,6 +67,7 @@ case $HOST in
 		brew autoremove
 		brew cleanup -s --prune=1
 		rm -rf /Users/kcrt/Library/Caches/Cypress/*
+		npx playwright uninstall all
 		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
 		nix-collect-garbage -d && nix-store --optimise
 		pip3 cache purge

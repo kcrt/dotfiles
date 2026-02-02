@@ -117,6 +117,7 @@ brew "emojify"
 brew "node"
 brew "emscripten"
 brew "enscript"
+brew "espeak-ng"
 brew "exiftool"
 brew "exiv2"
 brew "fcrackzip"
@@ -125,7 +126,6 @@ brew "fdupes"
 brew "x264"
 brew "x265"
 brew "ffmpeg"
-brew "open-mpi"
 brew "figlet"
 brew "firebase-cli", link: false
 brew "portaudio"
@@ -165,9 +165,8 @@ brew "graphviz"
 brew "gsl"
 brew "gsmartcontrol"
 brew "gtk4"
-brew "libbluray"
-brew "xvid"
 brew "gstreamer"
+brew "libbluray"
 brew "libdvdcss"
 brew "handbrake", link: false
 brew "hashcat"
@@ -181,6 +180,7 @@ brew "jadx"
 brew "jnethack"
 brew "john"
 brew "john-jumbo", link: false
+brew "open-mpi"
 brew "vips"
 brew "joplin-cli"
 brew "jq"
@@ -212,6 +212,7 @@ brew "miller"
 brew "mingw-w64"
 brew "minicom"
 brew "mise"
+brew "mkcert"
 brew "mole"
 brew "mongocli"
 brew "mongosh"
@@ -233,6 +234,7 @@ brew "nkf"
 brew "nmap"
 brew "ollama"
 brew "pytorch"
+brew "xvid"
 brew "openai-whisper"
 brew "opencode"
 brew "vtk"
@@ -472,7 +474,8 @@ cask "stratoshark"
 cask "subler"
 cask "suspicious-package"
 cask "teamviewer"
-cask "tigervnc-viewer"
+cask "tigervnc"
+cask "tigervnc"
 cask "timemachinestatus"
 cask "tomighty"
 cask "tor-browser"
@@ -524,7 +527,6 @@ mas "Front Row", id: 6480318506
 mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
 mas "Hex Fiend", id: 1342896380
-mas "iMovie", id: 408981434
 mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
@@ -537,7 +539,6 @@ mas "LadioCast", id: 411213048
 mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
 mas "LINE WORKS", id: 6447544433
-mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
@@ -549,8 +550,6 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
-mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
@@ -594,6 +593,7 @@ vscode "google.geminicodeassist"
 vscode "googlecloudtools.cloudcode"
 vscode "hbenl.vscode-test-explorer"
 vscode "jeff-hykin.better-cpp-syntax"
+vscode "jvalecillos.gpg"
 vscode "llvm-vs-code-extensions.lldb-dap"
 vscode "mechatroner.rainbow-csv"
 vscode "ms-azuretools.vscode-containers"
