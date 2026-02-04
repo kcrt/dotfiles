@@ -65,6 +65,25 @@ if [[ -d "$HOME/.cargo" && -x "$HOME/.cargo/bin/rustc" ]]; then
 fi
 
 # ------------------------------------------------------------------------------
+# Docker 補完（キャッシュ付き）
+# ------------------------------------------------------------------------------
+if command -v docker &> /dev/null; then
+	# キャッシュ設定
+	DOCKER_COMPLETION_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/docker-completion.zsh"
+	mkdir -p "$(dirname "$DOCKER_COMPLETION_CACHE" 2>/dev/null)"
+
+	# キャッシュを更新または読み込み（7日ごとに更新）
+	if is_file_older_than_days "$DOCKER_COMPLETION_CACHE" 7; then
+		docker completion zsh > "$DOCKER_COMPLETION_CACHE" 2>/dev/null
+	fi
+
+	# 補完スクリプトを読み込み
+	if [[ -f "$DOCKER_COMPLETION_CACHE" ]]; then
+		source "$DOCKER_COMPLETION_CACHE"
+	fi
+fi
+
+# ------------------------------------------------------------------------------
 # 補完初期化
 # ------------------------------------------------------------------------------
 # rootユーザーはスキップ

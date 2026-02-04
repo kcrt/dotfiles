@@ -7,6 +7,7 @@
 - Avoid duplicated code (DRY principle)
 - If you think the function/code is reusable, write it in a separate function or file for reuse.
 - Check utility libraries in the project before implementing common functionality
+- When addressing warnings or 'unused' code, investigate whether the code SHOULD be used before suppressing with `#[allow(dead_code)]` of linter off. Ask the user if the intent is to implement the functionality or remove it entirely.
 
 ### Language-Specific
 

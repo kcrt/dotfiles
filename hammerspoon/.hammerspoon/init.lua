@@ -128,22 +128,24 @@ lastSSIDTime = 0
 function ssidChangedCallback(watcher, message, interface)
 
 	ssid = hs.wifi.currentNetwork(interface)
-	
+	logger.i("WiFi event: " .. message .. " on " .. interface .. ", SSID: " .. tostring(ssid))
+
 	if ssid == nil then
 		if lastssid == "" then
 			return false
 		end
 		normal_alert("Wifi disconnected")
 		lastssid = ""
+		removeInformationBar()
 		return false
 	else
-		logger.i("SSID: " .. ssid)
 		if os.time() - lastSSIDTime < 2 then
 			-- 頻繁な切り替えを無視
 			return false
 		end
 		lastSSIDTime = os.time()
 		normal_alert("Connected to: " .. ssid .. " on " ..interface)
+		updateTetheringBar(ssid)
 	end
 
 	if ssid == "nagakuranet" then
@@ -668,8 +670,93 @@ function checkStartup()
 end
 
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
---   GPG Decryption Helper
+--   Tethering Detection (iPhone hotspot)
 -- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+function updateTetheringBar(ssid)
+	if ssid and string.find(ssid, "iPhone") then
+		local orangeColor = { red = 1, green = 0.5, blue = 0, alpha = 0.8 }
+		updateInformationBar("Tethering: " .. ssid, orangeColor)
+	else
+		removeInformationBar()
+	end
+end
+
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+--   Information Bar (reusable visual bar)
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+informationBar = nil
+
+-- Create or update information bar at bottom of screen
+-- text: string to display
+-- color: table with {red, green, blue, alpha} values (0-1)
+function createInformationBar(text, color)
+	if informationBar then
+		informationBar:delete()  -- Recreate to update text/color
+	end
+
+	local screen = hs.screen.primaryScreen()
+	local frame = screen:fullFrame()
+
+	-- Default to red if color not provided
+	local fillColor = color or { red = 1, green = 0, blue = 0, alpha = 0.8 }
+
+	local barHeight = 24
+	informationBar = hs.canvas.new({
+		x = frame.x,
+		y = frame.y + frame.h - barHeight,
+		w = frame.w,
+		h = barHeight
+	})
+
+	informationBar[1] = {
+		type = "rectangle",
+		action = "fill",
+		fillColor = fillColor
+	}
+
+	informationBar[2] = {
+		type = "text",
+		text = text,
+		textColor = { white = 1 },
+		textSize = 14,
+		textAlignment = "center",
+		frame = { x = 0, y = 2, w = frame.w, h = barHeight }
+	}
+
+	informationBar:level(hs.canvas.windowLevels.overlay)
+	informationBar:behavior(hs.canvas.windowBehaviors.canJoinAllSpaces)
+	informationBar:show()
+
+	return informationBar
+end
+
+-- Update existing information bar text and/or color
+function updateInformationBar(text, color)
+	if informationBar then
+		if text then
+			informationBar[2].text = text
+		end
+		if color then
+			informationBar[1].fillColor = color
+		end
+		informationBar:show()
+	else
+		createInformationBar(text, color)
+	end
+end
+
+-- Remove information bar
+function removeInformationBar()
+	if informationBar then
+		informationBar:delete()
+		informationBar = nil
+	end
+end
+
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+--   GPG Decryption Helper
+-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-
 function loadGPGEncryptedLua(filepath)
 	-- Use full path to gpg since Hammerspoon doesn't inherit shell PATH
 	local gpgPath = "/opt/homebrew/bin/gpg"
