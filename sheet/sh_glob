@@ -1,0 +1,35 @@
+# Basic globs (bash/zsh)
+*                       any string
+?                       single character
+[abc]                   character class
+[a-z]                   range
+[^...] or [!...]        negated class
+
+# Extended globs (zsh: setopt extended_glob)
+*.(mpg|mov)             multiple extensions
+^*.log                  negation (not ending in .log)
+**/*                    recursive glob
+foo*~*.txt              glob exclusion (matches foo* but not *.txt)
+<x-y>                   numeric ranges
+
+# Examples
+# Basic
+*.txt                    # all .txt files
+image?.png               # image + 1 char + .png (e.g., image1.png)
+image[0-9].png           # image0.png through image9.png
+image[0-9][0-9].png      # image00.png through image99.png
+
+# Extended glob (zsh: setopt extended_glob)
+*.(mpg|mov|avi)          # video files
+^*.log                   # everything except .log files
+**/*.zsh                 # recursive - all .zsh files in subdirs
+*.png~thumbnail_*.png    # .png files but not thumbnails
+<1-100>                  # match numbers 1-100
+image<1-100>.png         # image001.png through image100.png
+
+# Qualifiers (zsh)
+*(.)                     # regular files only
+*(@)                     # symbolic links only
+*/                       # directories only
+*(om)                    # sorted by modification time (newest first)
+*(.Lm+10)                # files larger than 10MB

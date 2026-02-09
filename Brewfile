@@ -7,6 +7,7 @@ tap "homebrew/cask"
 tap "homebrew/core"
 tap "homebrew/services"
 tap "itchyny/tap"
+tap "kcrt/kcrt"
 tap "mackerelio/mackerel-agent"
 tap "microsoft/foundrylocal"
 tap "nohajc/anylinuxfs"
@@ -133,7 +134,6 @@ brew "fluid-synth"
 brew "libheif"
 brew "libtool"
 brew "imagemagick"
-brew "libraw"
 brew "folderify"
 brew "fontforge"
 brew "fortune"
@@ -180,6 +180,7 @@ brew "jadx"
 brew "jnethack"
 brew "john"
 brew "john-jumbo", link: false
+brew "libraw"
 brew "open-mpi"
 brew "vips"
 brew "joplin-cli"
@@ -278,6 +279,7 @@ brew "shellcheck"
 brew "sl"
 brew "smpeg"
 brew "sox"
+brew "squashfs"
 brew "ssh-vault"
 brew "stow"
 brew "streamlink"
@@ -308,6 +310,7 @@ brew "watchman"
 brew "wget"
 brew "whisper-cpp"
 brew "whisperkit-cli"
+brew "winetricks"
 brew "xcodegen"
 brew "xleak"
 brew "yarn"
@@ -357,11 +360,13 @@ cask "claude-code"
 cask "clipy"
 cask "cocoarestclient"
 cask "codex"
+cask "codex-app"
 cask "steipete/tap/codexbar"
 cask "color-oracle"
 cask "cscreen"
 cask "cubicsdr"
 cask "cyberduck"
+cask "db-browser-for-sqlite"
 cask "deepl"
 cask "docker-desktop"
 cask "dolphin"
@@ -383,6 +388,7 @@ cask "freecad"
 cask "gcloud-cli"
 cask "ghidra"
 cask "gimp"
+cask "github"
 cask "github-copilot-for-xcode"
 cask "google-chrome"
 cask "google-drive"
@@ -391,6 +397,7 @@ cask "gpower"
 cask "gqrx"
 cask "grandperspective"
 cask "gstreamer-framework"
+cask "gstreamer-runtime"
 cask "hackintool"
 cask "hammerspoon"
 cask "handbrake-app"
@@ -401,6 +408,7 @@ cask "imageoptim"
 cask "inkscape"
 cask "iterm2"
 cask "jamovi"
+cask "jasp"
 cask "joplin"
 cask "jordanbaird-ice@beta"
 cask "karabiner-elements"
@@ -443,6 +451,7 @@ cask "openemu"
 cask "openmtp"
 cask "osirix-quicklook"
 cask "pgadmin4"
+cask "kcrt/kcrt/ping-monitor"
 cask "popclip"
 cask "productdevbook/tap/portkiller"
 cask "postman"
@@ -490,6 +499,7 @@ cask "utm"
 cask "visual-studio-code"
 cask "vlc"
 cask "warp"
+cask "wine-stable"
 cask "wireshark-app"
 cask "wpsoffice"
 cask "xld"
@@ -527,6 +537,7 @@ mas "Front Row", id: 6480318506
 mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
 mas "Hex Fiend", id: 1342896380
+mas "iMovie", id: 408981434
 mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
@@ -539,6 +550,7 @@ mas "LadioCast", id: 411213048
 mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
 mas "LINE WORKS", id: 6447544433
+mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
@@ -550,6 +562,8 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
@@ -584,7 +598,6 @@ vscode "docsmsft.docs-markdown"
 vscode "expo.vscode-expo-tools"
 vscode "formulahendry.auto-rename-tag"
 vscode "github.codespaces"
-vscode "github.copilot"
 vscode "github.copilot-chat"
 vscode "github.vscode-github-actions"
 vscode "gluestack.gluestack-vscode"
