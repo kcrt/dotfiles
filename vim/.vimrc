@@ -359,14 +359,19 @@ let g:dart_format_on_save = 1
 " ----- LSP --------------------------------------
 let g:lsp_signs_enabled = 1
 let g:lsp_diagnostics_echo_cursor = 1
-let g:lsp_signs_error = {'text': '✗', 'icon': expand('~/etc/icons/win/msg_error.png')}
-let g:lsp_signs_warning = {'text': '‼', 'icon': expand('~/etc/icons/win/msg_warning_mini.png')}
-let g:lsp_signs_information = {'text':'ℹ', 'icon': expand('~/etc/icons/win/msg_information.png')}
-let g:lsp_signs_hint = {'text':'ℹ', 'icon': expand('~/etc/icons/win/msg_information.png')}
-" let g:lsp_signs_error = {'text': '❌️'}
-" let g:lsp_signs_warning = {'text': '‼'}
-" let g:lsp_signs_information = {'text':'ℹ'}
-" let g:lsp_signs_hint = {'text':'ℹ'}
+let g:lsp_signs_error = {'text': '✗', 'icon': expand('~/dotfiles/materials/image/lsp_error.png')}
+let g:lsp_signs_warning = {'text': '‼', 'icon': expand('~/dotfiles/materials/image/lsp_warning.png')}
+let g:lsp_signs_information = {'text':'ℹ', 'icon': expand('~/dotfiles/materials/image/lsp_information.png')}
+let g:lsp_signs_hint = {'text':'ℹ', 'icon': expand('~/dotfiles/materials/image/lsp_information.png')}
+
+" Use ruff for Python LSP instead of pylsp
+let g:lsp_settings_filetype_python = ['ruff']
+
+" Alert if ruff is not installed when opening Python files
+augroup CheckRuffInstalled
+  autocmd!
+  autocmd FileType python if !executable('ruff') | echohl WarningMsg | echom "Warning: ruff LSP not found. Install with: uv tool install ruff" | echohl None | endif
+augroup END
 
 " ----- NERDTree ---------------------------------
 let NERDTreeShowHidden = 1

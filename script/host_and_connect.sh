@@ -15,8 +15,8 @@ abbreviate_ipv6() {
     fi
 }
 
-# Get hostname
-HOSTNAME=$(hostname)
+# Get hostname (strip .local suffix if present)
+HOSTNAME=$(hostname | sed 's/\.local$//')
 
 # Check if running via mosh (only on Linux where pstree works properly)
 IS_MOSH=0
