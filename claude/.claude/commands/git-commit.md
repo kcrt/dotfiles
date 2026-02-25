@@ -1,7 +1,7 @@
 # Check staged files and commit them with a message.
 Please see what was changed with `git diff --staged`, and commit with appropriate message.
 Use one of following gitmoji for title.
-You don't need to write "Co-authored-by Claude" or "Generated with Claude Code" in the commit message.
+Avoid adding "Co-Authored-By" in the commit message.
 
 ```
 :tada: Major feature additions to be celebrated with a bang

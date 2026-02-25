@@ -1,0 +1,20 @@
+{
+  "custom_adapters": [
+    {
+      "name": "xlsx_py",
+      "description": "Extract text from XLSX files using exstrings.py",
+      "version": 1,
+      "extensions": ["xlsx"],
+      "binary": "/Users/kcrt/dotfiles/script/exstrings.py",
+      "args": ["--stdin", "--type", "xlsx"]
+    },
+    {
+      "name": "pptx_py",
+      "description": "Extract text from PPTX files using exstrings.py",
+      "version": 1,
+      "extensions": ["pptx"],
+      "binary": "/Users/kcrt/dotfiles/script/exstrings.py",
+      "args": ["--stdin", "--type", "pptx"]
+    }
+  ]
+}

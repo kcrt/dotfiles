@@ -16,6 +16,8 @@ elif [[ -n "${ANTHROPIC_BASE_URL}" ]]; then
         target="kimi"
     elif [[ "${ANTHROPIC_BASE_URL}" == *"localhost:11434"* ]]; then
         target="ollama"
+    elif [[ "${ANTHROPIC_BASE_URL}" == *"openrouter"* ]]; then
+        target="openrouter"
     fi
 fi
 
@@ -28,6 +30,9 @@ case "$target" in
         ;;
     ollama)
         echo "🦙"
+        ;;
+    openrouter)
+        echo "🔀"
         ;;
     *)
         # Default: anthropic

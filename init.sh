@@ -307,6 +307,12 @@ fi
 
 if [ "$(uname)" = "Darwin" ]; then
 	echo_aqua "Mac OS X Setting..."
+
+	# rga (ripgrep-all) on macOS reads config from ~/Library/Application Support,
+	# not ~/.config. Symlink to keep dotfiles-managed config working.
+	ln -sf ~/.config/ripgrep-all/config.jsonc \
+		~/Library/Application\ Support/ripgrep-all/config.jsonc
+
 	sudo nvram SystemAudioVolume=%00					# no boot sound
 	defaults write -g AppleKeyboardUIMode -int 3				# Full keyboard access
 	defaults write -g AppleShowAllExtensions -bool true			# Show file extentions
