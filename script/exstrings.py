@@ -29,15 +29,20 @@ from pathlib import Path
 
 from docx import Document as DocxDocument
 from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
 from pypdf import PdfReader
 from pptx import Presentation
 
 
 def extract_text_from_docx(filepath: Path) -> str:
     """Extract text from a DOCX file."""
-    doc = DocxDocument(filepath)
-    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-    return "\n".join(paragraphs)
+    try:
+        doc = DocxDocument(filepath)
+        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+        return "\n".join(paragraphs)
+    except zipfile.BadZipFile:
+        # Encrypted or corrupted file - return empty string silently
+        return ""
 
 
 def extract_text_from_pptx(filepath: Path) -> str:
@@ -59,17 +64,21 @@ def extract_text_from_pptx(filepath: Path) -> str:
 
 def extract_text_from_xlsx(filepath: Path) -> str:
     """Extract text from an XLSX file."""
-    wb = load_workbook(filepath, read_only=True, data_only=True)
-    sheets_text = []
+    try:
+        wb = load_workbook(filepath, read_only=True, data_only=True)
+        sheets_text = []
 
-    for sheet in wb:
-        sheets_text.append(f"----- Sheet: {sheet.title} -----")
-        for row in sheet.iter_rows(values_only=True):
-            row_text = "\t".join(str(v) if v is not None else "" for v in row)
-            if row_text.strip():
-                sheets_text.append(row_text)
+        for sheet in wb:
+            sheets_text.append(f"----- Sheet: {sheet.title} -----")
+            for row in sheet.iter_rows(values_only=True):
+                row_text = "\t".join(str(v) if v is not None else "" for v in row)
+                if row_text.strip():
+                    sheets_text.append(row_text)
 
-    return "\n".join(sheets_text)
+        return "\n".join(sheets_text)
+    except (zipfile.BadZipFile, InvalidFileException):
+        # Encrypted or corrupted file - return empty string silently
+        return ""
 
 
 def extract_text_from_pdf(filepath: Path) -> str:
