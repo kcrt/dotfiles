@@ -1,0 +1,10 @@
+X:1
+T:SessionStart
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=180
+K:C
+%%MIDI program 12
+%%MIDI control 10 64
+C2 E2 G2 c2 z8|]

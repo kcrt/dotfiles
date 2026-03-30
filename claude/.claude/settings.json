@@ -1,4 +1,8 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(echo:*)",
@@ -68,7 +72,9 @@
       "Bash(npx agent-browser *)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "Bash(npx agent-browser)"
+      "Bash(npx agent-browser)",
+      "Bash(# 全exportをファイルに保存してから調べる dyld_info -exports /System/Library/Frameworks/PDFKit.framework/PDFKit)",
+      "Read(//System/Library/Frameworks/PDFKit.framework/**)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -112,15 +118,47 @@
       "Bash(rsync:*)"
     ]
   },
-  "model": "opusplan",
   "hooks": {
-    "PreCompact": [
+    "PreToolUse": [
       {
-        "matcher": "auto",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Context window is full. Compacting.\""
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_tool_use.m4a &"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use.m4a &"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use_failure.m4a &"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/notification.m4a &"
           }
         ]
       }
@@ -131,7 +169,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Done.\""
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/stop.m4a &"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_compact.m4a &"
           }
         ]
       }
@@ -143,6 +192,136 @@
           {
             "type": "command",
             "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\" &"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_start.m4a &"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_end.m4a &"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/user_prompt_submit.m4a &"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_start.m4a &"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_stop.m4a &"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/permission_request.m4a &"
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/config_change.m4a &"
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/instructions_loaded.m4a &"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/task_completed.m4a &"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/teammate_idle.m4a &"
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_create.m4a &"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_remove.m4a &"
           }
         ]
       }
@@ -164,6 +343,7 @@
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
+  "voiceEnabled": true,
   "mcpServers": {
     "context7": {
       "type": "http",

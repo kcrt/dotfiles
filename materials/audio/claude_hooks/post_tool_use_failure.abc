@@ -1,0 +1,10 @@
+X:1
+T:PostToolUseFailure
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=440
+K:C
+%%MIDI program 80
+%%MIDI control 10 64
+A2 z A2 z A2 z10|]

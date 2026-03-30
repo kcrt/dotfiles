@@ -1,0 +1,10 @@
+X:1
+T:PostToolUse
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=200
+K:C
+%%MIDI program 8
+%%MIDI control 10 64
+G2 G2 z12|]

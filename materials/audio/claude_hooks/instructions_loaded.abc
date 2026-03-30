@@ -1,0 +1,10 @@
+X:1
+T:InstructionsLoaded
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=160
+K:C
+%%MIDI program 8
+%%MIDI control 10 64
+c2 z14|]

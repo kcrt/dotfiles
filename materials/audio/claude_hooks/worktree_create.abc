@@ -1,0 +1,10 @@
+X:1
+T:WorktreeCreate
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=200
+K:C
+%%MIDI program 98
+%%MIDI control 10 64
+C2 G2 z12|]

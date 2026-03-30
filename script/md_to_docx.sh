@@ -6,4 +6,4 @@ if [ $# -eq 0 ]; then
 fi
 
 filename="$1"
-pandoc $filename -t docx --reference-doc $HOME/etc/template/template.docx --toc --highlight-style=zenburn -o ${filename:r}.docx
+pandoc $filename -t docx --reference-doc $HOME/dotfiles/template/template.docx --toc --highlight-style=zenburn -o ${filename:r}.docx

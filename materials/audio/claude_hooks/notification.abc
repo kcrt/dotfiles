@@ -1,0 +1,10 @@
+X:1
+T:Notification
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=180
+K:C
+%%MIDI program 9
+%%MIDI control 10 64
+g4 z12|]

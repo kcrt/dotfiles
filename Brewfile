@@ -20,6 +20,7 @@ tap "steipete/tap"
 tap "theseal/ssh-askpass"
 tap "wader/tap"
 tap "ynqa/tap"
+brew "abcmidi"
 brew "act"
 brew "freetype"
 brew "gettext"
@@ -36,16 +37,15 @@ brew "afsctool"
 brew "icu4c@76"
 brew "little-cms2"
 brew "openjdk"
+brew "python@3.13", link: false
 brew "ant"
 brew "jpeg-xl"
-brew "webp"
 brew "llvm"
 brew "aria2"
 brew "arping"
 brew "boost"
 brew "docbook"
 brew "asciidoc"
-brew "git"
 brew "asdf"
 brew "atkmm@2.28"
 brew "atomicparsley"
@@ -131,6 +131,7 @@ brew "figlet"
 brew "firebase-cli", link: false
 brew "portaudio"
 brew "fluid-synth"
+brew "webp"
 brew "libheif"
 brew "libtool"
 brew "imagemagick"
@@ -147,6 +148,7 @@ brew "ghidra", link: false
 brew "leptonica"
 brew "tesseract"
 brew "ghostscript"
+brew "git"
 brew "git-delta"
 brew "git-lfs"
 brew "gitui"
@@ -235,7 +237,6 @@ brew "nkf"
 brew "nmap"
 brew "ollama"
 brew "pytorch"
-brew "xvid"
 brew "openai-whisper"
 brew "opencode"
 brew "vtk"
@@ -252,6 +253,7 @@ brew "pinentry-mac"
 brew "pipx"
 brew "pkgx"
 brew "postgresql@15"
+brew "powershell", link: false
 brew "progress"
 brew "pup"
 brew "pv"
@@ -313,6 +315,7 @@ brew "whisperkit-cli"
 brew "winetricks"
 brew "xcodegen"
 brew "xleak"
+brew "xvid"
 brew "yarn"
 brew "yasm"
 brew "yt-dlp"
@@ -338,7 +341,6 @@ cask "antigravity"
 cask "appcleaner"
 cask "applite"
 cask "arduino"
-cask "atok"
 cask "audacity"
 cask "azookey"
 cask "background-music"
@@ -402,6 +404,7 @@ cask "gstreamer-runtime"
 cask "hackintool"
 cask "hammerspoon"
 cask "handbrake-app"
+cask "hhkb"
 cask "horos"
 cask "iaito"
 cask "iina"
@@ -422,6 +425,7 @@ cask "kindle-previewer"
 cask "kodi"
 cask "krita"
 cask "libreoffice"
+cask "lm-studio"
 cask "ltspice"
 cask "lyrics-master"
 cask "mac-monitor"
@@ -464,10 +468,10 @@ cask "qlcolorcode"
 cask "qlmarkdown"
 cask "qlprettypatch"
 cask "qlstephen"
-cask "qlvideo"
 cask "quarto"
 cask "quicklook-csv"
 cask "quicklook-json"
+cask "quicklook-video"
 cask "rar"
 cask "raspberry-pi-imager"
 cask "retroarch-metal"
@@ -479,13 +483,12 @@ cask "smartgit"
 cask "smartreporter-free"
 cask "smoothcsv"
 cask "sourcetree"
+cask "stats"
 cask "steam"
 cask "stratoshark"
 cask "subler"
 cask "suspicious-package"
 cask "teamviewer"
-cask "tigervnc"
-cask "tigervnc"
 cask "timemachinestatus"
 cask "tomighty"
 cask "tor-browser"
@@ -529,6 +532,7 @@ mas "Developer", id: 640199958
 mas "Diffusers", id: 1666309574
 mas "Discovery", id: 1381004916
 mas "Display Menu", id: 549083868
+mas "Draw Things", id: 6444050820
 mas "Dropover", id: 1355679052
 mas "EdgeView", id: 1580323719
 mas "Enchanted", id: 6474268307
@@ -543,6 +547,7 @@ mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
 mas "Key Codes", id: 414568915
+mas "Keynote", id: 361285480
 mas "Keynote", id: 409183694
 mas "Kindle", id: 302584613
 mas "Kindle Classic", id: 405399194
@@ -563,8 +568,10 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
+mas "Numbers", id: 361304891
 mas "Numbers", id: 409203825
 mas "Pages", id: 409201541
+mas "Pages", id: 361309726
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
@@ -689,3 +696,7 @@ cargo "mdbook"
 cargo "minidump-stackwalk"
 cargo "tauri-cli"
 cargo "wasm-pack"
+uv "it2"
+uv "parakeet-mlx"
+uv "ruff"
+uv "zotero-mcp-server"

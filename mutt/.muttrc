@@ -10,6 +10,7 @@ source "gpg -d ~/dotfiles/secrets/mutt_account.asc |"
 set timeout=600
 set mail_check=600
 set beep_new=yes
+unset thorough_search	# server side search
 
 # PGPの設定
 
@@ -18,7 +19,6 @@ set charset="utf-8"
 set send_charset="us-ascii:utf-8"
 #set strict_mime=no
 set assumed_charset="iso-2022-jp:shift_jis:utf-8"
-set thorough_search=yes
 set rfc2047_parameters=yes
 set forward_decode=yes
 set mime_forward_decode=no

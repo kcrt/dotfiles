@@ -1,0 +1,10 @@
+X:1
+T:UserPromptSubmit
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=200
+K:C
+%%MIDI program 37
+%%MIDI control 10 64
+C2 z14|]

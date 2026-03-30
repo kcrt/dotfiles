@@ -6,13 +6,14 @@
 # Helper function to show help text
 function _claude-code-show-help() {
 	cat <<'EOF'
-Usage: claude-code-to [anthropic|zai|kimi|ollama:MODEL|openrouter:MODEL]
+Usage: claude-code-to [anthropic|zai|kimi|ollama:MODEL|lmstudio:MODEL|openrouter:MODEL]
 
 Examples:
   claude-code-to anthropic          # Use Anthropic API directly
   claude-code-to zai                # Use Z.ai proxy
   claude-code-to kimi               # Use Kimi (Moonshot AI)
   claude-code-to ollama:MODEL       # Use Ollama with specified model
+  claude-code-to lmstudio:MODEL     # Use LM Studio with specified model
   claude-code-to openrouter:MODEL   # Use OpenRouter with specified model
 EOF
 }
@@ -66,6 +67,17 @@ function _claude-code-set-env() {
 			if [[ -n "$model" ]]; then
 				export ANTHROPIC_BASE_URL=http://localhost:11434
 				export ANTHROPIC_AUTH_TOKEN=ollama
+				export ANTHROPIC_MODEL=$model
+				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
+				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
+				export ANTHROPIC_DEFAULT_HAIKU_MODEL=$model
+				export CLAUDE_CODE_SUBAGENT_MODEL=$model
+			fi
+			;;
+		lmstudio)
+			if [[ -n "$model" ]]; then
+				export ANTHROPIC_BASE_URL=http://localhost:1234
+				export ANTHROPIC_AUTH_TOKEN=lm-studio
 				export ANTHROPIC_MODEL=$model
 				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
 				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
@@ -127,11 +139,37 @@ function claude-code-to() {
 			echo '{"target":"kimi"}' > "$config_file"
 			_claude-code-set-env "kimi"
 			;;
+		ollama)
+			echo "Available Ollama models:"
+			if ! ollama list 2>/dev/null | tail -n +2 | awk '{print "  claude-code-to ollama:" $1}'; then
+				echo "  (could not run ollama — is it installed and running?)"
+			fi
+			return 1
+			;;
 		ollama:*)
 			local model="${target#ollama:}"
 			echo_info "Ollama ($model) enabled for Claude."
 			echo "{\"target\":\"ollama\",\"model\":\"$model\"}" > "$config_file"
 			_claude-code-set-env "ollama" "$model"
+			;;
+		lmstudio)
+			echo "Available LM Studio models:"
+			local models
+			models=$(curl -sf http://localhost:1234/v1/models 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+			if [[ -z "$models" ]]; then
+				echo "  (could not reach LM Studio at http://localhost:1234 — is it running?)"
+			else
+				echo "$models" | while read -r m; do
+					echo "  claude-code-to lmstudio:$m"
+				done
+			fi
+			return 1
+			;;
+		lmstudio:*)
+			local model="${target#lmstudio:}"
+			echo_info "LM Studio ($model) enabled for Claude."
+			echo "{\"target\":\"lmstudio\",\"model\":\"$model\"}" > "$config_file"
+			_claude-code-set-env "lmstudio" "$model"
 			;;
 		openrouter)
 			echo "Error: OpenRouter requires a model to be specified."
@@ -161,7 +199,8 @@ function claude-code-to() {
 			echo "  zai                    - Use Z.ai proxy"
 			echo "  kimi                   - Use Kimi (Moonshot AI)"
 			echo "  ollama:MODEL_NAME      - Use Ollama with specified model"
-			echo "  openrouter:MODEL_NAME   - Use OpenRouter with specified model"
+			echo "  lmstudio:MODEL_NAME    - Use LM Studio with specified model"
+			echo "  openrouter:MODEL_NAME  - Use OpenRouter with specified model"
 			return 1
 			;;
 	esac
@@ -189,6 +228,12 @@ if [[ -f "$config_file" ]]; then
 			if [[ -n "$model" ]]; then
 				_claude-code-set-env "ollama" "$model"
 				echo_info "Ollama ($model) enabled for Claude."
+			fi
+			;;
+		lmstudio)
+			if [[ -n "$model" ]]; then
+				_claude-code-set-env "lmstudio" "$model"
+				echo_info "LM Studio ($model) enabled for Claude."
 			fi
 			;;
 		openrouter)

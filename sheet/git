@@ -46,7 +46,12 @@ git branch --track localbranch remotebranch
 						git pull, pushのデフォルトを設定
 * stash
 git stash [-u]			-u: untracked(新規ファイル)も含める
-git stash list
+git stash list|pop
 git stash apply stash@{0}
+
+Pull requestをローカルで編集するとき: git switch copilot/branch_name
+いろいろ変更したけどbranch切るべきだな、と思ったとき: git switch -cA branch_name
+最新コミットからやり直したいとき: git restore .
+
 * その他
 git archive, git bisect, git gc, git fsck, git stash

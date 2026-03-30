@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Theme configuration
+  "theme": "opencode",
+  // Permission configuration
+  "permission": {
+    "edit": "ask",
+    "write": "ask",
+    "patch": "ask",
+    "bash": "ask"
+  }
+}

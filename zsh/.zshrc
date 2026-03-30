@@ -49,3 +49,8 @@ if [[ -d "${ZSHRC_DIR}" ]]; then
 		end_of "${config:t}"
 	done
 fi
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/kcrt/.lmstudio/bin"
+# End of LM Studio CLI section
+

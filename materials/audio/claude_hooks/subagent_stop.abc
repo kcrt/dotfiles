@@ -1,0 +1,11 @@
+X:1
+T:SubagentStop
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=220
+K:C
+%%MIDI program 98
+%%MIDI control 10 64
+%%MIDI beat 65 60 55 50
+g2 e2 z12|]

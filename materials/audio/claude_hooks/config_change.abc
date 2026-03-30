@@ -1,0 +1,11 @@
+X:1
+T:ConfigChange
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=160
+K:C
+%%MIDI program 8
+%%MIDI control 10 64
+%%MIDI beat 55 50 45 40
+G2 z14|]

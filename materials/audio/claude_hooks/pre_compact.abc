@@ -1,0 +1,10 @@
+X:1
+T:PreCompact
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=140
+K:C
+%%MIDI program 80
+%%MIDI control 10 64
+E2 C2 z12|]

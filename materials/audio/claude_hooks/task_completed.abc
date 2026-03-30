@@ -1,0 +1,10 @@
+X:1
+T:TaskCompleted
+C:Claude Code Hooks
+M:4/4
+L:1/16
+Q:1/4=180
+K:C
+%%MIDI program 9
+%%MIDI control 10 64
+c2 e2 g2 z10|]
