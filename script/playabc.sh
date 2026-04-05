@@ -28,7 +28,15 @@ TMPDIR=$(mktemp -d)
 trap "rm -rf $TMPDIR" EXIT
 
 abc2midi "$ABC_FILE" -o "$TMPDIR/out.mid" > /dev/null
-fluidsynth -ni -T wav -F "$TMPDIR/out.wav" -r 44100 "$SOUNDFONT" "$TMPDIR/out.mid" > /dev/null 2>&1
+fluidsynth -ni -T wav -F "$TMPDIR/out.wav" -r 44100 \
+    -o synth.reverb.active=no -o synth.chorus.active=no \
+    "$SOUNDFONT" "$TMPDIR/out.mid" > /dev/null 2>&1
+
+# Trim trailing silence using sox reverse trick
+if command -v sox > /dev/null 2>&1; then
+    sox "$TMPDIR/out.wav" "$TMPDIR/trimmed.wav" reverse silence 1 0.05 0.1% reverse
+    mv "$TMPDIR/trimmed.wav" "$TMPDIR/out.wav"
+fi
 
 if [[ -n "$OUTPUT" ]]; then
     afconvert -f m4af -d aac "$TMPDIR/out.wav" "$OUTPUT"
