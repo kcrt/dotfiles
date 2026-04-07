@@ -1,0 +1,35 @@
+#!/bin/bash
+# Check commit message format: should start with :<emoji>: prefix
+# Known prefixes:
+#   :sparkles:  - New feature
+#   :+1:        - Enhancement / improvement
+#   :beetle:    - Bug fix
+#   :bug:       - Bug fix
+#   :hammer:    - Refactoring
+#   :shower:    - Remove / clean up
+#   :wrench:    - Configuration / tooling
+#   :tada:      - Initial commit / milestone
+
+msg=$(cat "$1")
+
+# Skip merge commits
+if [[ "$msg" =~ ^Merge ]]; then
+  exit 0
+fi
+
+# Check for emoji prefix
+if [[ ! "$msg" =~ ^:[a-z_+0-9]+:\ .+ ]]; then
+  echo "WARNING: Commit message does not start with an emoji prefix."
+  echo "  Expected format: :<emoji>: <message>"
+  echo "  Examples:"
+  echo "    :sparkles: Add new feature"
+  echo "    :beetle: Fix login bug"
+  echo "    :hammer: Refactor auth module"
+  echo ""
+  echo "  Current message: $msg"
+  read -p "Proceed without emoji prefix? (y/N) " answer </dev/tty
+  if [[ "$answer" != [yY] ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+fi

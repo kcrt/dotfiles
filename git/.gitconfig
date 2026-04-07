@@ -5,6 +5,7 @@
 	signingKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJOPgJQcfABeJYG6ANq9VpyO/kcrt/V5gp7pcZpCtW6U kcrt@kcrt.net"
 [core]
 	excludesfile = ~/.gitignore
+	hooksPath = ~/.githooks
 	attributesfile = ~/.gitattributes
 	quotepath = false
 	editor = vim
@@ -67,6 +68,7 @@
 	commit-without-sign = commit --no-gpg-sign
 	shallow-clone = clone --depth=1
 	commit-claude = "!claude '/git-commit'"
+	back-to-latest-commit = !git reset --hard HEAD && git clean -fd
 [diff "totext"]
 	textconv = ~/dotfiles/script/totext.sh
 [diff "tomd"]

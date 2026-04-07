@@ -34,10 +34,8 @@ brew "librsvg"
 brew "afflib"
 brew "afio"
 brew "afsctool"
-brew "icu4c@76"
 brew "little-cms2"
 brew "openjdk"
-brew "python@3.13", link: false
 brew "ant"
 brew "jpeg-xl"
 brew "llvm"
@@ -45,6 +43,7 @@ brew "aria2"
 brew "arping"
 brew "boost"
 brew "docbook"
+brew "icu4c@76"
 brew "asciidoc"
 brew "asdf"
 brew "atkmm@2.28"
@@ -55,6 +54,7 @@ brew "gcc"
 brew "lame"
 brew "openblas"
 brew "numpy", link: false
+brew "python@3.13", link: false
 brew "aubio"
 brew "autoconf"
 brew "automake"
@@ -570,8 +570,8 @@ mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
 mas "Numbers", id: 361304891
 mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
 mas "Pages", id: 361309726
+mas "Pages", id: 409201541
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
