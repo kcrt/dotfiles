@@ -125,7 +125,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_tool_use.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_tool_use.m4a"
           }
         ]
       }
@@ -136,7 +136,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use.m4a"
           }
         ]
       }
@@ -147,7 +147,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use_failure.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use_failure.m4a"
           }
         ]
       }
@@ -158,7 +158,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/notification.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/notification.m4a"
           }
         ]
       }
@@ -169,7 +169,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/stop.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/stop.m4a"
           }
         ]
       }
@@ -180,7 +180,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_compact.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_compact.m4a"
           }
         ]
       }
@@ -191,7 +191,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\" &"
+            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\""
           }
         ]
       },
@@ -200,7 +200,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_start.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_start.m4a"
           }
         ]
       }
@@ -211,7 +211,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_end.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_end.m4a"
           }
         ]
       }
@@ -222,7 +222,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/user_prompt_submit.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/user_prompt_submit.m4a"
           }
         ]
       }
@@ -233,7 +233,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_start.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_start.m4a"
           }
         ]
       }
@@ -244,7 +244,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_stop.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_stop.m4a"
           }
         ]
       }
@@ -255,7 +255,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/permission_request.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/permission_request.m4a"
           }
         ]
       }
@@ -266,7 +266,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/config_change.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/config_change.m4a"
           }
         ]
       }
@@ -277,7 +277,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/instructions_loaded.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/instructions_loaded.m4a"
           }
         ]
       }
@@ -288,7 +288,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/task_completed.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/task_completed.m4a"
           }
         ]
       }
@@ -299,7 +299,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/teammate_idle.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/teammate_idle.m4a"
           }
         ]
       }
@@ -310,7 +310,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_create.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_create.m4a"
           }
         ]
       }
@@ -321,7 +321,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_remove.m4a &"
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_remove.m4a"
           }
         ]
       }

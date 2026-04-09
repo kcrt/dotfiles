@@ -70,7 +70,7 @@ if [ "$PLATFORM" = "macos" ]; then
             exit 1
             ;;
     esac
-    say -v "$voice" "$text"
+    nohup say -v "$voice" "$text" &>/dev/null &
 else
     # Map language codes to espeak voices
     case "$lang" in
@@ -92,5 +92,8 @@ else
             exit 1
             ;;
     esac
-    $TTS_CMD -v "$voice" "$text"
+    nohup $TTS_CMD -v "$voice" "$text" &>/dev/null &
 fi
+
+disown 2>/dev/null
+exit 0

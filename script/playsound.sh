@@ -12,14 +12,18 @@ FILE="${FILE/#\~/$HOME}"
 [[ -f "$FILE" ]] || { echo "Error: $FILE not found" >&2; exit 1; }
 
 if command -v afplay &>/dev/null; then
-    afplay "$FILE"
+    nohup afplay "$FILE" &>/dev/null &
 elif command -v paplay &>/dev/null; then
-    paplay "$FILE"
+    nohup paplay "$FILE" &>/dev/null &
 elif command -v aplay &>/dev/null; then
-    aplay "$FILE" 2>/dev/null
+    nohup aplay "$FILE" &>/dev/null &
 elif command -v mpv &>/dev/null; then
-    mpv --no-video --really-quiet "$FILE"
+    nohup mpv --no-video --really-quiet "$FILE" &>/dev/null &
 else
     # No audio player available — exit silently (don't break hooks)
     exit 0
 fi
+
+# Detach background process so the script can exit immediately
+disown 2>/dev/null
+exit 0
