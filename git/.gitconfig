@@ -68,7 +68,9 @@
 	commit-without-sign = commit --no-gpg-sign
 	shallow-clone = clone --depth=1
 	commit-claude = "!claude '/git-commit'"
+	autotag = "!~/dotfiles/script/git-autotag.sh"
 	back-to-latest-commit = !git reset --hard HEAD && git clean -fd
+	add-and-commit = !git add . && claude --allowedTools 'Bash(git commit:*)' -p "/git-commit"
 [diff "totext"]
 	textconv = ~/dotfiles/script/totext.sh
 [diff "tomd"]

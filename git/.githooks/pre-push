@@ -5,60 +5,8 @@
 #      (package.json, Cargo.toml, pyproject.toml, pubspec.yaml, Xcode)
 #   3. Warn when tag is not on the release branch
 
-check_version_consistency() {
-  local tag_version="$1"  # e.g. 1.2.3
-  local tag_commit="$2"
-  local mismatch=0
-
-  # Check package.json
-  local pkg_version
-  pkg_version=$(git show "$tag_commit":package.json 2>/dev/null | sed -n 's/.*"version".*:.*"\([^"]*\)".*/\1/p')
-  if [[ -n "$pkg_version" && "$pkg_version" != "$tag_version" ]]; then
-    echo "  package.json: $pkg_version"
-    mismatch=1
-  fi
-
-  # Check Cargo.toml (Rust)
-  local cargo_version
-  cargo_version=$(git show "$tag_commit":Cargo.toml 2>/dev/null | sed -n 's/^version *= *"\([^"]*\)".*/\1/p')
-  if [[ -n "$cargo_version" && "$cargo_version" != "$tag_version" ]]; then
-    echo "  Cargo.toml: $cargo_version"
-    mismatch=1
-  fi
-
-  # Check pyproject.toml (Python)
-  local py_version
-  py_version=$(git show "$tag_commit":pyproject.toml 2>/dev/null | sed -n 's/^version *= *"\([^"]*\)".*/\1/p')
-  if [[ -n "$py_version" && "$py_version" != "$tag_version" ]]; then
-    echo "  pyproject.toml: $py_version"
-    mismatch=1
-  fi
-
-  # Check pubspec.yaml (Flutter/Dart) — version: 1.2.3+N, compare only semver part
-  local pub_version
-  pub_version=$(git show "$tag_commit":pubspec.yaml 2>/dev/null | sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p')
-  if [[ -n "$pub_version" && "$pub_version" != "$tag_version" ]]; then
-    echo "  pubspec.yaml: $pub_version"
-    mismatch=1
-  fi
-
-  # Check Xcode project (MARKETING_VERSION in .pbxproj)
-  local pbxproj
-  pbxproj=$(git ls-tree -r --name-only "$tag_commit" 2>/dev/null | grep '\.pbxproj$' | head -1)
-  if [[ -n "$pbxproj" ]]; then
-    local xcode_versions
-    xcode_versions=$(git show "$tag_commit":"$pbxproj" 2>/dev/null | sed -n 's/.*MARKETING_VERSION = \([^;]*\);.*/\1/p' | sort -u)
-    while IFS= read -r xv; do
-      if [[ -n "$xv" && "$xv" != "$tag_version" ]]; then
-        echo "  Xcode (MARKETING_VERSION): $xv"
-        mismatch=1
-        break
-      fi
-    done <<< "$xcode_versions"
-  fi
-
-  return "$mismatch"
-}
+# Source shared version detection library
+source "$HOME/dotfiles/script/lib/detect-project-version.sh"
 
 while read local_ref local_sha remote_ref remote_sha; do
   if [[ "$remote_ref" == refs/tags/v* ]]; then
