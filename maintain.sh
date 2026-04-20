@@ -58,19 +58,33 @@ case $HOST in
 		OSNotify "Cleaning Caches..."
 		hdfreebefore=`df -h / | grep / | awk '{print $4}'`
 		cd ~
+		# Xcode
 		rm -rf ~/Library/Developer/Xcode/DerivedData/*
 		rm -rf ~/Library/Developer/Xcode/iOS\ DeviceSupport/*
 		rm -rf ~/Library/Developer/Xcode/Archives/*
 		rm -rf ~/Library/Caches/com.apple.dt.Xcode/*
 		rm -rf ~/Library/Developer/CoreSimulator/Caches/dyld/*
 		xcrun simctl delete unavailable
+		# Homebrew
 		brew autoremove
 		brew cleanup -s --prune=1
-		rm -rf /Users/kcrt/Library/Caches/Cypress/*
+		# Node.js / JavaScript
+		npm cache clean --force
+		rm -rf ~/Library/Caches/node-gyp
+		pnpm store prune
+		bun pm cache rm
 		npx playwright uninstall all
-		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
-		nix-collect-garbage -d && nix-store --optimise
+		rm -rf /Users/kcrt/Library/Caches/Cypress/*
+		# Python
 		pip3 cache purge
+		uv cache clean
+		# Rust (registry cache only, keep toolchains)
+		cargo cache -a
+		# Go
+		go clean -modcache
+		# Nix
+		nix-collect-garbage -d && nix-store --optimise
+		hdfreeafter=`df -h / | grep / | awk '{print $4}'`
 		OSNotify "Cleaned. Free space: $hdfreebefore -> $hdfreeafter"
 
 		

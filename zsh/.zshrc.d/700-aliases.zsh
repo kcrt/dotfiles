@@ -43,7 +43,7 @@ else
 fi
 
 # Disk utilities
-abbrev-alias du='du -hcs *'
+abbrev-alias du-dir='du -hcs *'
 abbrev-alias df='df -H'
 
 # ============================================================================

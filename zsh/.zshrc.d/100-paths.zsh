@@ -39,3 +39,4 @@ typeset -U path PATH
 [[ -d "$HOME/.cargo/bin" ]] && path=($path "$HOME/.cargo/bin")
 [[ -d "/snap/bin" ]] && path=($path "/snap/bin")
 [[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
+[[ -d "/opt/homebrew/opt/libpq/bin" ]] && path=($path "/opt/homebrew/opt/libpq/bin")

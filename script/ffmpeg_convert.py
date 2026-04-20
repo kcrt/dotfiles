@@ -57,6 +57,15 @@ CRF_MAP: dict[str, dict[str, int]] = {
     },
 }
 
+def format_file_size(size_bytes: int) -> str:
+    """Format file size in human-readable form (e.g., '324 MB')."""
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size_bytes < 1024:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024
+    return f"{size_bytes:.1f} PB"
+
+
 SizeOption = Literal["480p", "720p", "1080p"]
 CodecOption = Literal["h264", "hevc", "av1"]
 QualityOption = Literal["low", "portable", "normal", "high", "veryhigh"]
@@ -478,7 +487,13 @@ def main() -> None:
 
         # Validate duration after successful conversion (skip in dry-run mode)
         if not args.dry_run:
-            print("\nValidating duration...")
+            # Show file size change
+            original_size = args.input_file.stat().st_size
+            converted_size = output_path.stat().st_size
+            ratio = converted_size / original_size * 100
+            print(f"\nFile size: {format_file_size(original_size)} -> {format_file_size(converted_size)} ({ratio:.1f}%)")
+
+            print("Validating duration...")
             if not validate_duration(args.input_file, output_path):
                 sys.exit(1)
     except RuntimeError as e:
