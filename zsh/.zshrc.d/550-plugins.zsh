@@ -11,7 +11,14 @@ if command -v sheldon &> /dev/null; then
 	eval "$(sheldon source)"
 else
 	echo_warn "Please install sheldon for zsh plugins: https://sheldon.cli.rs/Installation.html"
-	echo_warn "Use brew install sheldon (macOS) or cargo binstall sheldon (Linux)."
+	if [[ "$OSTYPE" = darwin* ]]; then
+		echo_warn "  macOS: brew install sheldon"
+	elif command -v cargo &> /dev/null; then
+		echo_warn "  Linux: cargo binstall sheldon  (or: cargo install sheldon)"
+	else
+		echo_warn "  Linux: install rustup first, then 'cargo binstall sheldon':"
+		echo_warn "    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+	fi
 	function abbrev-alias(){
 		# skip this command
 	}
