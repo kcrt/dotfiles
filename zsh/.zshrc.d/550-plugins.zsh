@@ -29,14 +29,26 @@ if command -v zoxide &> /dev/null; then
     eval "$(zoxide init zsh --cmd cd)"
 	# --cmd cd: make zoxide override cd command (same as `alias cd='zoxide`, but better`)
 else
-	echo_warn "Warning: zoxide is not installed. Use brew or cargo to install zoxide."
+	echo_warn "Warning: zoxide is not installed."
+	if [[ "$OSTYPE" = darwin* ]]; then
+		echo_warn "  macOS: brew install zoxide"
+	else
+		echo_warn "  Ubuntu 21.04+/Debian 12+: sudo apt install zoxide"
+		echo_warn "  Other Linux: curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh"
+	fi
 fi
 
 # ----- direnv (directory-based environment variables)
 if command -v direnv &> /dev/null; then
 	eval "$(direnv hook zsh)"
 else
-	echo_warn "Warning: direnv is not installed. Use brew install direnv."
+	echo_warn "Warning: direnv is not installed."
+	if [[ "$OSTYPE" = darwin* ]]; then
+		echo_warn "  macOS: brew install direnv"
+	else
+		echo_warn "  Ubuntu/Debian: sudo apt install direnv"
+		echo_warn "  Other Linux: curl -sfL https://direnv.net/install.sh | bash"
+	fi
 fi
 
 # ----- Bracketed paste

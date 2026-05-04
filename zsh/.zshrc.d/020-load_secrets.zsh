@@ -37,6 +37,7 @@ if [ -f ${DOTFILES}/secrets/secrets.sh.asc ]; then
 	unset GPG_BIN
 	if [ -z "$SECRET_KEYS_SUCCESSFULLY_LOADED" ]; then
 		echo_warn "Warning: Secret keys not loaded. Check setup and private GPG keys."
+		echo_warn "  Try: gpg -d ${DOTFILES}/secrets/secrets.sh.asc  (to see the real error / cache passphrase)"
 	fi
 else
 	echo_info "No encrypted secrets file found at ${DOTFILES}/secrets/secrets.sh.asc"
