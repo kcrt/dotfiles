@@ -74,7 +74,19 @@
       "mcp__context7__query-docs",
       "Bash(npx agent-browser)",
       "Bash(# 全exportをファイルに保存してから調べる dyld_info -exports /System/Library/Frameworks/PDFKit.framework/PDFKit)",
-      "Read(//System/Library/Frameworks/PDFKit.framework/**)"
+      "Read(//System/Library/Frameworks/PDFKit.framework/**)",
+      "Bash(supabase status *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:supabase.com)",
+      "Read(//Users/kcrt/src/gotrue/**)",
+      "Read(//Users/kcrt/src/supabase-cli/pkg/config/**)",
+      "Read(//Users/kcrt/src/supabase-cli/**)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "Bash(pnpm test:e2e e2e/messaging-site-admin.test.ts e2e/messaging-project-notifications.test.ts)",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "mcp__plugin_playwright_playwright__browser_handle_dialog",
+      "mcp__plugin_playwright_playwright__browser_tabs"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -343,6 +355,7 @@
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
+  "effortLevel": "high",
   "voiceEnabled": true,
   "mcpServers": {
     "context7": {
@@ -366,5 +379,11 @@
       "env": {},
       "disabled": true
     }
-  }
+  },
+  "editorMode": "vim",
+  "verbose": true,
+  "preferredNotifChannel": "iterm2_with_bell",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
