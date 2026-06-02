@@ -3,7 +3,9 @@
     "allow": [
       "Bash(echo $SHELL)",
       "Bash(otool:*)",
-      "Bash(BENCHMARK_ZSHRC=1 zsh:*)"
+      "Bash(BENCHMARK_ZSHRC=1 zsh:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:eu-central-1-1.aws.cloud2.influxdata.com)"
     ],
     "deny": []
   },

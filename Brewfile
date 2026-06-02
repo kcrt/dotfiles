@@ -37,7 +37,6 @@ brew "afsctool"
 brew "little-cms2"
 brew "openjdk"
 brew "ant"
-brew "jpeg-xl"
 brew "llvm"
 brew "aria2"
 brew "arping"
@@ -135,6 +134,7 @@ brew "webp"
 brew "libheif"
 brew "libtool"
 brew "imagemagick"
+brew "jpeg-xl"
 brew "folderify"
 brew "fontforge"
 brew "fortune"
@@ -515,88 +515,6 @@ cask "xquartz"
 cask "zoom"
 cask "zulu@17"
 cask "zulu@21"
-mas "Affinity Designer", id: 824171161
-mas "Affinity Designer 2", id: 1616831348
-mas "Affinity Photo", id: 824183456
-mas "Affinity Photo 2", id: 1616822987
-mas "Affinity Publisher", id: 881418622
-mas "Affinity Publisher 2", id: 1606941598
-mas "App Language Chooser", id: 451732904
-mas "Apple Configurator", id: 1037126344
-mas "Batch Clipboard", id: 6695729238
-mas "Blackmagic Disk Speed Test", id: 425264550
-mas "BlueSee", id: 1336679524
-mas "Boom3D Netflix Extension", id: 6445882848
-mas "ByeGraph", id: 6467188044
-mas "CHM Reader - Enjoy", id: 1661528239
-mas "Cinebench", id: 1438772273
-mas "Copilot", id: 6738511300
-mas "CotEditor", id: 1024640650
-mas "Developer", id: 640199958
-mas "Diffusers", id: 1666309574
-mas "Discovery", id: 1381004916
-mas "Display Menu", id: 549083868
-mas "Draw Things", id: 6444050820
-mas "Dropover", id: 1355679052
-mas "EdgeView", id: 1580323719
-mas "Enchanted", id: 6474268307
-mas "EPUB Reader", id: 1506541486
-mas "Final Cut Pro", id: 424389933
-mas "Front Row", id: 6480318506
-mas "GarageBand", id: 682658836
-mas "Goodnotes", id: 1444383602
-mas "Hex Fiend", id: 1342896380
-mas "iMovie", id: 408981434
-mas "isHUD", id: 484757536
-mas "JoyKeyMapper", id: 1511416593
-mas "Keepa - Price Tracker", id: 1533805339
-mas "Key Codes", id: 414568915
-mas "Keynote", id: 361285480
-mas "Keynote", id: 409183694
-mas "Kindle", id: 302584613
-mas "Kindle Classic", id: 405399194
-mas "Klack", id: 6446206067
-mas "LadioCast", id: 411213048
-mas "LibreOffice Vanilla", id: 921923693
-mas "LINE", id: 539883307
-mas "LINE WORKS", id: 6447544433
-mas "Logic Pro", id: 634148309
-mas "Magnet", id: 441258766
-mas "MainStage", id: 634159523
-mas "Microsoft Excel", id: 462058435
-mas "Microsoft PowerPoint", id: 462062816
-mas "Microsoft Word", id: 462054704
-mas "MidiPlayerPlus", id: 1612350258
-mas "MIDITrail", id: 421739418
-mas "Motion", id: 434290957
-mas "Native SQLite Manager", id: 1416282836
-mas "NetHack", id: 528223360
-mas "Noizio", id: 928871589
-mas "Numbers", id: 361304891
-mas "Numbers", id: 409203825
-mas "Pages", id: 361309726
-mas "Pages", id: 409201541
-mas "PDF Squeezer", id: 504700302
-mas "PDFOutliner", id: 420874236
-mas "Physics 101", id: 435293897
-mas "PrimeVideo", id: 545519333
-mas "QR Journal", id: 483820530
-mas "RemoteDrive", id: 6502180430
-mas "shakepin", id: 6599856142
-mas "Steam Link", id: 1246969117
-mas "Swift Playground", id: 1496833156
-mas "Tailscale", id: 1475387142
-mas "TestFlight", id: 899247664
-mas "The Unarchiver", id: 425424353
-mas "TinyStopwatch", id: 1447754003
-mas "uBlacklist for Safari", id: 1547912640
-mas "Wappalyzer - Technology profiler", id: 1520333300
-mas "WattsConnected", id: 1639692859
-mas "WiFi Explorer Lite", id: 1408727408
-mas "WiFi Signal", id: 525912054
-mas "WinArchiver Lite", id: 414855915
-mas "Windows App", id: 1295203466
-mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "charliermarsh.ruff"
 vscode "cschlosser.doxdocgen"
@@ -672,6 +590,7 @@ vscode "tauri-apps.tauri-vscode"
 vscode "timonwong.shellcheck"
 vscode "toba.vsfire"
 vscode "tomoki1207.pdf"
+vscode "typescriptteam.native-preview"
 vscode "unifiedjs.vscode-remark"
 vscode "vadimcn.vscode-lldb"
 vscode "visualstudioexptteam.intellicode-api-usage-examples"
@@ -685,21 +604,8 @@ vscode "zhuangtongfa.material-theme"
 go "github.com/go-delve/delve/cmd/dlv"
 go "golang.org/x/tools/gopls"
 go "honnef.co/go/tools/cmd/staticcheck"
-cargo "c2patool"
-cargo "cargo-binstall"
-cargo "cargo-bundle"
-cargo "cargo-cache"
-cargo "cargo-compete"
-cargo "cargo-llvm-cov"
-cargo "cargo-modules"
-cargo "cargo-update"
-cargo "create-tauri-app"
-cargo "cross"
-cargo "mdbook"
-cargo "minidump-stackwalk"
-cargo "tauri-cli"
-cargo "wasm-pack"
 uv "it2"
 uv "parakeet-mlx"
 uv "ruff"
 uv "zotero-mcp-server"
+npm "corepack"

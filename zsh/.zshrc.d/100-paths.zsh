@@ -40,3 +40,11 @@ typeset -U path PATH
 [[ -d "/snap/bin" ]] && path=($path "/snap/bin")
 [[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
 [[ -d "/opt/homebrew/opt/libpq/bin" ]] && path=($path "/opt/homebrew/opt/libpq/bin")
+
+# Re-activate mise so its tool paths win over Homebrew (which prepends above).
+# Strip existing mise install paths first, because `typeset -U` would otherwise
+# keep their original (now-later) position when activate tries to prepend them.
+if command -v mise &> /dev/null; then
+	path=(${path:#$HOME/.local/share/mise/installs/*})
+	eval "$(mise activate zsh)"
+fi

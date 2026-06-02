@@ -69,6 +69,7 @@
 	shallow-clone = clone --depth=1
 	commit-claude = "!claude '/git-commit'"
 	autotag = "!~/dotfiles/script/git-autotag.sh"
+	clean-all-worktree = "!~/dotfiles/script/git-clean-claude-worktree.sh"
 	back-to-latest-commit = !git reset --hard HEAD && git clean -fd
 	add-and-commit = !git add . && claude --allowedTools 'Bash(git commit:*)' -p "/git-commit"
 [diff "totext"]

@@ -92,7 +92,13 @@
       "Bash(rm -rf /)",
       "Bash(rm -rf /*)",
       "Bash(rm -rf ~/*)",
-      "Bash(dd:*)"
+      "Bash(dd:*)",
+      "Read(//**/.env.production.local)",
+      "Bash(cat *.env.production.local)",
+      "Bash(grep *.env.production.local)",
+      "Bash(head *.env.production.local)",
+      "Bash(tail *.env.production.local)",
+      "Bash(less *.env.production.local)"
     ],
     "ask": [
       "Bash(find *-exec*)",
@@ -315,28 +321,6 @@
           }
         ]
       }
-    ],
-    "WorktreeCreate": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_create.m4a"
-          }
-        ]
-      }
-    ],
-    "WorktreeRemove": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/worktree_remove.m4a"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -356,6 +340,12 @@
     "typescript-lsp@claude-plugins-official": true
   },
   "effortLevel": "high",
+  "editorMode": "vim",
+  "verbose": true,
+  "preferredNotifChannel": "iterm2_with_bell",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
   "mcpServers": {
     "context7": {
@@ -380,10 +370,5 @@
       "disabled": true
     }
   },
-  "editorMode": "vim",
-  "verbose": true,
-  "preferredNotifChannel": "iterm2_with_bell",
-  "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "inputNeededNotifEnabled": true
 }
