@@ -14,7 +14,29 @@ Clipboard QR Code Reader
 Reads an image from the clipboard, recognizes QR codes, and outputs the results.
 """
 
+import ctypes.util
+import platform
 import sys
+from pathlib import Path
+
+
+# macOS SIP strips DYLD_* env vars when the script is launched via /usr/bin/env,
+# so pyzbar's ctypes.util.find_library('zbar') cannot locate the Homebrew-installed
+# libzbar.dylib. Patch find_library to fall back to known Homebrew locations.
+if platform.system() == "Darwin":
+    _orig_find_library = ctypes.util.find_library
+
+    def _find_library_with_brew_fallback(name: str) -> str | None:
+        found = _orig_find_library(name)
+        if found is not None or name != "zbar":
+            return found
+        for candidate in ("/opt/homebrew/lib/libzbar.dylib", "/usr/local/lib/libzbar.dylib"):
+            if Path(candidate).exists():
+                return candidate
+        return None
+
+    ctypes.util.find_library = _find_library_with_brew_fallback
+
 from PIL import ImageGrab
 from pyzbar import pyzbar
 

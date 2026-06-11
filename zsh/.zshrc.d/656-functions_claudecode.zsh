@@ -6,12 +6,13 @@
 # Helper function to show help text
 function _claude-code-show-help() {
 	cat <<'EOF'
-Usage: claude-code-to [anthropic|zai|kimi|ollama:MODEL|lmstudio:MODEL|openrouter:MODEL]
+Usage: claude-code-to [anthropic|zai|kimi|deepseek:MODEL|ollama:MODEL|lmstudio:MODEL|openrouter:MODEL]
 
 Examples:
   claude-code-to anthropic          # Use Anthropic API directly
   claude-code-to zai                # Use Z.ai proxy
   claude-code-to kimi               # Use Kimi (Moonshot AI)
+  claude-code-to deepseek:MODEL     # Use DeepSeek with specified model
   claude-code-to ollama:MODEL       # Use Ollama with specified model
   claude-code-to lmstudio:MODEL     # Use LM Studio with specified model
   claude-code-to openrouter:MODEL   # Use OpenRouter with specified model
@@ -50,6 +51,18 @@ function _claude-code-set-env() {
 			export ANTHROPIC_DEFAULT_SONNET_MODEL=kimi-k2.5
 			export ANTHROPIC_DEFAULT_HAIKU_MODEL=kimi-k2.5
 			export CLAUDE_CODE_SUBAGENT_MODEL=kimi-k2.5
+			;;
+		deepseek)
+			if [[ -n "$model" ]]; then
+				export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+				export ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_API_KEY
+				export ANTHROPIC_API_KEY=""  # Important: Must be explicitly empty
+				export ANTHROPIC_MODEL=$model
+				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
+				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
+				export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash
+				export CLAUDE_CODE_SUBAGENT_MODEL=$model
+			fi
 			;;
 		openrouter)
 			if [[ -n "$model" ]]; then
@@ -139,6 +152,24 @@ function claude-code-to() {
 			echo '{"target":"kimi"}' > "$config_file"
 			_claude-code-set-env "kimi"
 			;;
+		deepseek)
+			echo "Error: DeepSeek requires a model to be specified."
+			echo ""
+			echo "Available models:"
+			echo "  claude-code-to deepseek:deepseek-v4-pro     # DeepSeek V4 Pro"
+			echo "  claude-code-to deepseek:deepseek-v4-flash   # DeepSeek V4 Flash"
+			return 1
+			;;
+		deepseek:*)
+			local model="${target#deepseek:}"
+			if [[ -z "$DEEPSEEK_API_KEY" ]]; then
+				echo "Error: DEEPSEEK_API_KEY environment variable is not set. Please set it to use DeepSeek."
+				return 1
+			fi
+			echo_info "DeepSeek ($model) enabled for Claude."
+			echo "{\"target\":\"deepseek\",\"model\":\"$model\"}" > "$config_file"
+			_claude-code-set-env "deepseek" "$model"
+			;;
 		ollama)
 			echo "Available Ollama models:"
 			if ! ollama list 2>/dev/null | tail -n +2 | awk '{print "  claude-code-to ollama:" $1}'; then
@@ -198,6 +229,7 @@ function claude-code-to() {
 			echo "  anthropic              - Use Anthropic API directly"
 			echo "  zai                    - Use Z.ai proxy"
 			echo "  kimi                   - Use Kimi (Moonshot AI)"
+			echo "  deepseek:MODEL_NAME    - Use DeepSeek with specified model"
 			echo "  ollama:MODEL_NAME      - Use Ollama with specified model"
 			echo "  lmstudio:MODEL_NAME    - Use LM Studio with specified model"
 			echo "  openrouter:MODEL_NAME  - Use OpenRouter with specified model"
@@ -222,6 +254,12 @@ if [[ -f "$config_file" ]]; then
 			if [[ -n "$MOONSHOT_API_KEY" ]]; then
 				_claude-code-set-env "kimi"
 				echo_info "Kimi (Moonshot AI) enabled for Claude."
+			fi
+			;;
+		deepseek)
+			if [[ -n "$model" ]] && [[ -n "$DEEPSEEK_API_KEY" ]]; then
+				_claude-code-set-env "deepseek" "$model"
+				echo_info "DeepSeek ($model) enabled for Claude."
 			fi
 			;;
 		ollama)

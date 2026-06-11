@@ -20,6 +20,8 @@ elif [[ -n "${ANTHROPIC_BASE_URL}" ]]; then
         target="lmstudio"
     elif [[ "${ANTHROPIC_BASE_URL}" == *"openrouter"* ]]; then
         target="openrouter"
+    elif [[ "${ANTHROPIC_BASE_URL}" == *"deepseek"* ]]; then
+        target="deepseek"
     fi
 fi
 
@@ -38,6 +40,9 @@ case "$target" in
         ;;
     openrouter)
         echo "🔀"
+        ;;
+    deepseek)
+        echo "🐋"
         ;;
     *)
         # Default: anthropic
