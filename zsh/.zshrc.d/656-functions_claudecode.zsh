@@ -6,17 +6,102 @@
 # Helper function to show help text
 function _claude-code-show-help() {
 	cat <<'EOF'
-Usage: claude-code-to [anthropic|zai|kimi|deepseek:MODEL|ollama:MODEL|lmstudio:MODEL|openrouter:MODEL]
+Usage:
+  claude-code-to [TARGET]              # Switch the current shell to TARGET
+  claude-code-to --run TARGET [ARGS]   # Launch `claude ARGS` with TARGET in a subshell
+                                       #   (current shell environment is not modified)
+
+Targets: anthropic | zai | kimi | deepseek:MODEL | ollama:MODEL | lmstudio:MODEL | openrouter:MODEL
 
 Examples:
-  claude-code-to anthropic          # Use Anthropic API directly
-  claude-code-to zai                # Use Z.ai proxy
-  claude-code-to kimi               # Use Kimi (Moonshot AI)
-  claude-code-to deepseek:MODEL     # Use DeepSeek with specified model
-  claude-code-to ollama:MODEL       # Use Ollama with specified model
-  claude-code-to lmstudio:MODEL     # Use LM Studio with specified model
-  claude-code-to openrouter:MODEL   # Use OpenRouter with specified model
+  claude-code-to anthropic                 # Use Anthropic API directly
+  claude-code-to zai                       # Use Z.ai proxy
+  claude-code-to kimi                      # Use Kimi (Moonshot AI)
+  claude-code-to deepseek:MODEL            # Use DeepSeek with specified model
+  claude-code-to ollama:MODEL              # Use Ollama with specified model
+  claude-code-to lmstudio:MODEL            # Use LM Studio with specified model
+  claude-code-to openrouter:MODEL          # Use OpenRouter with specified model
+  claude-code-to --run zai                 # One-shot: run `claude` against Z.ai
+  claude-code-to --run deepseek:MODEL -c   # Forward extra args to `claude`
 EOF
+}
+
+# List available models for a model-requiring provider.
+# $2 is the command prefix used in the suggestions (e.g. "claude-code-to" or
+# "claude-code-to --run"), defaulting to "claude-code-to".
+function _claude-code-list-models() {
+	local provider=$1
+	local prefix=${2:-claude-code-to}
+
+	case "$provider" in
+		deepseek)
+			echo "Available models:"
+			echo "  $prefix deepseek:deepseek-v4-pro     # DeepSeek V4 Pro"
+			echo "  $prefix deepseek:deepseek-v4-flash   # DeepSeek V4 Flash"
+			;;
+		openrouter)
+			echo "Available models:"
+			echo "  $prefix openrouter:minimax/minimax-m2.5        # MiniMax M2.5"
+			echo "  $prefix openrouter:moonshotai/kimi-k2.5        # Kimi K2.5"
+			echo "  $prefix openrouter:openai/gpt-oss-120b:nitro   # GPT-OSS 120B (nitro)"
+			echo "  $prefix openrouter:z-ai/glm-5                  # GLM-5"
+			;;
+		ollama)
+			echo "Available Ollama models:"
+			if ! ollama list 2>/dev/null | tail -n +2 | awk -v p="$prefix" '{print "  " p " ollama:" $1}'; then
+				echo "  (could not run ollama — is it installed and running?)"
+			fi
+			;;
+		lmstudio)
+			echo "Available LM Studio models:"
+			local models
+			models=$(curl -sf http://localhost:1234/v1/models 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
+			if [[ -z "$models" ]]; then
+				echo "  (could not reach LM Studio at http://localhost:1234 — is it running?)"
+			else
+				echo "$models" | while read -r m; do
+					echo "  $prefix lmstudio:$m"
+				done
+			fi
+			;;
+	esac
+}
+
+# Validate target+model and required env vars for a one-shot run.
+# Echoes errors and returns non-zero on failure.
+function _claude-code-validate() {
+	local provider=$1
+	local model=$2
+
+	case "$provider" in
+		anthropic)
+			;;
+		zai)
+			[[ -z "$ZAI_API_KEY" ]] && { echo "Error: ZAI_API_KEY environment variable is not set."; return 1; }
+			;;
+		kimi)
+			[[ -z "$MOONSHOT_API_KEY" ]] && { echo "Error: MOONSHOT_API_KEY environment variable is not set."; return 1; }
+			;;
+		deepseek)
+			[[ -z "$model" ]] && { echo "Error: deepseek requires a model."; echo ""; _claude-code-list-models deepseek "claude-code-to --run"; return 1; }
+			[[ -z "$DEEPSEEK_API_KEY" ]] && { echo "Error: DEEPSEEK_API_KEY environment variable is not set."; return 1; }
+			;;
+		openrouter)
+			[[ -z "$model" ]] && { echo "Error: openrouter requires a model."; echo ""; _claude-code-list-models openrouter "claude-code-to --run"; return 1; }
+			[[ -z "$OPENROUTER_API_KEY" ]] && { echo "Error: OPENROUTER_API_KEY environment variable is not set."; return 1; }
+			;;
+		ollama)
+			[[ -z "$model" ]] && { echo "Error: ollama requires a model."; echo ""; _claude-code-list-models ollama "claude-code-to --run"; return 1; }
+			;;
+		lmstudio)
+			[[ -z "$model" ]] && { echo "Error: lmstudio requires a model."; echo ""; _claude-code-list-models lmstudio "claude-code-to --run"; return 1; }
+			;;
+		*)
+			echo "Error: Unknown target '$provider'."
+			return 1
+			;;
+	esac
+	return 0
 }
 
 # Helper function to set environment variables for Claude Code targets
@@ -109,6 +194,31 @@ function claude-code-to() {
 		return 1
 	fi
 
+	# --run: launch `claude` in a subshell with the target's env vars set,
+	# without modifying the current shell or the persisted config file.
+	if [[ "$1" == "--run" ]]; then
+		shift
+		local run_target=$1
+		if [[ -z "$run_target" ]]; then
+			echo "Error: --run requires a target."
+			echo ""
+			_claude-code-show-help
+			return 1
+		fi
+		shift
+		local run_provider="${run_target%%:*}"
+		local run_model=""
+		[[ "$run_target" == *:* ]] && run_model="${run_target#*:}"
+		if ! _claude-code-validate "$run_provider" "$run_model"; then
+			return 1
+		fi
+		(
+			_claude-code-set-env "$run_provider" "$run_model"
+			command claude "$@"
+		)
+		return $?
+	fi
+
 	local target=$1
 	local config_file="$HOME/.claude-code-to.json"
 
@@ -155,9 +265,7 @@ function claude-code-to() {
 		deepseek)
 			echo "Error: DeepSeek requires a model to be specified."
 			echo ""
-			echo "Available models:"
-			echo "  claude-code-to deepseek:deepseek-v4-pro     # DeepSeek V4 Pro"
-			echo "  claude-code-to deepseek:deepseek-v4-flash   # DeepSeek V4 Flash"
+			_claude-code-list-models deepseek
 			return 1
 			;;
 		deepseek:*)
@@ -171,10 +279,7 @@ function claude-code-to() {
 			_claude-code-set-env "deepseek" "$model"
 			;;
 		ollama)
-			echo "Available Ollama models:"
-			if ! ollama list 2>/dev/null | tail -n +2 | awk '{print "  claude-code-to ollama:" $1}'; then
-				echo "  (could not run ollama — is it installed and running?)"
-			fi
+			_claude-code-list-models ollama
 			return 1
 			;;
 		ollama:*)
@@ -184,16 +289,7 @@ function claude-code-to() {
 			_claude-code-set-env "ollama" "$model"
 			;;
 		lmstudio)
-			echo "Available LM Studio models:"
-			local models
-			models=$(curl -sf http://localhost:1234/v1/models 2>/dev/null | jq -r '.data[].id' 2>/dev/null)
-			if [[ -z "$models" ]]; then
-				echo "  (could not reach LM Studio at http://localhost:1234 — is it running?)"
-			else
-				echo "$models" | while read -r m; do
-					echo "  claude-code-to lmstudio:$m"
-				done
-			fi
+			_claude-code-list-models lmstudio
 			return 1
 			;;
 		lmstudio:*)
@@ -205,11 +301,7 @@ function claude-code-to() {
 		openrouter)
 			echo "Error: OpenRouter requires a model to be specified."
 			echo ""
-			echo "Available models:"
-			echo "  claude-code-to openrouter:minimax/minimax-m2.5           # MiniMax M2.5"
-			echo "  claude-code-to openrouter:moonshotai/kimi-k2.5          # Kimi K2.5"
-			echo "  claude-code-to openrouter:openai/gpt-oss-120b:nitro     # GPT-OSS 120B (nitro)"
-			echo "  claude-code-to openrouter:z-ai/glm-5                    # GLM-5"
+			_claude-code-list-models openrouter
 			return 1
 			;;
 		openrouter:*)

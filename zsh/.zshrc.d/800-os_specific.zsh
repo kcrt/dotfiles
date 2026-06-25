@@ -49,6 +49,15 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	# Set Android SDK path if it exists
 	[[ -d "$HOME/Library/Android/sdk" ]] && export ANDROID_SDK=$HOME/Library/Android/sdk
 
+	# Load SSH keys stored in the Keychain into the agent.
+	# macOS does not auto-load Keychain-stored keys when the agent (re)starts,
+	# so without this you must re-run `ssh-add --apple-use-keychain` regularly.
+	# Only run when the agent is empty (`ssh-add -l` exits non-zero) to avoid
+	# redundant work on every new shell/tab.
+	if [[ -o interactive ]] && ! ssh-add -l &>/dev/null; then
+		ssh-add --apple-load-keychain 2>/dev/null
+	fi
+
 	# macOS specific aliases
 	alias locate='mdfind -name'
 	alias :sleep="pmset sleepnow"

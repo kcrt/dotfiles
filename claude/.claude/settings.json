@@ -344,6 +344,7 @@
   "verbose": true,
   "preferredNotifChannel": "iterm2_with_bell",
   "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
@@ -369,7 +370,5 @@
       "env": {},
       "disabled": true
     }
-  },
-  "inputNeededNotifEnabled": true,
-  "model": "claude-fable-5[1m]"
+  }
 }
