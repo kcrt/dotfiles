@@ -4,3 +4,9 @@ no_git
 secrets/*.asc
 /.claude/
 firebase-debug.log
+
+# Agent skills: third-party, installed via `npx skills` into ~/.agents and
+# symlinked here. Machine-specific and not our code, so keep them out of these
+# (MIT) dotfiles. Own hand-written skills (e.g. readme-updater) stay tracked.
+/claude/.claude/skills/*
+!/claude/.claude/skills/readme-updater
