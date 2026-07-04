@@ -152,6 +152,8 @@ brew "cloudflared"
 brew "cmake"
 # Migemo is a tool that supports Japanese incremental search with Romaji
 brew "cmigemo"
+# Create and run Linux containers using lightweight virtual machines
+brew "container"
 # Apjanke's fork of the classic cowsay project
 brew "cowsay"
 # Securely send things from one computer to another
@@ -659,8 +661,6 @@ cask "activitywatch"
 cask "adobe-acrobat-pro"
 # E-book reader
 cask "adobe-digital-editions"
-# Menu bar tool to limit maximum charging percentage
-cask "aldente"
 # Tools for building Android applications
 cask "android-studio"
 # Agent orchestration platform
@@ -683,8 +683,6 @@ cask "balenaetcher"
 cask "bartender"
 # 2-channel browser
 cask "bathyscaphe"
-# App for managing battery charging. (Also installs a CLI on first use.)
-cask "battery"
 # Cross platform SQL editor and database management app
 cask "beekeeper-studio"
 # Utility to create and modify archives
@@ -874,8 +872,6 @@ cask "mountain-duck"
 cask "mullvad-vpn"
 # Open-source music notation software
 cask "musescore"
-# Power management and monitoring for Apple Mx processors
-cask "mx-power-gadget"
 # Visualiser for neural network, deep learning, and machine learning models
 cask "netron"
 # Open-source software for live streaming and screen recording
@@ -1058,10 +1054,10 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
-mas "Numbers", id: 409203825
 mas "Numbers", id: 361304891
-mas "Pages", id: 409201541
+mas "Numbers", id: 409203825
 mas "Pages", id: 361309726
+mas "Pages", id: 409201541
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
