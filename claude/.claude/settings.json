@@ -337,9 +337,20 @@
     "playwright@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "joplin-mcp@joplin-mcp": true,
+    "vercel@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "joplin-mcp": {
+      "source": {
+        "source": "github",
+        "repo": "alondmnt/joplin-mcp"
+      }
+    }
   },
   "effortLevel": "high",
+  "tui": "fullscreen",
   "editorMode": "vim",
   "verbose": true,
   "preferredNotifChannel": "iterm2_with_bell",

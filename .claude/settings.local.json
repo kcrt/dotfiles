@@ -5,7 +5,14 @@
       "Bash(otool:*)",
       "Bash(BENCHMARK_ZSHRC=1 zsh:*)",
       "WebFetch(domain:api.github.com)",
-      "WebFetch(domain:eu-central-1-1.aws.cloud2.influxdata.com)"
+      "WebFetch(domain:eu-central-1-1.aws.cloud2.influxdata.com)",
+      "Read(//Users/kcrt/.agents/**)",
+      "Bash(npx -y skills@latest add google-deepmind/science-skills -g -y -s pubmed-database -s clinical-trials-database -s literature-search-europepmc -s openfda-database -s credentials)",
+      "Bash(npx -y skills@latest add K-Dense-AI/scientific-agent-skills -g -y -s scikit-survival -s statistical-power -s experimental-design -s statistical-analysis -s citation-management -s literature-review)",
+      "Bash(npx -y skills@latest add posit-dev/skills -g -y -s quarto-authoring -s ggsql -s testing-r-packages -s pr-create -s pr-threads-address -s pr-threads-resolve -s critical-code-reviewer)",
+      "Bash(npx -y skills@latest add ab604/claude-code-r-skills -g -y -s tidyverse-patterns -s r-bayes -s r-performance -s rlang-patterns)",
+      "Bash(npx -y skills@latest add nealcaren/social-data-analysis -g -y -s r-analyst)",
+      "Bash(npx -y skills@latest add trailofbits/skills -g -y -s rust-review -s modern-python -s property-based-testing -s semgrep -s codeql -s differential-review)"
     ],
     "deny": []
   },
