@@ -30,13 +30,15 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
       --to bob@example.com --body "本文" --attach ~/doc.pdf
 
 本文について:
-  - reply/reply-all は Mail のネイティブ引用（元メールの引用＋署名）を活かし、
-    その上に本文を差し込む。本文は「ウィンドウを開いて → クリップボード経由で
-    貼り付け（⌘V）」で入れる。これは `set content` が本文を cite ブロック
-    （<blockquote type="cite">）に巻き込み、送信時に本文全体が "> " 付きの
-    引用として送られてしまう Mail の挙動を回避するため（下記「既知の落とし穴」）。
-    引用を残したくない場合は --no-quote を付ける（⌘A で全選択してから貼り付け、
-    ネイティブ引用ごと本文に置き換える）。
+  - reply/reply-all は Mail のネイティブ引用（元メールの引用＋署名）を活かす。
+    返信ウィンドウ・宛先・添付までを用意し、**本文はクリップボードに載せるだけ
+    （pbcopy 相当）** で、ユーザーが本文欄の先頭で ⌘V で手貼りする。自動 ⌘V は
+    環境（アクセシビリティ権限・タイミング）で不発になることがあるため行わない。
+    `set content` を使わないのは、本文が cite ブロック（<blockquote type="cite">）に
+    巻き込まれ送信時に本文全体が "> " 付き引用として送られてしまう Mail の挙動を
+    回避するため（下記「既知の落とし穴」）。
+    引用を残したくない場合は --no-quote を付ける（この場合はユーザーが本文欄で
+    ⌘A→⌘V し、ネイティブ引用ごと本文に置き換える）。
     （--keep-quote は後方互換のため受理するが、既定動作なので何もしない。）
   - forward は Mail が生成する本文（元メール＋添付）を活かし、その上に本文を
     差し込む（従来どおり set content。転送はウィンドウの初期フォーカスが宛先欄の
@@ -61,15 +63,14 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
     プレーンテキスト（引用なし）になる。
 
 補足:
-  - reply/reply-all は本文貼り付けのため **作成ウィンドウを開く**（一瞬前面に出る）。
-    System Events による ⌘V を使うのでアクセシビリティ権限が必要。作成後の
-    ウィンドウは開いたまま残す（そのまま内容確認 → 送信できる）。返信ウィンドウが
-    開くまでポーリングし、開かない／Mail を前面化できない場合は貼り付けを中止する
-    （別アプリへの誤爆防止）。
-  - 貼り付けのため一時的にクリップボードを使用する（実行後に元の内容を復元する）。
-    **クリップボードとウィンドウフォーカスを一時的に奪う**ため、reply/reply-all を
-    実行する側（Claude 等）は「今から実行します。準備 OK か」をユーザーに確認して
-    から起動すること（ユーザーが別作業でクリップボードを使っている最中を避ける）。
+  - reply/reply-all は **作成ウィンドウを開く**（一瞬前面に出る）。作成後の
+    ウィンドウは本文欄にフォーカスした状態で開いたまま残す（ユーザーが ⌘V で
+    本文を貼り、内容確認 → 送信できる）。返信ウィンドウが開くまでポーリングし、
+    開かなければ中止する。
+  - **本文はクリップボードに載せたまま**にする（ユーザーが手貼りするので復元しない）。
+    クリップボードの内容を上書きするため、reply/reply-all を実行する側（Claude 等）は
+    「今から実行します。準備 OK か」をユーザーに確認してから起動すること
+    （ユーザーが別作業でクリップボードを使っている最中を避ける）。
   - 元メールは既定で INBOX を検索する。見つからない場合は --search-all で
     全メールボックスを走査する。
   - --open は互換のため受理する（reply は元々ウィンドウを開く）。
@@ -212,9 +213,12 @@ def _recipients_and_subject(args) -> list[str]:
 def build_reply(args, reply_all: bool) -> str:
     """reply / reply-all の下書きを作る。
 
-    本文は「ウィンドウを開いてクリップボードから貼り付け」で入れる。
-    `set content` は本文を cite ブロックに巻き込み、送信時に本文全体が "> " 付き
-    引用になってしまう Mail の挙動を回避するため（docstring「既知の落とし穴」参照）。
+    本文は**クリップボードに載せるだけ（pbcopy 相当）**。返信ウィンドウを開いて
+    ネイティブ引用・スレッド連結・宛先・添付までを用意し、本文はユーザーが
+    ⌘V で手貼りする。System Events による自動 ⌘V は環境（アクセシビリティ権限・
+    タイミング）で不発になることがあるため行わない。
+    `set content` を使わないのは、本文が cite ブロックに巻き込まれ送信時に本文全体が
+    "> " 付き引用になってしまう Mail の挙動を回避するため（docstring「既知の落とし穴」）。
     ネイティブ引用と In-Reply-To/References は維持される。
     """
     body = as_lit(args.body)
@@ -223,25 +227,20 @@ def build_reply(args, reply_all: bool) -> str:
 
     parts = ['tell application "Mail"']
     parts.append(find_original_block(args.message_id, args.match_subject, args.search_all))
-    # 貼り付け先ウィンドウの出現を検知するため、開く前のウィンドウ数を控える。
+    # 返信ウィンドウの出現を検知するため、開く前のウィンドウ数を控える。
     parts.append("\tset winBefore to (count windows)")
     parts.append("end tell")
 
-    # クリップボードを退避し、本文をクリップボードへ。
-    parts.append('set savedClip to ""')
-    parts.append("try")
-    parts.append("\tset savedClip to (the clipboard as text)")
-    parts.append("end try")
+    # 本文をクリップボードへ（ユーザーが手貼りするので復元はしない）。
     parts.append(f'set the clipboard to "{body}"')
 
-    # 返信ウィンドウを開く（ネイティブ引用＋署名を生成させる）。
+    # 返信ウィンドウを開く（ネイティブ引用＋署名＋スレッド連結を生成させる）。
     parts.append('tell application "Mail"')
     parts.append("\tactivate")
     parts.append(f"\tset msg to {verb}")
     parts.append("end tell")
 
-    # 固定 delay ではなく、実際に返信ウィンドウが開くまでポーリングする
-    # （最大 ~10 秒）。開かなければ貼り付けを中止（誤爆防止）。
+    # 実際に返信ウィンドウが開くまでポーリングする（最大 ~10 秒）。
     parts.append("set opened to false")
     parts.append("repeat 40 times")
     parts.append("\ttell application \"Mail\" to set winNow to (count windows)")
@@ -251,26 +250,11 @@ def build_reply(args, reply_all: bool) -> str:
     parts.append("\tend if")
     parts.append("\tdelay 0.25")
     parts.append("end repeat")
-    parts.append('if not opened then error "返信ウィンドウが開きませんでした（貼り付け中止）"')
+    parts.append('if not opened then error "返信ウィンドウが開きませんでした"')
     # 引用/署名の生成が落ち着くのを待つ。
     parts.append("delay 0.8")
 
-    # System Events で本文を貼り付ける。返信ウィンドウは初期フォーカスが本文欄
-    # （宛先は自動で埋まっているため）なので、そこへ貼り付けると引用の上に入る。
-    # Mail を確実に前面へ。前面化できなければ貼り付けを中止（別アプリへの誤爆防止）。
-    parts.append('tell application "System Events"')
-    parts.append('\tset frontmost of process "Mail" to true')
-    parts.append("\tdelay 0.4")
-    parts.append('\tif not (frontmost of process "Mail") then error "Mail を前面にできませんでした（貼り付け中止）"')
-    if args.no_quote:
-        # 全選択してから貼り付け＝ネイティブ引用ごと本文に置き換える。
-        parts.append('\tkeystroke "a" using {command down}')
-        parts.append("\tdelay 0.3")
-    parts.append('\tkeystroke "v" using {command down}')
-    parts.append("end tell")
-    parts.append("delay 0.8")
-
-    # 追加宛先・件名・添付・保存。
+    # 追加宛先・件名・添付・保存（本文は入れない）。
     parts.append('tell application "Mail"')
     parts.extend(_recipients_and_subject(args))
     if args.attach:
@@ -279,12 +263,16 @@ def build_reply(args, reply_all: bool) -> str:
     parts.append("\tsave msg")
     parts.append("end tell")
 
-    # クリップボードを復元。
-    parts.append("try")
-    parts.append("\tset the clipboard to savedClip")
-    parts.append("end try")
+    # Mail を前面化し、本文欄にフォーカスした状態でユーザーへ渡す（すぐ ⌘V できる）。
+    parts.append('try')
+    parts.append('\ttell application "System Events" to set frontmost of process "Mail" to true')
+    parts.append('end try')
 
-    parts.append(f'return "OK({mode}) subject=" & outSubject')
+    hint = "本文欄で ⌘A → ⌘V" if args.no_quote else "本文欄の先頭で ⌘V"
+    parts.append(
+        f'return "OK({mode}) 本文はクリップボードにコピー済み。開いた返信ウィンドウの'
+        f'{hint} で貼り付けてください。 subject=" & outSubject'
+    )
     return "\n".join(parts)
 
 
