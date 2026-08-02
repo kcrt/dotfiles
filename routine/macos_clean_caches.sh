@@ -49,11 +49,11 @@ pip3 cache purge
 # each one holds ~/.cache/uv/.lock for its whole lifetime, so uv sits here for
 # its default 300s and then gives up. Notify as soon as we know we are going to
 # wait - closing Claude within the window is enough to let it through - and cap
-# the wait at three minutes. ('uv cache size' does not need the lock.)
+# the wait at a minute. ('uv cache size' does not need the lock.)
 if lsof ~/.cache/uv/.lock > /dev/null 2>&1; then
-    OSNotify "uv cache is locked by a running uv process (Claude's MCP servers). Waiting up to 3 min; close Claude to let it through."
+    OSNotify "uv cache is locked by a running uv process (Claude's MCP servers). Waiting up to 1 min; close Claude to let it through."
 fi
-if UV_LOCK_TIMEOUT=180 uv cache clean; then
+if UV_LOCK_TIMEOUT=60 uv cache clean; then
     echo_ok "uv cache cleaned."
 else
     echo_warn "uv cache left alone ($(uv cache size 2>/dev/null | awk '{printf "%.1fG", $1/1024/1024/1024}')): the lock was still held."
