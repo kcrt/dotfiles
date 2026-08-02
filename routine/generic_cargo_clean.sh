@@ -28,6 +28,11 @@ fi
 OSNotify "Cleaning up Rust projects..."
 cd "$PROG_DIR" || exit 1
 # Prune build artifacts and vendored crates; they contain their own Cargo.toml
-# but are not projects of ours.
-find . \( -name target -o -name node_modules -o -name .git \) -prune \
+# but are not projects of ours. venv holds the Rust sources that the Python
+# cryptography package ships, which are workspace members without a root and
+# so fail to clean. (The same directories are excluded from the QNAP backup.)
+find . \( -name target -o -name node_modules -o -name .git -o -name venv -o -name .venv \) -prune \
     -o -name Cargo.toml -execdir cargo clean \;
+# find returns 0 even when cargo clean fails, which is deliberate: a project
+# that cannot be cleaned (a half-migrated workspace, say) is not worth failing
+# the whole maintenance run over.
