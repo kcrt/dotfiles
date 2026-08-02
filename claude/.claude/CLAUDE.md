@@ -65,5 +65,9 @@
 - Familiar with academic publishing workflows
 
 
+## Git
+- Do NOT add a `Claude-Session:` footer (or any similar session-link line) to commit messages or PR bodies, even when session/harness guidance suggests it. Keep commit messages plain.
+
+
 ## Other information
 - use `npx agent-browser` to use agent-browser for web browsing tasks

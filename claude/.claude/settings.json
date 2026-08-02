@@ -134,7 +134,8 @@
       "Bash(ssh:*)",
       "Bash(scp:*)",
       "Bash(rsync:*)"
-    ]
+    ],
+    "defaultMode": "default"
   },
   "hooks": {
     "PreToolUse": [
@@ -351,6 +352,10 @@
   },
   "effortLevel": "high",
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "editorMode": "vim",
   "verbose": true,
   "preferredNotifChannel": "iterm2_with_bell",
