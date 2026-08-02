@@ -32,4 +32,16 @@ if [[ ! -f "$QNAP_FILELIST" ]]; then
 fi
 
 OSNotify "/Volumes/Backup/ mounted, refreshing QnapFileList.txt..."
-pv "$QNAP_FILELIST" | grep -Ev 'AppleDouble|\._|DS_Store|\.@__thumb' | LANG=C sort > ~/QnapFileList.txt
+# Without pipe_fail the status would be sort's, so a failing pv goes unnoticed.
+setopt local_options pipe_fail
+# Build the list in a temporary file: the redirection truncates its target
+# before the pipeline even starts, which would destroy the previous list.
+QNAP_FILELIST_TMP="${TMPDIR:-/tmp}/QnapFileList.txt.$$"
+if pv "$QNAP_FILELIST" | grep -Ev 'AppleDouble|\._|DS_Store|\.@__thumb' | LANG=C sort > "$QNAP_FILELIST_TMP"; then
+    mv "$QNAP_FILELIST_TMP" ~/QnapFileList.txt
+    echo_ok "QnapFileList.txt refreshed ($(wc -l < ~/QnapFileList.txt | tr -d ' ') entries)."
+else
+    rm -f "$QNAP_FILELIST_TMP"
+    OSError "Failed to refresh QnapFileList.txt. The existing file is kept."
+    exit 1
+fi

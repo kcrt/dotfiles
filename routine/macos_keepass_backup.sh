@@ -18,6 +18,10 @@ source ${DOTFILES}/script/OSNotify.sh
 KEEPASS_DB=~/Documents/passwords.kdbx
 KEEPASS_GENERATIONS=20
 
+# A password backup that quietly did not happen is the worst outcome here, so
+# count every failure and report it through the exit status as well.
+typeset -i FAILURES=0
+
 backup_keepass(){
     local dest="$1"
     if [[ ! -d "${dest:h}" ]]; then
@@ -37,12 +41,13 @@ if [[ ! -f "$KEEPASS_DB" ]]; then
     exit 1
 fi
 
-backup_keepass "$HOME/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx"
+backup_keepass "$HOME/Library/Mobile Documents/iCloud~be~kyuran~kypass2/Documents/passwords.kdbx" || (( FAILURES++ ))
 
 if gcloud storage cp "$KEEPASS_DB" gs://auto.backup.kcrt.net/auto/passwords.kdbx; then
     echo_ok "passwords.kdbx -> gs://auto.backup.kcrt.net/auto/"
 else
     OSError "Failed to upload passwords.kdbx to Google Cloud Storage."
+    (( FAILURES++ ))
 fi
 
 if [[ -d /Volumes/Backup/passwords ]]; then
@@ -53,7 +58,12 @@ if [[ -d /Volumes/Backup/passwords ]]; then
             echo_info "Removing $(( ${#kdbx_generations} - KEEPASS_GENERATIONS )) old generation(s) of passwords.kdbx..."
             rm -v -f -- "${kdbx_generations[@]:$KEEPASS_GENERATIONS}"
         fi
+    else
+        (( FAILURES++ ))
     fi
 else
     OSError "/Volumes/Backup/passwords not found. Skipping dated backup."
+    (( FAILURES++ ))
 fi
+
+(( FAILURES == 0 )) || exit 1

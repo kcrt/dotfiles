@@ -31,13 +31,29 @@ if ! ping -c 1 qnap.local &> /dev/null; then
     exit 1
 fi
 
+typeset -i RSYNC_FAILURES=0
+
+# Homebrew's rsync, not the ancient one in /usr/bin.
+run_rsync() {
+    local rc=0
+    /opt/homebrew/bin/rsync "$@" || rc=$?
+    # 24 = "partial transfer due to vanished source files". Caches and temp
+    # files disappearing mid-run is normal here, so it is not a failure.
+    if (( rc != 0 && rc != 24 )); then
+        OSError "rsync failed (exit $rc): ${@[-1]}"
+        (( RSYNC_FAILURES++ ))
+        return $rc
+    fi
+    return 0
+}
+
 backup_directory_mount() {
     local src_dir=$1
     local dest_dir=$2
     # iconv is required to convert file names from UTF-8 to UTF-8-MAC.
     # (seems strage, but UTF-8-MAC,UTF-8 does not work)
     # This is required to avoid resending files again and again.
-    /opt/homebrew/bin/rsync -ahv \
+    run_rsync -ahv \
         --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
         --iconv=UTF-8,UTF-8-MAC \
@@ -50,7 +66,7 @@ backup_directory_rsync() {
         src_dir="$src_dir/"
     fi
     # -z sometimes causes problems with large files, so we disable it.
-    /opt/homebrew/bin/rsync -ahv \
+    run_rsync -ahv \
         --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" \
         --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --exclude="*/.@__thumb/" --exclude=".rustup" \
 		--exclude="Library/pnpm" \
@@ -74,13 +90,19 @@ if [[ -d /Volumes/Backup/ ]]; then
     OSNotify "Mail -> Qnap"
     backup_directory_rsync ~/Library/Mail/ Mail
     OSNotify "nosync -> Qnap"
-    backup_directory_rsync /Volumes/nosync/ nosync
+    backup_directory_rsync /nosync/ nosync
 
     
     # Because Parallels disk images are extremely large, we use a different method.
     OSNotify "Parallels -> Qnap"
-    /opt/homebrew/bin/rsync -ahv \
+    run_rsync -ahv \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
         --inplace --partial --block-size=128K \
-        ~/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels"
+        /nosync/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels"
+fi
+
+# Let maintain.sh's run_step know that something did not make it to the NAS.
+if (( RSYNC_FAILURES > 0 )); then
+    OSError "$RSYNC_FAILURES rsync transfer(s) failed."
+    exit 1
 fi

@@ -15,19 +15,29 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+# Report a non-zero status if any of the updates below failed, so that
+# maintain.sh's run_step does not call a half-finished run a success.
+typeset -i FAILURES=0
+failed() {
+    OSError "$1"
+    (( FAILURES++ ))
+}
+
 echo_info "vim update"
 # .vimrc uses vim-plug (PluginInstall is Vundle's command and does not exist).
 # --sync is required so that the updates finish before vim quits.
-vim -c "PlugInstall --sync" -c "PlugUpdate --sync" -c "qall"
+vim -c "PlugInstall --sync" -c "PlugUpdate --sync" -c "qall" || failed "vim plugin update failed."
 
 echo_info "Google cloud command update"
 if command -v gcloud > /dev/null 2>&1; then
-    yes | gcloud components update
+    yes | gcloud components update || failed "gcloud components update failed."
 fi
 
 echo_info "GitHub Copilot update"
-if command -v gh > /dev/null 2>&1; then
-    gh extension upgrade gh-copilot
+# 'gh extension upgrade' fails outright when the extension is not installed,
+# so only upgrade what is actually there.
+if command -v gh > /dev/null 2>&1 && gh extension list 2>/dev/null | grep -q "gh-copilot"; then
+    gh extension upgrade gh-copilot || failed "gh extension upgrade gh-copilot failed."
 fi
 
 echo_info "google key"
@@ -39,5 +49,7 @@ if wget -q "https://pki.goog/roots.pem" -O "$roots_pem_tmp"; then
     echo_ok "google-roots.pem updated."
 else
     rm -f "$roots_pem_tmp"
-    OSError "Failed to download roots.pem. The existing file is kept."
+    failed "Failed to download roots.pem. The existing file is kept."
 fi
+
+(( FAILURES == 0 )) || exit 1
