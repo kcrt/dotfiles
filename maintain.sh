@@ -130,6 +130,7 @@ case $HOST in
 esac
 
 run_step "CLI tools update" run_routine generic_cli_tools_update.sh
+run_step "zjstatus check"   run_routine generic_zjstatus_update.sh
 run_step "R packages"       run_routine generic_r_install_packages.sh
 
 finish

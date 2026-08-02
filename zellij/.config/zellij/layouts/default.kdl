@@ -1,6 +1,11 @@
 layout {
 	default_tab_template {
 		pane size=1 borderless=true {
+			// zellij は URL のハッシュを名前にして wasm をキャッシュし、そのファイルが
+			// 存在する限り再取得しない (zellij-utils/src/downloader.rs)。URL が固定の
+			// "latest/download" では初回取得版が永久に使われ続けるため、更新するには
+			// キャッシュを消す必要がある。検知と手順の通知は
+			// routine/generic_zjstatus_update.sh が行う。
 			plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
 				format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | {tabs}"
 				format_center ""
@@ -35,7 +40,7 @@ layout {
 
 				command_progressinfo_command "bash -c \"$HOME/dotfiles/script/progress_info.sh zjstatus\""
 				command_progressinfo_format  "{stdout}"
-				command_progressinfo_interval 5
+				command_progressinfo_interval 10
 				command_progressinfo_rendermode "dynamic"
 
 				command_hostinfo_command "bash -c \"$HOME/dotfiles/script/host_and_connect.sh\""
