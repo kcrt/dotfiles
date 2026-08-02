@@ -26,9 +26,8 @@ if command -v ioreg > /dev/null 2>&1; then
 			 /"BatteryInstalled"/{ BATTERY=$3 }
 			 /"FullyCharged"/{ FULL=$3 }
 			 /"ExternalConnected"/ {AC=$3}
-			 END { printf("%.1f %s %s %s\n", CURRENT/MAX*100, BATTERY, FULL, AC) }')
+			 END { printf("%.0f %s %s %s\n", CURRENT/MAX*100, BATTERY, FULL, AC) }')
 	BATPER=$(echo "$BATSTR" | cut -f1 -d" ")
-	BATPER_INT=$(echo "$BATPER" | cut -f1 -d".")
 	BATTERY=$(echo "$BATSTR" | cut -f2 -d" ")
 	FULL=$(echo "$BATSTR" | cut -f3 -d" ")
 	AC=$(echo "$BATSTR" | cut -f4 -d" ")
@@ -41,7 +40,7 @@ if command -v ioreg > /dev/null 2>&1; then
 	elif [ "$AC" = "Yes" ]; then
 		# Connected to AC, but not fully charged (charging)
 		echo "${BATPER}% [🔌⚡️]"
-	elif [ "$BATPER_INT" -ge 30 ]; then
+	elif [ "$BATPER" -ge 30 ]; then
 		# Using battery
 		echo "${BATPER}% [🔋]"
 	else
