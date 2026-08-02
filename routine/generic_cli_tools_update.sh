@@ -26,7 +26,11 @@ failed() {
 echo_info "vim update"
 # .vimrc uses vim-plug (PluginInstall is Vundle's command and does not exist).
 # --sync is required so that the updates finish before vim quits.
-vim -c "PlugInstall --sync" -c "PlugUpdate --sync" -c "qall" || failed "vim plugin update failed."
+# -es (silent ex mode) avoids redrawing a full screen of escape sequences into
+# maintain.sh's log; -u is needed with it because -es skips the normal startup
+# and vim-plug's commands are defined in .vimrc.
+vim -es -u ~/.vimrc -c "PlugInstall --sync" -c "PlugUpdate --sync" -c "qall!" < /dev/null \
+    || failed "vim plugin update failed."
 
 echo_info "Google cloud command update"
 if command -v gcloud > /dev/null 2>&1; then

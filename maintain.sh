@@ -21,6 +21,26 @@ fi
 source ${DOTFILES}/script/OSNotify.sh
 autoload zmv
 
+# A full run takes hours, and the interesting lines scroll out of the
+# terminal's scrollback long before it ends. Keep a copy on disk.
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/maintain"
+LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d).log"
+LOG_GENERATIONS=30
+if mkdir -p "$LOG_DIR"; then
+	print -r -- "===== $(date '+%Y-%m-%d %H:%M:%S') maintain.sh started =====" >> "$LOG_FILE"
+	# Keep the newest $LOG_GENERATIONS daily logs. (NOn): skip if empty,
+	# sort by name descending == newest first.
+	log_generations=("$LOG_DIR"/*.log(NOn))
+	if (( ${#log_generations} > LOG_GENERATIONS )); then
+		rm -f -- "${log_generations[@]:$LOG_GENERATIONS}"
+	fi
+	# tee keeps the terminal colourful while sed stores a readable copy.
+	exec > >(tee >(sed -l 's/\x1b\[[0-9;?]*[a-zA-Z]//g' >> "$LOG_FILE")) 2>&1
+else
+	echo "maintain.sh: cannot write to $LOG_DIR, continuing without a log." >&2
+	LOG_FILE=""
+fi
+
 # Routines exit on their own error paths (e.g. "QNAP is not reachable"), so run
 # them in a subshell; otherwise their exit would terminate maintain.sh itself.
 run_routine(){
@@ -68,6 +88,7 @@ run_step(){
 # status behind for whoever (launchd, a future cron job) started us.
 finish(){
 	local total=$(format_duration $SECONDS)
+	[[ -n "$LOG_FILE" ]] && echo_info "Log: $LOG_FILE"
 	if (( ${#FAILED_STEPS} == 0 )); then
 		echo_ok "==== FINISHED! $STEP_COUNT steps in $total ===="
 		OSNotify "All $STEP_COUNT steps finished in $total."
