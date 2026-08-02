@@ -49,6 +49,7 @@ if [[ -d /Volumes/Private/Recording/ ]]; then
     echo "Starting transcription..."
     for i in /Volumes/Private/Recording/VoiceMemo/*.m4a; do
         if [ ! -e "${i:r}.txt" ]; then
+			echo "Transcripting $i"
             uv tool run parakeet-mlx --model mlx-community/parakeet-tdt_ctc-0.6b-ja "$i" --output-dir /Volumes/Private/Recording/VoiceMemo/
             # Use srt format and rename to txt after transcription
             mv "${i:r}.srt" "${i:r}.txt"
