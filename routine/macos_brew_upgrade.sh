@@ -14,7 +14,11 @@
 source ${DOTFILES}/script/OSNotify.sh
 
 OSNotify "Updating brew..."
-brew update
-brew outdated
-brew upgrade
-brew bundle dump -f --file ${DOTFILES}/Brewfile
+brew update || count_failure "brew update failed."
+brew outdated   # informational only
+# A cask that cannot be upgraded makes this exit non-zero while the rest of the
+# upgrade still succeeds, so keep going and report at the end.
+brew upgrade || count_failure "brew upgrade failed. Check the log for which formula or cask."
+brew bundle dump -f --file ${DOTFILES}/Brewfile || count_failure "brew bundle dump failed."
+
+routine_exit_status

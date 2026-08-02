@@ -31,6 +31,28 @@ fi
 
 source ${DOTFILES}/script/echo_color.sh
 
+# --- failure counting for maintenance routines --------------------------------
+# A routine that logs an error and then ends on a successful command still
+# reports success to its caller, which is how a failing 'brew upgrade' kept
+# being recorded as a finished step. count_failure() records the problem and
+# lets the routine carry on with its remaining work; routine_exit_status()
+# turns the tally into an exit code at the end of the script.
+ROUTINE_FAILURES=0
+
+function count_failure(){
+	OSError "$1"
+	ROUTINE_FAILURES=$((ROUTINE_FAILURES + 1))
+	return 0
+}
+
+function routine_exit_status(){
+	if [ "$ROUTINE_FAILURES" -eq 0 ]; then
+		return 0
+	fi
+	OSError "$ROUTINE_FAILURES step(s) of this routine failed."
+	return 1
+}
+
 # Title used when a notification is sent with a message only. $OSNOTIFY_TITLE
 # lets a script override it; otherwise the name of the running script is used.
 # (ZSH_ARGZERO keeps the invoked script name even inside functions and sourced

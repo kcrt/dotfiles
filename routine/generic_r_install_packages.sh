@@ -14,9 +14,15 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if ! command -v R > /dev/null 2>&1; then
+    OSError "R is not installed. Please install it first."
+    exit 1
+fi
+
 echo_info "Installing R packages..."
 
-R --vanilla << R_UPDATE
+# The delimiter is quoted so the shell leaves the R code alone.
+R --vanilla << 'R_UPDATE'
 options(repos=c(CRAN="http://cran.r-project.org"))
 packages_to_need = c("tidyverse", "gtsummary", "coin", "exactRankTests", "languageserver")
 packages_installed = rownames(installed.packages())
@@ -24,3 +30,7 @@ packages_to_install = packages_to_need[!is.element(packages_to_need, packages_in
 install.packages(packages_to_install, dependencies=TRUE)
 update.packages(ask=FALSE)
 R_UPDATE
+r_status=$?
+(( r_status == 0 )) || count_failure "R package update failed (exit $r_status)."
+
+routine_exit_status

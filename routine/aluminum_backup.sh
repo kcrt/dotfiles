@@ -31,8 +31,6 @@ if ! ping -c 1 qnap.local &> /dev/null; then
     exit 1
 fi
 
-typeset -i RSYNC_FAILURES=0
-
 # Homebrew's rsync, not the ancient one in /usr/bin.
 run_rsync() {
     local rc=0
@@ -40,8 +38,7 @@ run_rsync() {
     # 24 = "partial transfer due to vanished source files". Caches and temp
     # files disappearing mid-run is normal here, so it is not a failure.
     if (( rc != 0 && rc != 24 )); then
-        OSError "rsync failed (exit $rc): ${@[-1]}"
-        (( RSYNC_FAILURES++ ))
+        count_failure "rsync failed (exit $rc): ${@[-1]}"
         return $rc
     fi
     return 0
@@ -119,7 +116,4 @@ if [[ -d /Volumes/Backup/ ]]; then
 fi
 
 # Let maintain.sh's run_step know that something did not make it to the NAS.
-if (( RSYNC_FAILURES > 0 )); then
-    OSError "$RSYNC_FAILURES rsync transfer(s) failed."
-    exit 1
-fi
+routine_exit_status
