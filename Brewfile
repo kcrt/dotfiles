@@ -8,6 +8,7 @@ tap "homebrew/core"
 tap "homebrew/services"
 tap "itchyny/tap", trusted: true
 tap "kcrt/kcrt", trusted: true
+tap "libsql/sqld", trusted: true
 tap "mackerelio/mackerel-agent", trusted: true
 tap "microsoft/foundrylocal", trusted: true
 tap "nohajc/anylinuxfs", trusted: true
@@ -18,7 +19,9 @@ tap "ruffle-rs/ruffle", trusted: true
 tap "slp/krun", trusted: true
 tap "steipete/tap", trusted: true
 tap "theseal/ssh-askpass", trusted: true
+tap "tursodatabase/tap", trusted: true
 tap "wader/tap", trusted: true
+tap "wunderlandmedia/tap"
 tap "ynqa/tap", trusted: true
 # Converts abc music notation files to MIDI files
 brew "abcmidi"
@@ -48,16 +51,8 @@ brew "afflib"
 brew "afio"
 # Utility for manipulating APFS and ZFS compressed files
 brew "afsctool"
-# Color management engine supporting ICC profiles
-brew "little-cms2"
-# Development kit for the Java programming language
-brew "openjdk"
-# Java build tool
-brew "ant"
 # Next-gen compiler infrastructure
 brew "llvm"
-# Download with resuming and segmented downloading
-brew "aria2"
 # Utility to check whether MAC addresses are already taken on a LAN
 brew "arping"
 # Collection of portable C++ source libraries
@@ -104,6 +99,10 @@ brew "bandwhich"
 brew "libgit2"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Color management engine supporting ICC profiles
+brew "little-cms2"
+# Image format providing lossless and lossy compression for web images
+brew "webp"
 # Google's own build tool
 brew "bazel"
 # Convert CD images from .bin/.cue to .iso/.cdr
@@ -122,6 +121,8 @@ brew "boost-python3"
 brew "brew-gem"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
+# Development kit for the Java programming language
+brew "openjdk"
 # Command-line tool to manipulate Android App Bundles
 brew "bundletool"
 # Extract files from Microsoft cabinet files
@@ -168,8 +169,6 @@ brew "ddcctl"
 brew "ddrescue"
 # Secure runtime for JavaScript and TypeScript
 brew "deno"
-# Display graphs and colors of file system space/usage
-brew "dfc"
 # Library to load and enumerate PKCS#11 modules
 brew "p11-kit"
 # GNU Transport Layer Security (TLS) Library
@@ -244,8 +243,6 @@ brew "firebase-cli", link: false
 brew "portaudio"
 # Real-time software synthesizer based on the SoundFont 2 specs
 brew "fluid-synth"
-# Image format providing lossless and lossy compression for web images
-brew "webp"
 # ISO/IEC 23008-12:2017 HEIF file format decoder and encoder
 brew "libheif"
 # Generic library support script
@@ -308,8 +305,8 @@ brew "gobject-introspection"
 brew "gping"
 # Real-time satellite tracking/prediction application
 brew "gpredict"
-# Exporter for Prometheus Metrics, Loki Logs, and Tempo Traces
-brew "grafana-agent", restart_service: :changed
+# OpenTelemetry Collector distribution with programmable pipelines
+brew "grafana-alloy", restart_service: :changed
 # Image manipulation
 brew "netpbm"
 # Graph visualization software from AT&T and Bell Labs
@@ -418,8 +415,6 @@ brew "minicom"
 brew "mise"
 # Simple tool to make locally trusted development certificates
 brew "mkcert"
-# Deep clean and optimize your Mac
-brew "mole"
 # MongoDB CLI enables you to manage your MongoDB in the Cloud
 brew "mongocli"
 # MongoDB Shell to connect, configure, query, and work with your MongoDB database
@@ -530,8 +525,6 @@ brew "ripgrep-all"
 brew "rrdtool"
 # Utility that provides fast incremental file transfer
 brew "rsync"
-# Program to decode radio transmissions from devices
-brew "rtl_433"
 # Rust toolchain installer
 brew "rustup"
 # File compression tool (like gzip or bzip2)
@@ -651,6 +644,7 @@ brew "oven-sh/bun/bun"
 brew "ruffle-rs/ruffle/ruffle", args: ["HEAD"]
 # Passphrase dialog for use with OpenSSH in macOS
 brew "theseal/ssh-askpass/ssh-askpass"
+brew "tursodatabase/tap/turso", trusted: true
 # jq for binary formats
 brew "wader/tap/fq"
 # JSON navigator and interactive filter leveraging jq
@@ -669,7 +663,6 @@ cask "antigravity"
 cask "appcleaner"
 # User-friendly GUI app for Homebrew
 cask "applite"
-# Electronics prototyping platform
 cask "arduino"
 # Multi-track audio editor and recorder
 cask "audacity"
@@ -679,8 +672,6 @@ cask "azookey"
 cask "background-music"
 # Tool to flash OS images to SD cards & USB drives
 cask "balenaetcher"
-# Menu bar icon organiser
-cask "bartender"
 # 2-channel browser
 cask "bathyscaphe"
 # Cross platform SQL editor and database management app
@@ -691,12 +682,9 @@ cask "betterzip"
 cask "blackhole-2ch"
 # 3D creation suite
 cask "blender"
-# DVD mounting software, originally from Metakine
 cask "boxofsnoo-fairmount"
 # CD burning application
 cask "burn"
-# Utility that prevents the system from going to sleep
-cask "caffeine"
 # E-books management software
 cask "calibre"
 # OpenAI's official ChatGPT desktop app
@@ -704,11 +692,9 @@ cask "chatgpt"
 # Automated testing of webapps for Google Chrome
 cask "chromedriver"
 # Terminal-based AI coding assistant
-cask "claude-code"
+cask "claude-code@latest"
 # Clipboard extension app
 cask "clipy"
-# App for testing HTTP/REST endpoints
-cask "cocoarestclient"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 # OpenAI's Codex desktop app for managing coding agents
@@ -716,26 +702,17 @@ cask "codex-app"
 # Menu bar usage monitor for Codex and Claude
 cask "steipete/tap/codexbar"
 cask "color-oracle"
-# Command-line display management utility
 cask "cscreen"
-# Cross-platform software-defined radio application
-cask "cubicsdr"
 # Server and cloud storage browser
 cask "cyberduck"
 # Browser for SQLite databases
 cask "db-browser-for-sqlite"
 # AI-powered translator
 cask "deepl"
-# App to build and share containerised applications and microservices
-cask "docker-desktop"
 # Emulator to play GameCube and Wii games
 cask "dolphin"
 # Online diagram software
 cask "drawio"
-# Remote desktop and second display tool
-cask "duet"
-# Open-source image processing package
-cask "fiji"
 # Web browser
 cask "firefox"
 # Dreamcast, Naomi and Atomiswave emulator
@@ -748,13 +725,8 @@ cask "font-fontawesome"
 cask "font-ipaexfont"
 cask "font-mona-sans"
 cask "font-monaspace"
-# Finder replacement and FTP, SFTP, WebDAV and Amazon s3 client
-cask "forklift"
-# 3D parametric modeller
-cask "freecad"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-# Software reverse engineering (SRE) suite of tools
 cask "ghidra"
 # Free and open-source image editor
 cask "gimp"
@@ -768,13 +740,9 @@ cask "google-chrome"
 cask "google-drive"
 # Virtual globe
 cask "google-earth-pro"
-# Tool to compute statistical power analyses
 cask "gpower"
-# Software-defined radio receiver powered by GNU Radio and Qt
-cask "gqrx"
 # Graphically shows disk usage within a file system
 cask "grandperspective"
-# Open Source Multimedia Framework
 cask "gstreamer-framework"
 # Open Source Multimedia Framework
 cask "gstreamer-runtime"
@@ -788,6 +756,8 @@ cask "handbrake-app"
 cask "hhkb"
 # Medical image viewer
 cask "horos"
+# Menu bar app that detects keyboard shortcut conflicts
+cask "wunderlandmedia/tap/hotkeyclash", trusted: true
 # GUI for radare2
 cask "iaito"
 # Free and open-source media player
@@ -812,18 +782,11 @@ cask "karabiner-elements"
 cask "keepassxc"
 # File archiver
 cask "keka"
-# Audio tagger focusing on efficiency
-cask "kid3"
-# Interface for reading and syncing eBooks
 cask "kindle"
 # Comic and manga converter for ebook readers
 cask "kindle-comic-converter"
 # Preview and audit Kindle eBooks
 cask "kindle-previewer"
-# Free and open-source media player
-cask "kodi"
-# Free and open-source painting and sketching program
-cask "krita"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
 # Discover, download, and run local LLMs
@@ -832,10 +795,6 @@ cask "lm-studio"
 cask "ltspice"
 # Find and download lyrics
 cask "lyrics-master"
-# Analysis tool for security research and malware triage
-cask "mac-monitor"
-# Open-source Markdown editor
-cask "macdown"
 # File system integration
 cask "macfuse"
 # Live, interactive debugging of your running PHP applications
@@ -848,12 +807,8 @@ cask "macvim-app"
 cask "makemkv"
 # Markdown editor
 cask "mark-text"
-# Audio converter
-cask "mediahuman-audio-converter"
 # Visual diff and merge tool
 cask "meld"
-# Set of CPU, memory, disk, and network monitoring tools
-cask "menumeters"
 # Provides updates to various Microsoft products
 cask "microsoft-auto-update"
 # Multi-platform web browser
@@ -872,8 +827,6 @@ cask "mountain-duck"
 cask "mullvad-vpn"
 # Open-source music notation software
 cask "musescore"
-# Visualiser for neural network, deep learning, and machine learning models
-cask "netron"
 # Open-source software for live streaming and screen recording
 cask "obs"
 # AI coding agent desktop client
@@ -894,7 +847,6 @@ cask "popclip"
 cask "productdevbook/tap/portkiller"
 # Collaboration platform for API development
 cask "postman"
-# Command-line shell and scripting language
 cask "powershell"
 # NAS management application
 cask "qfinder-pro"
@@ -926,13 +878,8 @@ cask "raspberry-pi-imager"
 cask "retroarch-metal"
 # Data science software focusing on R and Python
 cask "rstudio"
-cask "sdrdx"
 # Tool for sending personal documents to Kindles from Macs
 cask "send-to-kindle"
-# MySQL/MariaDB database management platform
-cask "sequel-pro"
-# Git client
-cask "smartgit"
 # Drive failure monitoring tool
 cask "smartreporter-free"
 # CSV editor
@@ -945,8 +892,6 @@ cask "stats"
 cask "steam"
 # System calls and log messages analyzer
 cask "stratoshark"
-# Mux and tag mp4 files
-cask "subler"
 # Application for inspecting installer packages
 cask "suspicious-package"
 # Remote access and connectivity software focused on security
@@ -957,7 +902,6 @@ cask "timemachinestatus"
 cask "tomighty"
 # Web browser focusing on security
 cask "tor-browser"
-# Touch Bar as a standalone app
 cask "touch-bar-simulator"
 # Open-source BitTorrent client
 cask "transmission"
@@ -971,8 +915,6 @@ cask "ultimaker-cura"
 cask "unicodechecker"
 # Management tool for Unity
 cask "unity-hub"
-# AI image upscaler
-cask "upscayl"
 # Virtual machines UI using QEMU
 cask "utm"
 # Open-source code editor
@@ -1041,7 +983,6 @@ mas "Klack", id: 6446206067
 mas "LadioCast", id: 411213048
 mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
-mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
@@ -1056,8 +997,8 @@ mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
 mas "Numbers", id: 361304891
 mas "Numbers", id: 409203825
-mas "Pages", id: 361309726
 mas "Pages", id: 409201541
+mas "Pages", id: 361309726
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
@@ -1078,7 +1019,6 @@ mas "WiFi Explorer Lite", id: 1408727408
 mas "WiFi Signal", id: 525912054
 mas "WinArchiver Lite", id: 414855915
 mas "Windows App", id: 1295203466
-mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "charliermarsh.ruff"
 vscode "cschlosser.doxdocgen"
@@ -1169,8 +1109,24 @@ vscode "zhuangtongfa.material-theme"
 go "github.com/go-delve/delve/cmd/dlv"
 go "golang.org/x/tools/gopls"
 go "honnef.co/go/tools/cmd/staticcheck"
+cargo "c2patool"
+cargo "cargo-binstall"
+cargo "cargo-bundle"
+cargo "cargo-cache"
+cargo "cargo-compete"
+cargo "cargo-llvm-cov"
+cargo "cargo-modules"
+cargo "cargo-update"
+cargo "create-tauri-app"
+cargo "cross"
+cargo "mdbook"
+cargo "minidump-stackwalk"
+cargo "tauri-cli"
+cargo "wasm-pack"
 uv "it2"
 uv "parakeet-mlx"
 uv "ruff"
-uv "zotero-mcp-server"
+uv "zotero-mcp-server", source: "git+https://github.com/54yyyu/zotero-mcp.git"
+npm "agent-browser"
 npm "corepack"
+npm "vercel"
