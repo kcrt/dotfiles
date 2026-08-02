@@ -11,7 +11,7 @@ fi
 
 autoload zmv
 
-if [ ! -x "`which parallel`" ]; then
+if ! command -v parallel > /dev/null 2>&1; then
 	echo "Please install parallel first."
 	exit -1
 fi

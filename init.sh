@@ -48,7 +48,7 @@ if [ -f ~/dotfiles/init.sh ] && [ "$1" != "-f" ]; then
 	exit
 fi
 
-if [ ! -x "$(which sudo)" ]; then
+if ! command -v sudo > /dev/null 2>&1; then
 	echo_red "You need 'sudo' to execute this script."
 	echo_red "Please install 'sudo' first."
 fi
@@ -92,7 +92,7 @@ if [ -x /usr/bin/yum ] ; then
 	echo_aqua "Detected yum..."
 	sudo yum update
 	sudo yum -y install perl zsh yum-utils vim-common vim-enhanced screen rsync subversion w3m yafc rdiff-backup fastest-mirror mutt clamav
-elif [ -x "$(which brew)" ]; then
+elif command -v brew > /dev/null 2>&1; then
 	OSType=HomeBrew
 	echo_aqua "Detected Homebrew..."
 	# ---- Homebrew
@@ -294,7 +294,7 @@ stow R asdf git mutt nethack screen tmux vim zsh cloudshell
 # ln -s ~/.vimrc "$XDG_CONFIG_HOME"/nvim/init.vim
 
 echo_aqua "(4/5) : Changing Default Shell ----------------------"
-chsh -s $(which zsh)
+chsh -s "$(command -v zsh)"
 
 echo_aqua "(5/5) : Optional Step -------------------------------"
 echo_aqua "Do you want to install vim plugin manager Vundle? (Y/n): "

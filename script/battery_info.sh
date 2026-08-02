@@ -17,7 +17,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     exit 0
 fi
 
-if [ -x "$(which ioreg)" ]; then
+if command -v ioreg > /dev/null 2>&1; then
 	# macOS
 	BATSTR=$(ioreg -c AppleSmartBattery -r | \
 		awk '/"MaxCapacity"/{ MAX=$3 }

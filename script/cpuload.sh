@@ -21,7 +21,7 @@ source ~/dotfiles/script/echo_color.sh
 
 loadavg=`uptime | sed 's/.*load average.*: //' | sed 's/,/ /' | awk '{printf($1)}'`
 
-if [[ -x `which osx-cpu-temp` ]]; then
+if command -v osx-cpu-temp > /dev/null 2>&1; then
 	temp=`osx-cpu-temp | sed 's/°C/C/'`
 	result="$loadavg $temp"
 else

@@ -11,7 +11,7 @@ function if_error(){
 function need_app(){
 	# usage: need_app "git"
 
-	if [[ ! -x `which $1` ]]; then
+	if ! command -v "$1" > /dev/null 2>&1; then
 		echo_red "'$1' not found!"
 		exit
 	else

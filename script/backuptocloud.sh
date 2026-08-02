@@ -17,8 +17,9 @@ YEAR=$(date +%Y)
 MONTH=$(date +%m)
 
 echo "sending $1 to cloud☁️ .."
+# gcloud storage parallelizes by default, so gsutil's -m has no counterpart.
 if [[ -d "$1" ]]; then
-	gsutil -m cp -r "$1" gs://auto.backup.kcrt.net/manual/$YEAR/$MONTH/
+	gcloud storage cp -r "$1" gs://auto.backup.kcrt.net/manual/$YEAR/$MONTH/
 else
-	gsutil -m cp "$1" gs://auto.backup.kcrt.net/manual/$YEAR/$MONTH/
+	gcloud storage cp "$1" gs://auto.backup.kcrt.net/manual/$YEAR/$MONTH/
 fi
