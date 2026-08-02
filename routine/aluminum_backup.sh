@@ -59,9 +59,18 @@ backup_directory_mount() {
         --iconv=UTF-8,UTF-8-MAC \
         "$src_dir" "/Volumes/Backup/$dest_dir"
 }
+# Volume roots carry these root-owned directories. rsync cannot read them, which
+# costs an exit 23 and, worse, makes rsync skip --delete for the whole transfer.
+VOLUME_METADATA_EXCLUDES=(
+    --exclude=".Spotlight-V100" --exclude=".Trashes" --exclude=".fseventsd"
+    --exclude=".DocumentRevisions-V100" --exclude=".TemporaryItems"
+)
+
+# backup_directory_rsync <src> <dest> [extra rsync options...]
 backup_directory_rsync() {
     local src_dir=$1
     local dest_dir=$2
+    shift 2
     if [[ "$src_dir" != */ ]]; then
         src_dir="$src_dir/"
     fi
@@ -70,6 +79,7 @@ backup_directory_rsync() {
         --exclude="site-packages/" --exclude=".git/" --exclude=".DS_Store" --exclude="packrat/" --exclude=".tmp.driveupload" --exclude="venv/" --exclude=".venv/" \
         --exclude=".pio/" --exclude="node_modules/" --exclude="dist/" --exclude=".next/" --exclude=".expo" --exclude="Arduino/libraries/" --exclude=".mypy_cache" --exclude="*/.@__thumb/" --exclude=".rustup" \
 		--exclude="Library/pnpm" \
+        "${VOLUME_METADATA_EXCLUDES[@]}" "$@" \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
         "$src_dir" "kcrt@qnap.local:/share/Backup/$dest_dir"
 }
@@ -89,11 +99,18 @@ if [[ -d /Volumes/Backup/ ]]; then
     backup_directory_rsync ~/Zotero/ Zotero
     OSNotify "Mail -> Qnap"
     backup_directory_rsync ~/Library/Mail/ Mail
+    # /nosync and its Parallels subdirectory are one pair: Parallels is excluded
+    # here and sent by the dedicated transfer right below. Keep the two together,
+    # because dropping the --exclude would silently back up 177G of disk images
+    # twice, without --inplace.
     OSNotify "nosync -> Qnap"
-    backup_directory_rsync /nosync/ nosync
+    backup_directory_rsync /nosync/ nosync --exclude="Parallels/"
 
-    
-    # Because Parallels disk images are extremely large, we use a different method.
+    # A single Parallels disk image is ~177G and changes whenever the VM runs.
+    # --inplace rewrites only the changed blocks; without it the NAS would have
+    # to write out the whole image every time. The trade-off is that an
+    # interrupted transfer leaves the destination image in a mixed state, which
+    # --partial lets the next run repair.
     OSNotify "Parallels -> Qnap"
     run_rsync -ahv \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
