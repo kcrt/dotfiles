@@ -4,7 +4,8 @@ layout {
 			plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
 				format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | {tabs}"
 				format_center ""
-				format_right  " | {command_claudeinfo} | {command_batteryinfo} {command_cpuload} {datetime}"
+				// progressinfo は転送中のみ出力し、区切りの " | " も自分で前置する
+				format_right  " | {command_claudeinfo}{command_progressinfo} | {command_batteryinfo} {command_cpuload} {datetime}"
 				format_space  "#[bg=#677589] "
 
 				border_enabled  "false"
@@ -31,6 +32,11 @@ layout {
 				command_claudeinfo_format  "{stdout}"
 				command_claudeinfo_interval 60
 				command_claudeinfo_rendermode "dynamic"
+
+				command_progressinfo_command "bash -c \"$HOME/dotfiles/script/progress_info.sh zjstatus\""
+				command_progressinfo_format  "{stdout}"
+				command_progressinfo_interval 5
+				command_progressinfo_rendermode "dynamic"
 
 				command_hostinfo_command "bash -c \"$HOME/dotfiles/script/host_and_connect.sh\""
 				command_hostinfo_format  "{stdout}"
