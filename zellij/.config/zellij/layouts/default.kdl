@@ -68,4 +68,54 @@ layout {
 			plugin location="zellij:status-bar"
 		}
 	}
+
+	// swap layout (Alt+[ / Alt+] で巡回)。
+	// 組み込みの default.swap.kdl は「組み込みの default レイアウト」専用で、
+	// 自前の default.kdl を置いた時点で読まれなくなる (layout.rs: swap_layout_and_path は
+	// 隣の default.swap.kdl しか探さない)。ここに直接書けば default_tab_template
+	// (= 上の zjstatus バー) が自動で適用されるので、swap ファイルは分けない。
+	// 中身は `zellij setup --dump-swap-layout default` の tiled 部分を、
+	// tab_template "ui" ではなく default_tab_template を使う形 (ui → tab) に直したもの。
+	// なお config.kdl で auto_layout false にしてあるため、ペインを開閉しても
+	// 勝手に組み替わらず、Alt+[ / Alt+] を押した時だけ切り替わる。
+	// 名前は zellij の split_direction (vertical = 縦の仕切り線 = 左右分割) ではなく
+	// 「ペインがどう並んで見えるか」に合わせてある。
+	//   vertical   → 上下に 1 列で積む       (最大 8)
+	//   horizontal → 左右に 1 行で並べる     (最大 8)
+	//   grid       → 田の字                  (最大 4)
+	//   stacked    → 左 1 枚 + 右をスタック  (5 枚以上)
+	// 9 枚以上では vertical/horizontal/grid は該当なしになるので stacked に回る。
+	swap_tiled_layout name="vertical" {
+		tab max_panes=8 {
+			pane split_direction="horizontal" {
+				children
+			}
+		}
+	}
+
+	swap_tiled_layout name="horizontal" {
+		tab max_panes=8 {
+			pane split_direction="vertical" {
+				children
+			}
+		}
+	}
+
+	swap_tiled_layout name="grid" {
+		tab max_panes=4 {
+			pane split_direction="horizontal" {
+				pane split_direction="vertical" { children; }
+				pane split_direction="vertical" { pane; pane; }
+			}
+		}
+	}
+
+	swap_tiled_layout name="stacked" {
+		tab min_panes=5 {
+			pane split_direction="vertical" {
+				pane
+				pane stacked=true { children; }
+			}
+		}
+	}
 }

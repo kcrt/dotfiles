@@ -291,6 +291,10 @@ themes {
 // theme "kcrt_theme"
 auto_tab_name true
 
+// ペインの開閉に合わせて swap layout へ自動で組み替えるのを止める。
+// layouts/default.kdl の swap_tiled_layout は Alt+[ / Alt+] の手動切替専用。
+auto_layout false
+
 // Use a simplified UI without special fonts (arrow glyphs)
 // Options:
 //   - true
