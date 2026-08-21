@@ -26,14 +26,28 @@ fi
 
 # ----- zoxide (smarter cd command)
 if command -v zoxide &> /dev/null; then
-    eval "$(zoxide init zsh --cmd cd)"
 	# --cmd cd: make zoxide override cd command (same as `alias cd='zoxide`, but better`)
+	# ただし古い zoxide (~v0.5, apt などで入るもの) が生成する内部関数は
+	# `builtin cd` ではなく `cd` を呼ぶため、--cmd cd と併用すると
+	# cd -> _z_cd -> cd ... と無限再帰し
+	# `cd:1: maximum nested function level reached` で cd が全く使えなくなる。
+	# 生成コードが builtin cd を使っているかどうかで判定する。
+	_zoxide_init="$(zoxide init zsh --cmd cd 2>/dev/null)"
+	if [[ "$_zoxide_init" == *"builtin cd"* ]]; then
+		eval "$_zoxide_init"
+	else
+		# cd は builtin のまま残し、z / zi だけを有効にする
+		[[ "$(whence -w cd)" == "cd: function" ]] && unfunction cd
+		eval "$(zoxide init zsh)"
+		echo_warn "Warning: zoxide $(zoxide --version 2>/dev/null | awk '{print $2}') is too old to replace 'cd' (use 'z' instead)."
+	fi
+	unset _zoxide_init
 else
 	echo_warn "Warning: zoxide is not installed."
 	if [[ "$OSTYPE" = darwin* ]]; then
 		echo_warn "  macOS: brew install zoxide"
 	else
-		echo_warn "  Ubuntu 21.04+/Debian 12+: sudo apt install zoxide"
+		echo_warn "  Debian 12+: sudo apt install zoxide  (older apt versions are too old for 'cd' integration)"
 		echo_warn "  Other Linux: curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh"
 	fi
 fi
