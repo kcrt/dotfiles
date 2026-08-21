@@ -3,6 +3,7 @@
 # vim swap files: .foo.swp, and .swo/.swn/... when several are open at once
 *.sw[a-p]
 no_git
+__pycache__/
 secrets/*.asc
 /.claude/
 firebase-debug.log
