@@ -86,7 +86,15 @@
       "mcp__plugin_playwright_playwright__browser_console_messages",
       "mcp__plugin_playwright_playwright__browser_press_key",
       "mcp__plugin_playwright_playwright__browser_handle_dialog",
-      "mcp__plugin_playwright_playwright__browser_tabs"
+      "mcp__plugin_playwright_playwright__browser_tabs",
+      "WebFetch(domain:www.kcrt.net)",
+      "WebFetch(domain:www.info.pmda.go.jp)",
+      "WebFetch(domain:www.jstage.jst.go.jp)",
+      "WebFetch(domain:www.kyorin-pharm.co.jp)",
+      "WebFetch(domain:www.jspaci.jp)",
+      "WebFetch(domain:alle-net.com)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm lint *)"
     ],
     "deny": [
       "Bash(rm -rf /)",
@@ -135,7 +143,7 @@
       "Bash(scp:*)",
       "Bash(rsync:*)"
     ],
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "hooks": {
     "PreToolUse": [
@@ -340,7 +348,8 @@
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
     "joplin-mcp@joplin-mcp": true,
-    "vercel@claude-plugins-official": true
+    "vercel@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "joplin-mcp": {
@@ -363,6 +372,23 @@
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DELETE*)",
+      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DROP*)"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Repository visibility**: assume private unless the remote host and repo name indicate otherwise",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production`",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development and medical/research writing",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, patient/medical data, confidential business data, or credentials — never commit or share outside explicitly cleared audiences"
+    ]
+  },
   "voiceEnabled": true,
   "mcpServers": {
     "context7": {
