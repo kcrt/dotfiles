@@ -18,7 +18,9 @@ layout {
 				border_format   "#[fg=#6C7086]{char}"
 				border_position "top"
 
-				// hide_frame_for_single_pane "true"  // zjstatus#174 / zellij#4978 のチラつき回避のため無効化
+				// hide_frame_for_single_pane "true"
+				// 単一ペインのみのチラつき (zjstatus#174 / zellij#4978) はバージョンアップで解消したが、
+				// 今度はペインが複数のときに表示が崩れるようになったため引き続き無効化。
 
 				mode_normal	"#[bg=#2E6C9E] "
 				mode_locked	"#[bg=#E28C36][LOCKED] "
