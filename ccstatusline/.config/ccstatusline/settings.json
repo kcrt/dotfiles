@@ -3,27 +3,86 @@
   "lines": [
     [
       {
-        "id": "0",
+        "id": "1",
         "type": "current-working-dir",
-        "color": "green"
+        "color": "green",
+        "rawValue": true,
+        "metadata": {
+          "abbreviateHome": "true"
+        }
       },
       {
-        "id": "1",
+        "id": "2",
         "type": "model",
-        "color": "cyan"
+        "color": "cyan",
+        "rawValue": true
       },
       {
         "id": "3",
-        "type": "context-percentage",
-        "color": "blue"
+        "type": "thinking-effort",
+        "color": "magenta"
+      },
+      {
+        "id": "ctxlabel",
+        "type": "custom-text",
+        "color": "blue",
+        "customText": "Ctx: ",
+        "merge": "no-padding"
+      },
+      {
+        "id": "4",
+        "type": "context-percentage-usable",
+        "color": "blue",
+        "rawValue": true
       },
       {
         "id": "5",
+        "type": "compaction-counter",
+        "color": "brightBlack"
+      },
+      {
+        "id": "usagelabel",
+        "type": "custom-text",
+        "color": "yellow",
+        "customText": "S/W: ",
+        "merge": "no-padding"
+      },
+      {
+        "id": "6",
+        "type": "session-usage",
+        "color": "yellow",
+        "rawValue": true,
+        "merge": "no-padding"
+      },
+      {
+        "id": "usagesep",
+        "type": "custom-text",
+        "color": "yellow",
+        "customText": "/",
+        "merge": "no-padding"
+      },
+      {
+        "id": "7",
+        "type": "weekly-usage",
+        "color": "red",
+        "rawValue": true
+      },
+      {
+        "id": "sandbox",
+        "type": "custom-command",
+        "color": "brightBlue",
+        "commandPath": "~/dotfiles/script/cc_sandbox_status.sh",
+        "rawValue": true,
+        "timeout": 1000,
+        "maxWidth": 4
+      },
+      {
+        "id": "9",
         "type": "git-branch",
         "color": "magenta"
       },
       {
-        "id": "7",
+        "id": "10",
         "type": "git-changes",
         "color": "yellow"
       }
@@ -51,7 +110,7 @@
     "endCaps": [
       "\ue0b0"
     ],
-    "theme": "nord-aurora",
+    "theme": "catppuccin",
     "autoAlign": false
   }
 }
