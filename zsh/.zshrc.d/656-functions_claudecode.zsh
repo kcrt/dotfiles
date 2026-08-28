@@ -104,10 +104,41 @@ function _claude-code-validate() {
 	return 0
 }
 
+# Providers other than Anthropic authenticate via ANTHROPIC_AUTH_TOKEN, and
+# Claude Code prefers ANTHROPIC_API_KEY when both are present. Mask it with an
+# empty value while a proxy target is active, stashing the original so that
+# switching back to `anthropic` restores it.
+function _claude-code-mask-api-key() {
+	[[ -z ${_CLAUDE_CODE_TO_SAVED_API_KEY+x} ]] && export _CLAUDE_CODE_TO_SAVED_API_KEY="${ANTHROPIC_API_KEY-}"
+	export ANTHROPIC_API_KEY=""
+}
+
+function _claude-code-restore-api-key() {
+	if [[ -n "${_CLAUDE_CODE_TO_SAVED_API_KEY-}" ]]; then
+		export ANTHROPIC_API_KEY="$_CLAUDE_CODE_TO_SAVED_API_KEY"
+	else
+		unset ANTHROPIC_API_KEY
+	fi
+	unset _CLAUDE_CODE_TO_SAVED_API_KEY
+}
+
 # Helper function to set environment variables for Claude Code targets
 function _claude-code-set-env() {
 	local target=$1
 	local model=$2
+
+	# Model-requiring providers cannot be configured without a model
+	case "$target" in
+		deepseek|openrouter|ollama|lmstudio)
+			[[ -z "$model" ]] && return 0
+			;;
+	esac
+
+	if [[ "$target" == "anthropic" ]]; then
+		_claude-code-restore-api-key
+	else
+		_claude-code-mask-api-key
+	fi
 
 	case "$target" in
 		anthropic)
@@ -122,66 +153,56 @@ function _claude-code-set-env() {
 		zai)
 			export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
 			export ANTHROPIC_AUTH_TOKEN=$ZAI_API_KEY
-			export ANTHROPIC_MODEL=GLM-5.1
+			export ANTHROPIC_MODEL=GLM-5.3
 			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
 			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=GLM-4.5-Air
-			export CLAUDE_CODE_SUBAGENT_MODEL=GLM-5.1
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=GLM-5.3-Flash
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		kimi)
 			export ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic
-			export ANTHROPIC_AUTH_TOKEN=${MOONSHOT_API_KEY}
+			export ANTHROPIC_AUTH_TOKEN=$MOONSHOT_API_KEY
 			export ANTHROPIC_MODEL=kimi-k2.5
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=kimi-k2.5
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=kimi-k2.5
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=kimi-k2.5
-			export CLAUDE_CODE_SUBAGENT_MODEL=kimi-k2.5
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		deepseek)
-			if [[ -n "$model" ]]; then
-				export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
-				export ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_API_KEY
-				export ANTHROPIC_API_KEY=""  # Important: Must be explicitly empty
-				export ANTHROPIC_MODEL=$model
-				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
-				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
-				export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash
-				export CLAUDE_CODE_SUBAGENT_MODEL=$model
-			fi
+			export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
+			export ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_API_KEY
+			export ANTHROPIC_MODEL=$model
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		openrouter)
-			if [[ -n "$model" ]]; then
-				export ANTHROPIC_BASE_URL=https://openrouter.ai/api
-				export ANTHROPIC_AUTH_TOKEN=$OPENROUTER_API_KEY
-				export ANTHROPIC_API_KEY=""  # Important: Must be explicitly empty
-				export ANTHROPIC_MODEL=$model
-				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
-				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
-				export ANTHROPIC_DEFAULT_HAIKU_MODEL=$model
-				export CLAUDE_CODE_SUBAGENT_MODEL=$model
-			fi
+			export ANTHROPIC_BASE_URL=https://openrouter.ai/api
+			export ANTHROPIC_AUTH_TOKEN=$OPENROUTER_API_KEY
+			export ANTHROPIC_MODEL=$model
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		ollama)
-			if [[ -n "$model" ]]; then
-				export ANTHROPIC_BASE_URL=http://localhost:11434
-				export ANTHROPIC_AUTH_TOKEN=ollama
-				export ANTHROPIC_MODEL=$model
-				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
-				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
-				export ANTHROPIC_DEFAULT_HAIKU_MODEL=$model
-				export CLAUDE_CODE_SUBAGENT_MODEL=$model
-			fi
+			export ANTHROPIC_BASE_URL=http://localhost:11434
+			export ANTHROPIC_AUTH_TOKEN=ollama
+			export ANTHROPIC_MODEL=$model
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		lmstudio)
-			if [[ -n "$model" ]]; then
-				export ANTHROPIC_BASE_URL=http://localhost:1234
-				export ANTHROPIC_AUTH_TOKEN=lm-studio
-				export ANTHROPIC_MODEL=$model
-				export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
-				export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
-				export ANTHROPIC_DEFAULT_HAIKU_MODEL=$model
-				export CLAUDE_CODE_SUBAGENT_MODEL=$model
-			fi
+			export ANTHROPIC_BASE_URL=http://localhost:1234
+			export ANTHROPIC_AUTH_TOKEN=lm-studio
+			export ANTHROPIC_MODEL=$model
+			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
+			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 	esac
 }
