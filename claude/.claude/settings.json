@@ -349,7 +349,8 @@
     "typescript-lsp@claude-plugins-official": true,
     "joplin-mcp@joplin-mcp": true,
     "vercel@claude-plugins-official": true,
-    "clangd-lsp@claude-plugins-official": true
+    "clangd-lsp@claude-plugins-official": true,
+    "eli5@claude-community": true
   },
   "extraKnownMarketplaces": {
     "joplin-mcp": {
@@ -357,9 +358,20 @@
         "source": "github",
         "repo": "alondmnt/joplin-mcp"
       }
+    },
+    "claude-community": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-community"
+      }
     }
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
@@ -368,6 +380,7 @@
   "editorMode": "vim",
   "verbose": true,
   "preferredNotifChannel": "iterm2_with_bell",
+  "autoCompactEnabled": true,
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
