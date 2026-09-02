@@ -101,3 +101,5 @@
 	tool = vimdiff
 [mergetool]
 	keepBackup = false
+[gpg "ssh"]
+	allowedSignersFile = /Users/kcrt/.ssh/allowed_signers
