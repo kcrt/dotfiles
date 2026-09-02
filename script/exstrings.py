@@ -7,7 +7,6 @@
 #     "python-pptx",
 #     "openpyxl",
 #     "pypdf",
-#     "rarfile",
 # ]
 # ///
 
@@ -118,12 +117,12 @@ def list_zip_contents(filepath: Path) -> str:
 
 
 def list_rar_contents(filepath: Path) -> str:
-    """List contents of a RAR file using unrar."""
-    if not shutil.which("unrar"):
-        return "unrar command not found"
+    """List contents of a RAR file using 7zz (7-Zip)."""
+    if not shutil.which("7zz"):
+        return f"skipping {filepath.name} (7zz not found; install with: brew install sevenzip)"
 
     result = subprocess.run(
-        ["unrar", "l", str(filepath)],
+        ["7zz", "l", str(filepath)],
         capture_output=True,
         text=True,
     )
