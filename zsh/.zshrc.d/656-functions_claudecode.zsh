@@ -3,6 +3,10 @@
 #		Z.ai API proxy for Claude
 #
 
+# Default model used when a Z.ai target is given without an explicit model.
+_CLAUDE_CODE_ZAI_DEFAULT_MODEL=glm-5.3
+_CLAUDE_CODE_ZAI_HAIKU_MODEL=glm-5.3-flash
+
 # Helper function to show help text
 function _claude-code-show-help() {
 	cat <<'EOF'
@@ -11,11 +15,12 @@ Usage:
   claude-code-to --run TARGET [ARGS]   # Launch `claude ARGS` with TARGET in a subshell
                                        #   (current shell environment is not modified)
 
-Targets: anthropic | zai | kimi | deepseek:MODEL | ollama:MODEL | lmstudio:MODEL | openrouter:MODEL
+Targets: anthropic | zai[:MODEL] | kimi | deepseek:MODEL | ollama:MODEL | lmstudio:MODEL | openrouter:MODEL
 
 Examples:
   claude-code-to anthropic                 # Use Anthropic API directly
-  claude-code-to zai                       # Use Z.ai proxy
+  claude-code-to zai                       # Use Z.ai proxy (default model)
+  claude-code-to zai:MODEL                 # Use Z.ai proxy with specified model
   claude-code-to kimi                      # Use Kimi (Moonshot AI)
   claude-code-to deepseek:MODEL            # Use DeepSeek with specified model
   claude-code-to ollama:MODEL              # Use Ollama with specified model
@@ -34,6 +39,11 @@ function _claude-code-list-models() {
 	local prefix=${2:-claude-code-to}
 
 	case "$provider" in
+		zai)
+			echo "Available models:"
+			echo "  $prefix zai:glm-5.3         # GLM-5.3"
+			echo "  $prefix zai:glm-5.3-flash   # GLM-5.3 Flash"
+			;;
 		deepseek)
 			echo "Available models:"
 			echo "  $prefix deepseek:deepseek-v4-pro     # DeepSeek V4 Pro"
@@ -153,10 +163,10 @@ function _claude-code-set-env() {
 		zai)
 			export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
 			export ANTHROPIC_AUTH_TOKEN=$ZAI_API_KEY
-			export ANTHROPIC_MODEL=GLM-5.3
+			export ANTHROPIC_MODEL=${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}
 			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
 			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=GLM-5.3-Flash
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$_CLAUDE_CODE_ZAI_HAIKU_MODEL
 			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		kimi)
@@ -264,15 +274,22 @@ function claude-code-to() {
 			echo '{"target":"anthropic"}' > "$config_file"
 			_claude-code-set-env "anthropic"
 			;;
-		zai)
+		zai|zai:*)
+			local model=""
+			[[ "$target" == zai:* ]] && model="${target#zai:}"
 			# Check if ZAI_API_KEY is set
 			if [[ -z "$ZAI_API_KEY" ]]; then
 				echo "Error: ZAI_API_KEY environment variable is not set. Please set it to use Z.ai model."
 				return 1
 			fi
-			echo_info "Z.ai proxy enabled for Claude."
-			echo '{"target":"zai"}' > "$config_file"
-			_claude-code-set-env "zai"
+			if [[ -n "$model" ]]; then
+				echo_info "Z.ai proxy ($model) enabled for Claude."
+				echo "{\"target\":\"zai\",\"model\":\"$model\"}" > "$config_file"
+			else
+				echo_info "Z.ai proxy ($_CLAUDE_CODE_ZAI_DEFAULT_MODEL) enabled for Claude."
+				echo '{"target":"zai"}' > "$config_file"
+			fi
+			_claude-code-set-env "zai" "$model"
 			;;
 		kimi)
 			if [[ -z "$MOONSHOT_API_KEY" ]]; then
@@ -340,7 +357,8 @@ function claude-code-to() {
 			echo ""
 			echo "Valid options:"
 			echo "  anthropic              - Use Anthropic API directly"
-			echo "  zai                    - Use Z.ai proxy"
+			echo "  zai                    - Use Z.ai proxy (default model)"
+			echo "  zai:MODEL_NAME         - Use Z.ai proxy with specified model"
 			echo "  kimi                   - Use Kimi (Moonshot AI)"
 			echo "  deepseek:MODEL_NAME    - Use DeepSeek with specified model"
 			echo "  ollama:MODEL_NAME      - Use Ollama with specified model"
@@ -359,8 +377,8 @@ if [[ -f "$config_file" ]]; then
 	case "$target" in
 		zai)
 			if [[ -n "$ZAI_API_KEY" ]]; then
-				_claude-code-set-env "zai"
-				echo_info "Z.ai proxy enabled for Claude."
+				_claude-code-set-env "zai" "$model"
+				echo_info "Z.ai proxy (${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}) enabled for Claude."
 			fi
 			;;
 		kimi)
