@@ -1,4 +1,5 @@
 tap "apple/apple", "http://github.com/apple/homebrew-apple", trusted: true
+tap "darrylmorley/whatcable"
 tap "filosottile/musl-cross", trusted: true
 tap "fredowski/pspp", trusted: true
 tap "gcenx/wine", trusted: true
@@ -41,6 +42,8 @@ brew "cairo"
 brew "fribidi"
 # General-purpose data compression with high compression ratio
 brew "xz"
+# Image format providing lossless and lossy compression for web images
+brew "webp"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Library to render SVG files using Cairo
@@ -51,8 +54,6 @@ brew "afflib"
 brew "afio"
 # Utility for manipulating APFS and ZFS compressed files
 brew "afsctool"
-# Next-gen compiler infrastructure
-brew "llvm"
 # Utility to check whether MAC addresses are already taken on a LAN
 brew "arping"
 # Collection of portable C++ source libraries
@@ -101,8 +102,6 @@ brew "libgit2"
 brew "bat"
 # Color management engine supporting ICC profiles
 brew "little-cms2"
-# Image format providing lossless and lossy compression for web images
-brew "webp"
 # Google's own build tool
 brew "bazel"
 # Convert CD images from .bin/.cue to .iso/.cdr
@@ -141,7 +140,7 @@ brew "pkgconf"
 brew "hdf5"
 # TUI web browser with CSS, inline image and JavaScript support
 brew "chawan"
-# Enables you to reproduce the CircleCI environment locally
+# Official command-line tool for CircleCI
 brew "circleci"
 # Protocol buffers library
 brew "protobuf-c"
@@ -267,8 +266,8 @@ brew "libpq"
 brew "netcdf"
 # Geospatial Data Abstraction Library
 brew "gdal"
-# Interact with Google Gemini AI models from the command-line
-brew "gemini-cli"
+# Nonsense activity generator
+brew "genact"
 # GitHub command-line tool
 brew "gh"
 # Multi-platform software reverse engineering framework
@@ -384,6 +383,8 @@ brew "librtlsdr"
 # SIXEL encoder/decoder implementation
 brew "libsixel"
 # Next-gen compiler infrastructure
+brew "llvm"
+# Next-gen compiler infrastructure
 brew "llvm@20"
 # Compression program with a very high compression ratio
 brew "lrzip"
@@ -403,6 +404,8 @@ brew "mdf2iso"
 brew "mecab"
 # IPA dictionary compiled for MeCab
 brew "mecab-ipadic"
+# Mermaid.js, but headless, in Rust
+brew "merman-cli"
 # Terminal-based visual file manager
 brew "midnight-commander"
 # Like sed, awk, cut, join & sort for name-indexed data such as CSV
@@ -537,6 +540,8 @@ brew "sdl2_image"
 brew "sdl2_mixer"
 # Library for using TrueType fonts in SDL applications
 brew "sdl2_ttf"
+# 7-Zip is a file archiver with a high compression ratio
+brew "sevenzip"
 # Fast, configurable, shell plugin manager
 brew "sheldon"
 # Static analysis and lint tool, for (ba)sh scripts
@@ -689,8 +694,6 @@ cask "burn"
 cask "calibre"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
-# Automated testing of webapps for Google Chrome
-cask "chromedriver"
 # Terminal-based AI coding assistant
 cask "claude-code@latest"
 # Clipboard extension app
@@ -774,15 +777,12 @@ cask "jamovi"
 cask "jasp"
 # Note taking and to-do application with synchronisation capabilities
 cask "joplin"
-# Menu bar manager
-cask "jordanbaird-ice@beta"
 # Keyboard customiser
 cask "karabiner-elements"
 # Password manager app
 cask "keepassxc"
 # File archiver
 cask "keka"
-cask "kindle"
 # Comic and manga converter for ebook readers
 cask "kindle-comic-converter"
 # Preview and audit Kindle eBooks
@@ -835,8 +835,6 @@ cask "opencode-desktop"
 cask "openemu"
 # Android file transfer
 cask "openmtp"
-# Quick Look plugin for OsiriX DICOM files
-cask "osirix-quicklook"
 # Administration and development platform for PostgreSQL
 cask "pgadmin4"
 # Network ping monitoring application
@@ -854,24 +852,12 @@ cask "qfinder-pro"
 cask "qflipper"
 # Geographic Information System
 cask "qgis"
-# Quick Look plug-in that renders source code with syntax highlighting
-cask "qlcolorcode"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
-# Quick Look plugin to view patch files
-cask "qlprettypatch"
-# Quick Look plugin for plaintext files without an extension
-cask "qlstephen"
 # Scientific and technical publishing system built on Pandoc
 cask "quarto"
-# Quick Look plugin for CSV files
-cask "quicklook-csv"
-# Quick Look plugin for JSON files
-cask "quicklook-json"
 # Thumbnails, static previews, cover art and metadata for video files
 cask "quicklook-video"
-# Archive manager for data compression and backups
-cask "rar"
 # Imaging utility to install operating systems to a microSD card
 cask "raspberry-pi-imager"
 # Frontend for emulators, game engines and media players (Metal graphics API)
@@ -896,6 +882,8 @@ cask "stratoshark"
 cask "suspicious-package"
 # Remote access and connectivity software focused on security
 cask "teamviewer"
+# Menu bar manager
+cask "thaw"
 # Menu bar app to show Time Machine information
 cask "timemachinestatus"
 # Pomodoro desktop timer
@@ -923,6 +911,8 @@ cask "visual-studio-code"
 cask "vlc"
 # Rust-based terminal
 cask "warp"
+# Menu bar app for USB-C cable diagnostics
+cask "darrylmorley/whatcable/whatcable", trusted: true
 # Compatibility layer to run Windows applications
 cask "wine-stable"
 # Network protocol analyzer
@@ -933,6 +923,8 @@ cask "wpsoffice"
 cask "xld"
 # Open-source version of the X.Org X Window System
 cask "xquartz"
+# AI-assisted development environment
+cask "zcode"
 # Video communication and virtual meeting platform
 cask "zoom"
 # OpenJDK distribution from Azul
@@ -975,14 +967,15 @@ mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
 mas "Key Codes", id: 414568915
-mas "Keynote", id: 409183694
 mas "Keynote", id: 361285480
+mas "Keynote", id: 409183694
 mas "Kindle", id: 302584613
 mas "Kindle Classic", id: 405399194
 mas "Klack", id: 6446206067
 mas "LadioCast", id: 411213048
 mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
+mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
@@ -995,10 +988,10 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
-mas "Numbers", id: 361304891
 mas "Numbers", id: 409203825
-mas "Pages", id: 409201541
+mas "Numbers", id: 361304891
 mas "Pages", id: 361309726
+mas "Pages", id: 409201541
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
@@ -1019,6 +1012,7 @@ mas "WiFi Explorer Lite", id: 1408727408
 mas "WiFi Signal", id: 525912054
 mas "WinArchiver Lite", id: 414855915
 mas "Windows App", id: 1295203466
+mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "charliermarsh.ruff"
 vscode "cschlosser.doxdocgen"
@@ -1123,10 +1117,12 @@ cargo "mdbook"
 cargo "minidump-stackwalk"
 cargo "tauri-cli"
 cargo "wasm-pack"
+uv "frida-tools"
 uv "it2"
 uv "parakeet-mlx"
 uv "ruff"
 uv "zotero-mcp-server", source: "git+https://github.com/54yyyu/zotero-mcp.git"
 npm "agent-browser"
 npm "corepack"
+npm "docx"
 npm "vercel"
