@@ -15,30 +15,47 @@
         "id": "2",
         "type": "model",
         "color": "cyan",
-        "rawValue": true
+        "rawValue": true,
+        "merge": "no-padding"
+      },
+      {
+        "id": "brain",
+        "type": "custom-text",
+        "color": "cyan",
+        "customText": " (🧠 ",
+        "merge": "no-padding"
       },
       {
         "id": "3",
         "type": "thinking-effort",
-        "color": "magenta"
-      },
-      {
-        "id": "ctxlabel",
-        "type": "custom-text",
-        "color": "blue",
-        "customText": "Ctx: ",
+        "color": "magenta",
+        "rawValue": true,
         "merge": "no-padding"
       },
       {
-        "id": "4",
-        "type": "context-percentage-usable",
-        "color": "blue",
-        "rawValue": true
+        "id": "1895bc9c-659f-4172-ae28-fc188d712834",
+        "type": "custom-text",
+        "backgroundColor": "bgYellow",
+        "customText": ")"
+      },
+      {
+        "id": "bbcc4ce6-3803-4138-ac3e-8b11118c66c1",
+        "type": "context-bar",
+        "backgroundColor": "bgBrightGreen",
+        "rawValue": true,
+        "metadata": {
+          "display": "slider-only"
+        }
       },
       {
         "id": "5",
         "type": "compaction-counter",
-        "color": "brightBlack"
+        "color": "brightBlack",
+        "metadata": {
+          "hideZero": "false",
+          "showTriggers": "false",
+          "showReclaimed": "false"
+        }
       },
       {
         "id": "usagelabel",
@@ -52,7 +69,11 @@
         "type": "session-usage",
         "color": "yellow",
         "rawValue": true,
-        "merge": "no-padding"
+        "merge": "no-padding",
+        "metadata": {
+          "display": "time",
+          "invert": "false"
+        }
       },
       {
         "id": "usagesep",
@@ -71,10 +92,10 @@
         "id": "sandbox",
         "type": "custom-command",
         "color": "brightBlue",
-        "commandPath": "~/dotfiles/script/cc_sandbox_status.sh",
         "rawValue": true,
-        "timeout": 1000,
-        "maxWidth": 4
+        "commandPath": "~/dotfiles/script/cc_sandbox_status.sh",
+        "maxWidth": 4,
+        "timeout": 1000
       },
       {
         "id": "9",
@@ -94,23 +115,27 @@
   "compactThreshold": 60,
   "colorLevel": 2,
   "defaultPadding": " ",
+  "defaultPaddingSide": "both",
   "inheritSeparatorColors": false,
   "globalBold": false,
+  "gitCacheTtlSeconds": 5,
+  "minimalistMode": false,
   "powerline": {
     "enabled": true,
     "separators": [
-      "\ue0b0"
+      ""
     ],
     "separatorInvertBackground": [
       false
     ],
     "startCaps": [
-      "\ue0b2"
+      ""
     ],
     "endCaps": [
-      "\ue0b0"
+      ""
     ],
     "theme": "catppuccin",
-    "autoAlign": false
+    "autoAlign": false,
+    "continueThemeAcrossLines": false
   }
 }
