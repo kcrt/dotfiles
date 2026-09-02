@@ -18,9 +18,11 @@ layout {
 				border_format   "#[fg=#6C7086]{char}"
 				border_position "top"
 
-				// hide_frame_for_single_pane "true"
-				// 単一ペインのみのチラつき (zjstatus#174 / zellij#4978) はバージョンアップで解消したが、
-				// 今度はペインが複数のときに表示が崩れるようになったため引き続き無効化。
+				hide_frame_for_single_pane "true"
+				// zjstatus v0.25.0 (2026-08-27) が zellij 0.45 の新フレーム様式に対応し
+				// (zjstatus#297 / zellij#5228)、単一・複数ペインどちらの崩れも解消したため再有効化。
+				// pane_frame_style は未指定 = zellij 0.45 の既定 "titles" に追従する
+				// (config.kdl の pane_frames もコメントアウト＝既定のままで整合)。
 
 				mode_normal	"#[bg=#2E6C9E] "
 				mode_locked	"#[bg=#E28C36][LOCKED] "
