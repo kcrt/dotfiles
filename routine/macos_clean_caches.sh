@@ -14,8 +14,71 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+# Directories this script empties or prunes. Their combined shrinkage is the
+# only honest measure of what a run achieved: df cannot show it, because APFS
+# keeps local snapshots (hourly, a rolling 24h window) that hold every freed
+# block referenced until 'tmutil thinlocalsnapshots' runs. Reporting df here
+# used to print an unchanged number even after tens of GB had been removed.
+# Paths that do not exist are skipped, so caches of tools that are not
+# installed can be listed safely.
+typeset -ga CLEAN_TARGETS=(
+	# Xcode / CoreSimulator
+	~/Library/Developer/Xcode/DerivedData
+	"$HOME/Library/Developer/Xcode/iOS DeviceSupport"
+	~/Library/Developer/Xcode/Archives
+	~/Library/Caches/com.apple.dt.Xcode
+	~/Library/Developer/CoreSimulator/Caches
+	~/Library/Developer/CoreSimulator/Devices
+	# Homebrew ('brew autoremove' prunes the Cellar itself, not just the cache)
+	~/Library/Caches/Homebrew
+	/opt/homebrew/Cellar
+	# Node.js / JavaScript
+	~/.npm
+	~/Library/Caches/node-gyp
+	~/Library/pnpm/store
+	~/.bun/install/cache
+	~/Library/Caches/ms-playwright
+	~/Library/Caches/Cypress
+	# Python
+	~/Library/Caches/pip
+	~/.cache/uv
+	# Rust (registry cache only, toolchains live elsewhere and are kept)
+	~/.cargo/registry
+	~/.cargo/git
+	# Go
+	~/go/pkg/mod
+)
+
+# Combined size of $CLEAN_TARGETS in KiB. du counts allocated blocks, which is
+# what actually returns to the volume, rather than the apparent size.
+clean_targets_kb(){
+	# Not named 'path': zsh ties $path to $PATH, so assigning a directory to it
+	# would wipe the command search path and du would not be found.
+	local total=0 target size
+	for target in $CLEAN_TARGETS; do
+		[[ -e $target ]] || continue
+		# du prints "<kb>\t<path>"; strip the path in the shell rather than
+		# spawning cut for every entry.
+		size=$(du -sk -- $target 2>/dev/null)
+		size=${size%%[[:space:]]*}
+		[[ $size == <-> ]] && (( total += size ))
+	done
+	print -r -- $total
+}
+
+# 1536 -> "1.5M". One decimal, so a few hundred MiB does not read as "0G".
+format_kb(){
+	local -i kb=$1
+	local sign=""
+	(( kb < 0 )) && { sign="-"; kb=$(( -kb )); }
+	if   (( kb >= 1048576 )); then printf '%s%.1fG' "$sign" $(( kb / 1048576.0 ))
+	elif (( kb >= 1024 ));    then printf '%s%.1fM' "$sign" $(( kb / 1024.0 ))
+	else                           printf '%s%dK'   "$sign" $kb
+	fi
+}
+
 OSNotify "Cleaning Caches..."
-hdfreebefore=$(df -h / | awk 'NR==2 {print $4}')
+cachebefore=$(clean_targets_kb)
 cd ~
 
 # Glob qualifier (ND) on the rm patterns below:
@@ -63,5 +126,12 @@ cargo cache -a
 # Go
 go clean -modcache
 
-hdfreeafter=$(df -h / | awk 'NR==2 {print $4}')
-OSNotify "Cleaned. Free space: $hdfreebefore -> $hdfreeafter"
+cacheafter=$(clean_targets_kb)
+freed=$(( cachebefore - cacheafter ))
+if (( freed >= 0 )); then
+	OSNotify "Cleaned. Caches: $(format_kb $cachebefore) -> $(format_kb $cacheafter) (freed $(format_kb $freed))"
+else
+	# A toolchain repopulating its cache mid-run (a background npm/uv process,
+	# say) is the usual cause, and is worth seeing rather than hiding as 0.
+	OSNotify "Cleaned. Caches: $(format_kb $cachebefore) -> $(format_kb $cacheafter) (grew by $(format_kb $(( -freed ))))"
+fi
