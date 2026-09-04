@@ -1,3 +1,6 @@
+# The following lines were added by Docker Desktop to add commands to your PATH.
+export PATH="$PATH:/Users/kcrt/.docker/bin"
+# End of Docker Desktop section.
 
 # ----- パスの設定(これも本当はzshenvに書くべき)
 # (N-/): 存在しないディレクトリは登録しない。
