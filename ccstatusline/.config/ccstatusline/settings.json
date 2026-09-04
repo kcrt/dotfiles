@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "lines": [
     [
       {
@@ -52,7 +52,6 @@
         "type": "compaction-counter",
         "color": "brightBlack",
         "metadata": {
-          "hideZero": "false",
           "showTriggers": "false",
           "showReclaimed": "false"
         }
