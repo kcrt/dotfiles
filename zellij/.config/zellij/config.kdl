@@ -166,6 +166,12 @@ keybinds clear-defaults=true {
         bind "Ctrl b" { SwitchToMode "tmux"; }
     }
     shared_except "locked" "scroll" "search" {
+        // Ctrl f は zellij では未バインドで、下のアプリ (zsh の forward-char、
+        // vim/less の画面送り) に素通しされていたキー。フルスクリーン切替を
+        // ^P f の 2 打鍵から 1 打鍵に縮めるため zellij 側で奪う。
+        // 下のアプリへ渡したいときは locked モード (Ctrl g) に入れば素通しになる。
+        // scroll / search は PageScrollDown を残すため除外。
+        bind "Ctrl f" { ToggleFocusFullscreen; SwitchToMode "normal"; }
         bind "Ctrl s" { SwitchToMode "scroll"; }
     }
     shared_except "locked" "tab" {
@@ -295,8 +301,13 @@ plugins {
         mode_tmux	"#[bg=#E28C36][{name}] "
         mode_default_to_mode "tmux"
 
-        tab_normal   "#[fg=#45BEC9,bg=#677589]/ {name} \\"
-        tab_active   "#[bg=#45BEC9,bold]/ {name} \\"
+        // フルスクリーン (^F / ^P f) は 1 ペインだけが全面に出るので、
+        // 本当にペインが 1 枚のタブと見分けが付かない。タブ名の前に印を出しておく。
+        // {fullscreen_indicator} は該当タブ以外では空文字に置換される
+        // (zjstatus src/widgets/tabs.rs)。印は好みで差し替えて良い。
+        tab_normal   "#[fg=#45BEC9,bg=#677589]/ {fullscreen_indicator}{name} \\"
+        tab_active   "#[bg=#45BEC9,bold]/ {fullscreen_indicator}{name} \\"
+        tab_fullscreen_indicator "⛶ "
 
         command_claudeinfo_command "bash -c \"$HOME/dotfiles/script/claude_code_status.sh\""
         command_claudeinfo_format  "{stdout}"
