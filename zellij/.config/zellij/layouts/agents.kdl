@@ -1,0 +1,56 @@
+// 複数エージェントを並走させる時のレイアウト。新セッションで開くなら `zellij -n agents`。
+// -l/--layout はセッション内から呼ぶと新セッションではなく現セッションへタブを足す挙動なので、
+// 「常に新しいセッション」が欲しい時は -n (--new-session-with-layout) を使う。
+//
+//   ┌───────────────────────┐
+//   │       agent-view      │ 30% : claude agents (agent view) で全体を俯瞰
+//   ├───────────┬───────────┤
+//   │  agent1   │  agent2   │ 下部は田の字に agent を 4 枚。じっくり読みたい時は
+//   ├───────────┼───────────┤ Ctrl+p → f (ToggleFocusFullscreen) で一時的に最大化し、
+//   │  agent3   │  agent4   │ もう一度押せば下の比率のまま元へ戻る。
+//   └───────────┴───────────┘
+//
+// 【なぜ % 指定なのか】端末が低いと zellij はエラーを出さずに即 "Bye from Zellij!" で
+// 終了する。縦に積んだペインと固定行指定を組み合わせると要求高さが極端に大きくなり、
+// 右側を 4 段スタックにしていた頃の実測 (200 桁) では size=10 で 54 行以上、size=20 で
+// 90 行以上を要求した (72/80 行は NG)。% 指定なら 30 行から起動でき、端末の高さにも追従する。
+//
+// zellij の split_direction は「仕切り線の向き」なので
+// vertical = 左右分割、horizontal = 上下分割 (default.kdl の swap layout と同じ約束)。
+// 田の字は「上下 2 段 (horizontal) の各段を左右 2 分割 (vertical)」で作る。
+layout {
+	// default_tab_template はレイアウトファイル単位で、default.kdl のものは継承されない。
+	// バー本体は config.kdl の plugins {} に zjstatus エイリアスとして置いてあるので、
+	// ここは同じ 3 段構成 (zjstatus / children / status-bar) を参照するだけで済む。
+	default_tab_template {
+		pane size=1 borderless=true {
+			plugin location="zjstatus"
+		}
+		children
+		pane size=2 borderless=true {
+			plugin location="zellij:status-bar"
+		}
+	}
+
+	tab name="agents" focus=true {
+		// 俯瞰用なので自動起動する。手動で開きたくなったら start_suspended=true を付ける。
+		pane size="30%" name="agent-view" {
+			command "claude"
+			args "agents"
+		}
+		pane split_direction="horizontal" {
+			pane split_direction="vertical" {
+				pane name="agent1" focus=true
+				pane name="agent2"
+			}
+			pane split_direction="vertical" {
+				pane name="agent3"
+				pane name="agent4"
+			}
+		}
+	}
+
+	// swap layout は定義していない。Alt+[ / Alt+] は無効で、上の比率が崩れることもない。
+	// 「一時的に 1 枚を大きく」は Ctrl+p → f のフルスクリーントグルで足りるため、
+	// 元の形へ戻れない swap layout はこのレイアウトには入れない (必要なら default.kdl から移植)。
+}

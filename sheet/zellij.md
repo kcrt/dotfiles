@@ -34,4 +34,7 @@ Ctrl+b Ctrl+b で literal な Ctrl+b を送る★
 zellij a -c NAME 無ければ作って attach★ | zellij ls EXITED も表示→attach で復活★
 zellij d NAME 復活データごと削除★ | zellij run -f -- CMD | zellij edit FILE
 zellij action dump-screen F --full★ / rename-tab / go-to-tab-name / new-pane -d right
-$ZELLIJ で在席判定★ | 設定 ~/dotfiles/zellij/.config/zellij/{config,layouts/default}.kdl
+$ZELLIJ で在席判定★ | 設定 ~/dotfiles/zellij/.config/zellij/{config,layouts/{default,agents}}.kdl
+zellij -n agents  上 agent-view 30% / 左 main 50% / 右 agent1-4 で新セッション
+レイアウトが端末に入らないと zellij は無言で即終了★ 固定行指定(size=10 等)は要求高さが激増する
+-l/--layout はセッション内だと新セッションでなく今のセッションにタブを足す★ -n なら必ず新規
