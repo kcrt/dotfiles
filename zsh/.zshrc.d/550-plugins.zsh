@@ -3,6 +3,14 @@
 #		Sheldon, zoxide, and plugin configuration
 #
 
+# `abbrev-alias` は zsh-abbrev-alias プラグインが提供するが、後続の
+# 655/700 系ファイルが無条件に呼び出す。プラグインが読み込まれない場合
+# (Claude Code 内、または sheldon 未インストール) でもエラーを出さないよう、
+# 先に何もしないスタブを定義しておく (プラグイン読み込み時に上書きされる)。
+function abbrev-alias(){
+	# skip this command
+}
+
 # Skip all plugin loading when in Claude Code
 [[ -n "$CLAUDECODE" ]] && return 0
 
@@ -19,9 +27,7 @@ else
 		echo_warn "  Linux: install rustup first, then 'cargo binstall sheldon':"
 		echo_warn "    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 	fi
-	function abbrev-alias(){
-		# skip this command
-	}
+	# abbrev-alias はファイル冒頭のスタブがそのまま使われる
 fi
 
 # ----- zoxide (smarter cd command)
