@@ -3,7 +3,7 @@
 #		Zcompile, fortune, zprof
 #
 
-if [ ! -f ~/zshrc.zwc -o ~/.zshrc -nt ~/.zshrc.zwc ]; then
+if [ ! -f ~/.zshrc.zwc -o ~/.zshrc -nt ~/.zshrc.zwc ]; then
 	# compile if modified
     zcompile ~/.zshrc
 fi
