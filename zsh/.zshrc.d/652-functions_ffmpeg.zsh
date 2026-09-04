@@ -2,8 +2,9 @@
 #	066-functions_ffmpeg.zsh
 #		FFmpeg conversion functions
 #
-# Simple video conversion functions have been replaced by script/ffmpeg_convert.py
-# Usage: ffmpeg_convert.py input.mp4 -s 720p -c hevc -q high [--tune animation]
+# Simple video conversion functions have been replaced by script/ffmpeg-convert.py
+# Usage: ffmpeg-convert.py input.mp4 -s 720p --hevc -q high [-t animation]
+#        ffmpeg-convert.py . -o out --lecture     # slide-based lecture videos
 #
 
 function ffmpeg_gif(){
