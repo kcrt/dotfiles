@@ -18,6 +18,11 @@ elif [[ "$1" =~ youtu\.be/([[:alnum:]_-]+) ]]; then
     video_id="${BASH_REMATCH[1]}"
 fi
 
+album_name="Downloaded from YouTube/Nicovideo"
+
 echo "Use yt-dlp instead of youtube-dl"
 yt-dlp --extract-audio --format m4a --embed-thumbnail -- "$1"
-AtomicParsley ./*"${video_id}"*.m4a --album "Downloaded from YouTube/Nicovideo" --overWrite
+AtomicParsley ./*"${video_id}"*.m4a \
+    --album "$album_name" \
+    --albumArtist "$album_name" \
+    --overWrite
