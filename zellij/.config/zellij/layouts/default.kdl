@@ -21,14 +21,18 @@ layout {
 	// なお config.kdl で auto_layout false にしてあるため、ペインを開閉しても
 	// 勝手に組み替わらず、Alt+[ / Alt+] を押した時だけ切り替わる。
 	// 名前は zellij の split_direction (vertical = 縦の仕切り線 = 左右分割) ではなく
-	// 「ペインがどう並んで見えるか」に合わせてある。
+	// 「ペインがどう並んで見えるか」に合わせてある。カッコ内は自分で開いたペインの枚数。
 	//   vertical   → 上下に 1 列で積む       (最大 8)
 	//   horizontal → 左右に 1 行で並べる     (最大 8)
 	//   grid       → 田の字                  (最大 4)
 	//   stacked    → 左 1 枚 + 右をスタック  (5 枚以上)
 	// 9 枚以上では vertical/horizontal/grid は該当なしになるので stacked に回る。
+	// 【max_panes / min_panes は実ペイン数 +2】判定はタブ内の全ペイン数で行われ、
+	// default_tab_template の zjstatus と status-bar (borderless な plugin ペイン) も
+	// 1 枚ずつ数に入る。grid を max_panes=4 と書いていた頃は実ペイン 2 枚までしか
+	// 該当せず、4 枚開いた状態で Alt+[ / Alt+] を回しても grid が出てこなかった。
 	swap_tiled_layout name="vertical" {
-		tab max_panes=8 {
+		tab max_panes=10 {
 			pane split_direction="horizontal" {
 				children
 			}
@@ -36,7 +40,7 @@ layout {
 	}
 
 	swap_tiled_layout name="horizontal" {
-		tab max_panes=8 {
+		tab max_panes=10 {
 			pane split_direction="vertical" {
 				children
 			}
@@ -44,7 +48,7 @@ layout {
 	}
 
 	swap_tiled_layout name="grid" {
-		tab max_panes=4 {
+		tab max_panes=6 {
 			pane split_direction="horizontal" {
 				pane split_direction="vertical" { children; }
 				pane split_direction="vertical" { pane; pane; }
@@ -53,7 +57,7 @@ layout {
 	}
 
 	swap_tiled_layout name="stacked" {
-		tab min_panes=5 {
+		tab min_panes=7 {
 			pane split_direction="vertical" {
 				pane
 				pane stacked=true { children; }

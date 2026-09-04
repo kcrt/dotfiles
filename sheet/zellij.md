@@ -38,3 +38,4 @@ $ZELLIJ で在席判定★ | 設定 ~/dotfiles/zellij/.config/zellij/{config,lay
 zellij -n agents  上 agent-view 30% / 左 main 50% / 右 agent1-4 で新セッション
 レイアウトが端末に入らないと zellij は無言で即終了★ 固定行指定(size=10 等)は要求高さが激増する
 -l/--layout はセッション内だと新セッションでなく今のセッションにタブを足す★ -n なら必ず新規
+swap layout の max_panes/min_panes は plugin ペイン (zjstatus/status-bar) も数える→実ペイン数 +2★★
