@@ -1,0 +1,33 @@
+# Chawan (cha) config
+# 全オプションは `man 5 cha-config` 参照
+
+[buffer]
+images = true
+
+[external]
+# 既定は xsel（Linux用）なので macOS では M-y / M-p が動かない
+copy-cmd = "pbcopy"
+paste-cmd = "pbpaste"
+# 既定は ${TMPDIR:-/tmp}/
+download-dir = "~/Downloads/"
+# M-a で追記されるブックマークを dotfiles 管理下に
+bookmark = "~/dotfiles/chawan/.config/chawan/bookmark.md"
+
+[input]
+# f のリンクヒントをホームポジション優先に
+link-hint-chars = "asdfghjklqwertyuiop"
+
+# Wikipedia を旧 vector スキンで（新スキンより端末で崩れにくい）
+[siteconf.wikipedia]
+url = '^https?://[a-z]+\.wikipedia\.org/wiki/(?!.*useskin=.*)'
+rewrite-url = 'x => x.searchParams.append("useskin", "vector")'
+
+# jw:喘息 で日本語版 Wikipedia 検索
+[omnirule.jw]
+match = '^jw:'
+substitute-url = '(x) => "https://ja.wikipedia.org/wiki/Special:Search?search=" + encodeURIComponent(x.slice(3))'
+
+# gh:キーワード で GitHub リポジトリ検索
+[omnirule.gh]
+match = '^gh:'
+substitute-url = '(x) => "https://github.com/search?q=" + encodeURIComponent(x.slice(3)) + "&type=repositories"'
