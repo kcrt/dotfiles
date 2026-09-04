@@ -14,6 +14,14 @@ if command -v zellij &> /dev/null; then
 			echo " ----------------------- "
 		fi
 	fi
+
+	# 複数エージェント並走用セッションの起動 (layouts/agents.kdl)。
+	# ZELLIJ_NO_TAB_RENAME は zellij サーバへ渡ってセッション内の全ペインに継承され、
+	# set_title のタブ改名だけを抑止する。ペインタイトルの OSC は出るので、
+	# 名前なしペインの枠には各エージェントの作業内容が出たままになる。
+	function zellij-agents(){
+		ZELLIJ_NO_TAB_RENAME=1 zellij -n agents "$@"
+	}
 elif command -v tmux &> /dev/null; then
 	if [[ -z "$TMUX" ]]; then
 		tmux ls

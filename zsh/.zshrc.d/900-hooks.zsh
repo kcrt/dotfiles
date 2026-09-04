@@ -20,8 +20,13 @@ function set_title(){
 	if [[ "$TERM_PROGRAM" == "tmux" ]]; then
 		tmux rename-window "$Title"
 	elif [[ -n "$ZELLIJ" ]]; then
-		# zellij
-		zellij action rename-tab "$Title" 2>/dev/null
+		# zellij: OSC 0 は「name= を持たないペイン」の枠タイトルとして拾われる。
+		# タブ名の追従は 1 タブ 1 ペイン前提の挙動なので、複数ペインを並べるセッション
+		# (agents レイアウト等) では ZELLIJ_NO_TAB_RENAME=1 を立てて抑止する。
+		# 抑止しないと、どのペインでコマンドを打ってもタブ名がそれで上書きされてしまう。
+		if [[ -z "$ZELLIJ_NO_TAB_RENAME" ]]; then
+			zellij action rename-tab "$Title" 2>/dev/null
+		fi
 		echo -n "\e]0;$Title\e\\"
 	elif [[ -n $SSH_CLIENT ]]; then
 		# via ssh

@@ -1,14 +1,16 @@
-// 複数エージェントを並走させる時のレイアウト。新セッションで開くなら `zellij -n agents`。
+// 複数エージェントを並走させる時のレイアウト。起動は `zellij-agents` 関数 (860-terminal_multiplexer.zsh)
+// が `ZELLIJ_NO_TAB_RENAME=1 zellij -n agents` を包んでいる。素の `zellij -n agents` でも開くが、
+// その場合は set_title がコマンド名でタブ名 "agents" を潰す。
 // -l/--layout はセッション内から呼ぶと新セッションではなく現セッションへタブを足す挙動なので、
 // 「常に新しいセッション」が欲しい時は -n (--new-session-with-layout) を使う。
 //
 //   ┌───────────────────────┐
 //   │       agent-view      │ 30% : claude agents (agent view) で全体を俯瞰
 //   ├───────────┬───────────┤
-//   │  agent1   │  agent2   │ 下部は田の字に agent を 4 枚。じっくり読みたい時は
-//   ├───────────┼───────────┤ Ctrl+p → f (ToggleFocusFullscreen) で一時的に最大化し、
-//   │  agent3   │  agent4   │ もう一度押せば下の比率のまま元へ戻る。
-//   └───────────┴───────────┘
+//   │  agent1   │  agent2   │ 下部は田の字に agent を 4 枚 (図のラベルは位置の呼び名で、
+//   ├───────────┼───────────┤ 実際の枠タイトルは各ペインの OSC に追従する)。じっくり
+//   │  agent3   │  agent4   │ 読みたい時は Ctrl+p → f (ToggleFocusFullscreen) で一時的に
+//   └───────────┴───────────┘ 最大化し、もう一度押せば下の比率のまま元へ戻る。
 //
 // 【なぜ % 指定なのか】端末が低いと zellij はエラーを出さずに即 "Bye from Zellij!" で
 // 終了する。縦に積んだペインと固定行指定を組み合わせると要求高さが極端に大きくなり、
@@ -38,14 +40,20 @@ layout {
 			command "claude"
 			args "agents"
 		}
+		// 【ペイン名を付けない理由】枠タイトルの優先順は
+		//   name= (レイアウトでの命名/Ctrl+p → c での改名) > OSC 0/2 で来たタイトル > コマンド行
+		// で、name= を付けると固定表示になり中で何が起きているか分からない。名前なしなら
+		// 各ペインが出す OSC (Claude Code の作業表示や zsh の set_title) が枠に出る。
+		// 逆に command 付きペイン (上の agent-view) はコマンド行がタイトルに固定され OSC で
+		// 上書きできないので、あちらは name= を付けて短く読みやすくしておく。
 		pane split_direction="horizontal" {
 			pane split_direction="vertical" {
-				pane name="agent1" focus=true
-				pane name="agent2"
+				pane focus=true
+				pane
 			}
 			pane split_direction="vertical" {
-				pane name="agent3"
-				pane name="agent4"
+				pane
+				pane
 			}
 		}
 	}

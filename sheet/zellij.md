@@ -35,7 +35,13 @@ zellij a -c NAME 無ければ作って attach★ | zellij ls EXITED も表示→
 zellij d NAME 復活データごと削除★ | zellij run -f -- CMD | zellij edit FILE
 zellij action dump-screen F --full★ / rename-tab / go-to-tab-name / new-pane -d right
 $ZELLIJ で在席判定★ | 設定 ~/dotfiles/zellij/.config/zellij/{config,layouts/{default,agents}}.kdl
-zellij -n agents  上 agent-view 30% / 左 main 50% / 右 agent1-4 で新セッション
+zellij-agents  上 agent-view 30% / 下 田の字 4 枚 で新セッション (ZELLIJ_NO_TAB_RENAME=1 付き)
 レイアウトが端末に入らないと zellij は無言で即終了★ 固定行指定(size=10 等)は要求高さが激増する
 -l/--layout はセッション内だと新セッションでなく今のセッションにタブを足す★ -n なら必ず新規
 swap layout の max_panes/min_panes は plugin ペイン (zjstatus/status-bar) も数える→実ペイン数 +2★★
+
+## 枠タイトル (ペインタイトル)  ★★
+優先順 name= (layout / Ctrl+p → c) > OSC 0/2 > コマンド行・Pane #N
+name= を付けると固定表示。中身に追従させたいペインは名前を付けない★
+command 付きペインはコマンド行に固定され OSC で上書きできない★
+set_title は zellij 配下でタブ名も改名する→複数ペインのタブは ZELLIJ_NO_TAB_RENAME=1 で抑止
