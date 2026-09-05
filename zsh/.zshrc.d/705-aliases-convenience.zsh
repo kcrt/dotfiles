@@ -85,6 +85,13 @@ for f in "${DOTFILES}"/script/*; do
 	alias "${f:t:r}"="$f"
 done
 
+# Private scripts. Same treatment as above, but the secrets submodule may not be
+# checked out on every machine, so (N) makes an absent directory a no-op rather
+# than a "no matches found" error.
+for f in "${DOTFILES}"/secrets/script/*(N); do
+	alias "${f:t:r}"="$f"
+done
+
 # ============================================================================
 # Utility One-Liners
 # ============================================================================
