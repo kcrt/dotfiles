@@ -6,12 +6,17 @@ for arg in "$@"; do
         -h|--help)
             echo "Usage: $(basename "$0") [--skip-sixel]"
             echo "Demonstrates various terminal escape sequences, including:"
-            echo "  - Text styles (bold / dim / italic / underline / blink / reverse / conceal / strikethrough / overline)"
-            echo "  - Extended underlines (double / curly / dotted / dashed / colored)"
+            echo "  - Text styles (bold / dim / italic / underline / blink / rapid blink / reverse / conceal / strikethrough / overline)"
+            echo "  - Extended underlines (double / curly / dotted / dashed, with indexed and RGB underline colors)"
+            echo "  - Superscript / subscript"
+            echo "  - Ideogram attributes (圏点 / 傍線)"
+            echo "  - SGR sub-parameter syntax (colon vs semicolon)"
             echo "  - 4-bit colors (16 colors)"
             echo "  - 8-bit colors (256 colors)"
             echo "  - 24-bit colors (true color)"
             echo "  - Character width (ASCII / full-width / CJK / emoji / combining / Nerd Font glyphs)"
+            echo "  - Double-width / double-height lines (DECDWL / DECDHL)"
+            echo "  - DEC Special Graphics line-drawing charset"
             echo "  - Sixel graphics (skip with --skip-sixel)"
             echo "  - Hyperlinks (OSC 8)"
             echo "  - Window title setting (OSC 0)"
@@ -48,13 +53,15 @@ echo ""
 
 # ----- Text Styles -----
 # ␛[(CSI) n m  —  0 = reset
-# 1 bold / 2 dim / 3 italic / 4 underline / 5 blink / 7 reverse / 8 conceal / 9 strikethrough / 53 overline
+# 1 bold / 2 dim / 3 italic / 4 underline / 5 blink / 6 rapid blink / 7 reverse
+# 8 conceal / 9 strikethrough / 53 overline
 echo "== Text styles =="
 echo "\e[1mbold\e[0m"
 echo "\e[2mdim\e[0m"
 echo "\e[3mitalic\e[0m"
 echo "\e[4munderline\e[0m"
 echo "\e[5mblink\e[0m"
+echo "\e[6mrapid blink\e[0m  <- spec says faster than 5; nearly every terminal just aliases it to 5"
 echo "\e[7mreverse\e[0m"
 echo "\e[8mconceal\e[0m  <- the word 'conceal' should be invisible"
 echo "\e[9mstrikethrough\e[0m"
@@ -64,13 +71,61 @@ echo ""
 
 # ----- Extended Underlines -----
 # ␛[4:_n_m  n = 2 double, 3 curly, 4 dotted, 5 dashed (sub-parameter form)
-# Underline color: ␛[58:2::_r_:_g_:_b_m  (reset color with ␛[59m)
+# Underline color: ␛[58:5:_n_m (256-color palette) or ␛[58:2::_r_:_g_:_b_m (true color)
+# ␛[59m restores the default underline color without touching anything else.
 echo "== Extended underlines =="
 echo "\e[4:2mdouble\e[0m"
 echo "\e[4:3mcurly\e[0m"
 echo "\e[4:4mdotted\e[0m"
 echo "\e[4:5mdashed\e[0m"
-echo "\e[4:3m\e[58:2::255:0:0mcolored curly (red)\e[0m"
+echo "\e[4:3m\e[58:2::255:0:0mcolored curly, true color (58:2::255:0:0)\e[0m"
+echo "\e[4:3m\e[58:5:33mcolored curly, palette index (58:5:33)\e[0m"
+printf "underline color palette (58:5:n): "
+for color in 1 2 3 4 5 6 9 10 11 12 13 14; do
+    printf "\e[4:3m\e[58:5:%sm %2s \e[0m" "$color" "$color"
+done
+echo ""
+echo "\e[4mdefault, \e[58:5:196mred (58:5:196), \e[59mdefault again (59)\e[0m"
+echo ""
+
+
+# ----- Superscript / Subscript -----
+# ␛[73m superscript / ␛[74m subscript / ␛[75m neither
+echo "== Superscript / subscript (SGR 73 / 74, reset 75) =="
+echo "E=mc\e[73m2\e[75m       <- the 2 should be raised"
+echo "H\e[74m2\e[75mO          <- the 2 should be lowered"
+echo ""
+
+
+# ----- Ideogram Attributes -----
+# ␛[60m-␛[64m mark CJK text; ␛[65m cancels them.
+# In vertical writing these are side lines; horizontally most terminals would
+# draw them as under/overlines. Support is rare, so plain text is the norm.
+echo "== Ideogram attributes (傍線・圏点, SGR 60-64, reset 65) =="
+echo "\e[60m日本語テキスト\e[65m  60: 右傍線 (underline / right side line)"
+echo "\e[61m日本語テキスト\e[65m  61: 右二重傍線 (double underline / right side)"
+echo "\e[62m日本語テキスト\e[65m  62: 左傍線 (overline / left side line)"
+echo "\e[63m日本語テキスト\e[65m  63: 左二重傍線 (double overline / left side)"
+echo "\e[64m日本語テキスト\e[65m  64: 圏点 (stress marking)"
+echo ""
+
+
+# ----- SGR Sub-Parameter Syntax -----
+# ITU T.416 / ECMA-48 give 4, 38, 48 and 58 *sub-parameters*, separated by ':'.
+# The ';' spelling is a misreading of the spec that became the de-facto
+# standard, and some terminals understand only that one: macOS Terminal.app is
+# semicolon-only, so every ':' sample below stays plain there. That is why the
+# 8-bit and 24-bit sections use ';' — otherwise those grids would vanish
+# entirely on such terminals instead of just failing this one check.
+# For true color T.416 also puts a color space id between the 2 and the r,
+# normally left empty — hence the doubled colon in '38:2::r:g:b'. Terminals
+# that reject the empty field may still accept the 5-field '38:2:r:g:b'.
+echo "== SGR sub-parameter syntax (colon vs semicolon) =="
+echo "8-bit   \e[38;5;196msemicolon 38;5;196\e[0m   \e[38:5:196mcolon 38:5:196\e[0m"
+echo "24-bit  \e[38;2;255;128;0msemicolon 38;2;r;g;b\e[0m   \e[38:2::255:128:0mcolon 38:2::r:g:b\e[0m   \e[38:2:255:128:0mcolon 38:2:r:g:b\e[0m"
+echo "The extended underlines above (4:3, 58:...) are colon-only by design:"
+echo "they have no semicolon spelling, so a semicolon-only terminal cannot"
+echo "render them at all."
 echo ""
 
 
@@ -85,6 +140,9 @@ echo ""
 
 # ----- 8-bit Color (256 colors) -----
 # Foreground: ␛[38;5;<n>m   Background: ␛[48;5;<n>m
+# Semicolon form on purpose: it is the widest-supported spelling, so this grid
+# renders everywhere. See the sub-parameter syntax section above for the ':'
+# form and why it is not used here.
 # Original is: https://tools.paco.bg/14/
 echo "== 8-bit color (256 colors) =="
 for fgbg in 38 48 ; do # Foreground / Background
@@ -104,6 +162,7 @@ echo ""
 # ----- 24-bit Color (true color) -----
 # Foreground: ␛[38;2;<r>;<g>;<b>m   Background: ␛[48;2;<r>;<g>;<b>m
 # <r> <g> <b> range from 0 to 255 inclusive.
+# Semicolon form on purpose, same reason as the 8-bit section above.
 # Originally taken from iTerm2 https://github.com/gnachman/iTerm2/blob/master/tests/24-bit-color.sh
 echo "== 24-bit color (true color) =="
 
@@ -163,6 +222,29 @@ echo "[日本]    CJK         (2 cols each)"
 echo "[😀🎨]    emoji       (2 cols each)"
 echo "[é|e\xcc\x81]    combining   (precomposed é vs e+U+0301 — should look identical)"
 echo "[]  Nerd Font / Powerline glyphs (need a patched font; tofu if unsupported)"
+echo ""
+
+
+# ----- Double-Width / Double-Height Lines -----
+# ␛#6 DECDWL double width / ␛#3 DECDHL top half / ␛#4 DECDHL bottom half
+# ␛#5 DECSWL back to normal. These are *line* attributes: they apply to the
+# whole line, and the two DECDHL halves must carry identical text.
+echo "== Double-width / double-height lines (DECDWL / DECDHL) =="
+echo "\e#6double width (DECDWL)"
+echo "\e#3double height (DECDHL)"
+echo "\e#4double height (DECDHL)"
+echo "\e#5normal width (DECSWL)"
+echo ""
+
+
+# ----- DEC Special Graphics -----
+# ␛(0 maps G0 to the line-drawing charset, ␛(B maps it back to ASCII.
+# lqk / x / mqj become box corners and edges without needing a patched font.
+echo "== DEC Special Graphics (ESC ( 0) =="
+echo "The three lines below are the plain ASCII lqqqk / x   x / mqqqj."
+echo "\e(0lqqqk\e(B"
+echo "\e(0x   x\e(B"
+echo "\e(0mqqqj\e(B"
 echo ""
 
 
