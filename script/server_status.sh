@@ -58,10 +58,12 @@ level="${line[1]}"
 [[ -z "$line" ]] && level="?"
 top="${line#*top=}"
 [[ "$top" == "$line" ]] && top=""
-[[ "$line" == *degraded=1* ]] && top="!${top}"
 (( ${#top} > 28 )) && top="${top[1,27]}…"
 count="${line#*n=}"; count="${count%% *}"
 [[ "$line" != *n=* ]] && count=""
+# 取得元の片方が鮮度切れ。どのレベルでも「平常の顔」をさせないよう ! を前置する。
+mark=""
+[[ "$line" == *degraded=1* ]] && mark="!"
 
 if [[ "$1" != "zjstatus" ]]; then
     print -r -- "${line:-? (relay unreachable)}"
@@ -69,10 +71,10 @@ if [[ "$1" != "zjstatus" ]]; then
 fi
 
 case "$level" in
-    G) print -r -- "#[fg=#3DB88B]●" ;;
-    I) print -r -- "#[fg=#3DB88B]● ${count}" ;;
-    W) print -r -- "#[fg=#E28C36]● ${top}" ;;
-    A) print -r -- "#[fg=#d74242]● ${top}" ;;
-    U) print -r -- "#[bg=#d74242, fg=#F5E0E0]● ${top}" ;;
+    G) print -r -- "#[fg=#3DB88B]●${mark:+ !}" ;;
+    I) print -r -- "#[fg=#3DB88B]● ${mark}${count}" ;;
+    W) print -r -- "#[fg=#E28C36]● ${mark}${top}" ;;
+    A) print -r -- "#[fg=#d74242]● ${mark}${top}" ;;
+    U) print -r -- "#[bg=#d74242, fg=#F5E0E0]● ${mark}${top}" ;;
     *) print -r -- "#[fg=#6C7086]○ ?" ;;
 esac
