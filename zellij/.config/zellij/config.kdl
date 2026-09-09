@@ -277,7 +277,7 @@ plugins {
         format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | {tabs}"
         format_center ""
         // progressinfo は転送中のみ出力し、区切りの " | " も自分で前置する
-        format_right  " | {command_claudeinfo}{command_progressinfo} | {command_batteryinfo} {command_cpuload} {datetime}"
+        format_right  " | {command_claudeinfo}{command_progressinfo} | {command_batteryinfo} {command_cpuload} {command_serverstatus} {datetime}"
         format_space  "#[bg=#677589] "
 
         border_enabled  "false"
@@ -333,6 +333,13 @@ plugins {
         command_cpuload_format  "{stdout}{stderr}"
         command_cpuload_interval 15
         command_cpuload_rendermode "dynamic"
+
+        // 自宅サーバー・公開サイトの状況 (信号機と同じ中継を読む)。
+        // 実体は beryllium の signal-tower-relay。宅内なら LAN 直、外からは ssh 越しに取る。
+        command_serverstatus_command "zsh -c \"$HOME/dotfiles/script/server_status.sh zjstatus\""
+        command_serverstatus_format  "{stdout}"
+        command_serverstatus_interval 15
+        command_serverstatus_rendermode "dynamic"
 
         datetime        "#[bg=#677589,fg=#eaf0f6,bold]{format}"
         datetime_format "%Y-%m-%d %H:%M"
