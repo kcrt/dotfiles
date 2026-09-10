@@ -80,6 +80,7 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 import tempfile
@@ -227,6 +228,8 @@ def build_reply(args, reply_all: bool) -> str:
 
     parts = ['tell application "Mail"']
     parts.append(find_original_block(args.message_id, args.match_subject, args.search_all))
+    # 誤爆検知に使うため元メールの件名を控える（後段で outSubject と突き合わせる）。
+    parts.append("\tset origSubject to (subject of orig) as string")
     # 返信ウィンドウの出現を検知するため、開く前のウィンドウ数を控える。
     parts.append("\tset winBefore to (count windows)")
     parts.append("end tell")
@@ -269,8 +272,10 @@ def build_reply(args, reply_all: bool) -> str:
     parts.append('end try')
 
     hint = "本文欄で ⌘A → ⌘V" if args.no_quote else "本文欄の先頭で ⌘V"
+    # 先頭に origSubject を区切り付きで載せ、Python 側で件名照合してから表示する。
     parts.append(
-        f'return "OK({mode}) 本文はクリップボードにコピー済み。開いた返信ウィンドウの'
+        f'return origSubject & "{SUBJECT_SEP}" & '
+        f'"OK({mode}) 本文はクリップボードにコピー済み。開いた返信ウィンドウの'
         f'{hint} で貼り付けてください。 subject=" & outSubject'
     )
     return "\n".join(parts)
@@ -300,6 +305,69 @@ def build_forward(args) -> str:
     parts.append('\treturn "OK(forward) subject=" & (subject of msg)')
     parts.append("end tell")
     return "\n".join(parts)
+
+
+def count_outgoing_messages() -> int:
+    """Mail に開かれている作成中メッセージの数を返す（取得できなければ -1）。"""
+    proc = subprocess.run(
+        ["osascript", "-e",
+         'tell application "Mail" to return (count of outgoing messages)'],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return -1
+    try:
+        return int(proc.stdout.strip())
+    except ValueError:
+        return -1
+
+
+def assert_no_open_drafts() -> None:
+    """reply/reply-all の誤爆ガード（2026-08-25 の実害を受けて 2026-09-08 に追加）。
+
+    `reply orig` は、新規に開いた返信ウィンドウではなく **既に開いていた別の作成中
+    メッセージ**を掴むことがある。実際に別スレッドへ返信が作られ、そのまま送信された。
+    元メールの特定（Message-ID 照合）は正しく動いていたので、ここでしか止められない。
+    """
+    n = count_outgoing_messages()
+    if n == -1:
+        print("警告: 作成中ウィンドウ数を取得できませんでした。Mail が起動しているか確認してください。",
+              file=sys.stderr)
+        return
+    if n > 0:
+        raise SystemExit(
+            f"中止: Mail に作成中のメッセージが {n} 件開いています。\n"
+            "  reply は開いている別の作成中メッセージを掴むことがあり、\n"
+            "  まったく別のスレッドへ返信が作られます（2026-08-25 に実害あり）。\n"
+            "  → すべて閉じてから再実行してください。\n"
+            "  （意図して残したまま実行するなら --allow-open-drafts）"
+        )
+
+
+SUBJECT_SEP = "@@AMD-SUBJECT-SPLIT@@"  # origSubject と outSubject の区切り（件名に現れない文字列）
+
+_RE_PREFIXES = ("re:", "re :", "返信:", "fwd:", "fw:")
+
+
+def _strip_re(subject: str) -> str:
+    s = subject.strip()
+    changed = True
+    while changed:
+        changed = False
+        for pre in _RE_PREFIXES:
+            if s.lower().startswith(pre):
+                s = s[len(pre):].strip()
+                changed = True
+    return s
+
+
+def verify_reply_subject(orig_subject: str, out_subject: str) -> bool:
+    """作られた下書きが本当に元メールへの返信かを件名で照合する。
+
+    誤爆すると「元メールとは無関係な件名」の下書きに本文が入る。Re: の付き方は
+    ロケール・元件名の Re: 有無で揺れるので、Re: 類を剥がした芯で比べる。
+    """
+    return _strip_re(orig_subject) == _strip_re(out_subject)
 
 
 def run_applescript(script: str) -> str:
@@ -369,6 +437,10 @@ def main() -> int:
     add_target(sp_reply)
     add_common(sp_reply, need_subject=False)
     sp_reply.add_argument("--from", dest="sender", help=argparse.SUPPRESS)
+    sp_reply.add_argument(
+        "--allow-open-drafts", action="store_true",
+        help="作成中ウィンドウが開いていても実行する（⚠️ 誤爆の危険。既定は中止）",
+    )
 
     sp_fwd = sub.add_parser("forward", help="転送の下書き(--to で転送先)")
     add_target(sp_fwd)
@@ -376,6 +448,8 @@ def main() -> int:
     sp_fwd.add_argument("--from", dest="sender", help=argparse.SUPPRESS)
 
     args = p.parse_args()
+    if not hasattr(args, "allow_open_drafts"):
+        args.allow_open_drafts = False
     resolve_body(args)
 
     if args.mode == "new":
@@ -383,6 +457,8 @@ def main() -> int:
             p.error("new には --to が必要です")
         script = build_new(args)
     elif args.mode == "reply":
+        if not args.dry_run and not args.allow_open_drafts:
+            assert_no_open_drafts()
         script = build_reply(args, args.all)
     elif args.mode == "forward":
         if not args.to:
@@ -396,10 +472,32 @@ def main() -> int:
         return 0
 
     try:
-        print(run_applescript(script))
+        out = run_applescript(script)
     except RuntimeError as e:
         print(f"エラー: {e}", file=sys.stderr)
         return 1
+
+    if args.mode == "reply" and SUBJECT_SEP in out:
+        orig_subject, out = out.split(SUBJECT_SEP, 1)
+        print(out)
+        # 誤爆の検知は「作られた下書きの件名が元メールのものか」で行う。
+        # save 済みなので下書きは残る。貼り付けさせないことが最優先。
+        m = re.search(r"subject=(.*)$", out, re.S)
+        out_subject = m.group(1).strip() if m else ""
+        if not verify_reply_subject(orig_subject, out_subject):
+            print(
+                "\n"
+                "🚨 中止してください: 作られた下書きが元メールへの返信になっていません。\n"
+                f"  元メールの件名 : {orig_subject}\n"
+                f"  下書きの件名   : {out_subject}\n"
+                "  別の作成中メッセージを掴んだ可能性があります（2026-08-25 の誤爆と同じ症状）。\n"
+                "  ⚠️ 貼り付け（⌘V）も送信もせず、開いている下書きを確認して破棄してください。",
+                file=sys.stderr,
+            )
+            return 2
+        return 0
+
+    print(out)
     return 0
 
 
