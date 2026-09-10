@@ -61,10 +61,17 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	# macOS specific aliases
 	alias locate='mdfind -name'
 	alias :sleep="pmset sleepnow"
+	# ----- Finder タグ（付け外しは ~/dotfiles/script/findertag.py に任せる）
+	# タグの実体は plist 配列。素の文字列を `xattr -w` してもタグとして認識されず、
+	# `xattr -d` は全タグを消してしまうので、スクリプト経由で扱う。
+	# 色はファイルではなく Finder のタグ一覧（Finder → 設定 → タグ）で決まる。
+	# ⚠️ 関数内で `local path` を宣言しないこと（zsh では $PATH に連動する特殊変数）。
 	alias GetInProgress="mdfind 'kMDItemUserTags==InProgress'"
-	alias SetInProgress="xattr -w com.apple.metadata:_kMDItemUserTags 'InProgress' "
 	alias GetDeletable="mdfind 'kMDItemUserTags==Deletable'"
-	alias SetDeletable="xattr -w com.apple.metadata:_kMDItemUserTags 'Deletable' "
+	SetInProgress()    { ~/dotfiles/script/findertag.py "$@" add InProgress }
+	RemoveInProgress() { ~/dotfiles/script/findertag.py "$@" remove InProgress }
+	SetDeletable()     { ~/dotfiles/script/findertag.py "$@" add Deletable }
+	RemoveDeletable()  { ~/dotfiles/script/findertag.py "$@" remove Deletable }
 	abbrev-alias sayen="say -v 'Ava (Premium)'"
 	abbrev-alias sayuk="say -v Daniel"
 	abbrev-alias sayjp="say -v 'Kyoko (Enhanced)'"
