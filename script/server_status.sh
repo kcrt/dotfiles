@@ -3,7 +3,7 @@
 # サーバー状況を1文字で表示する。実体は beryllium の中継 (signal-tower-relay)。
 # 中継は Grafana Cloud のアラートを G/I/W/A/U/? の1行に潰している。
 #   param
-#       zjstatus - zjstatus のステータスバー用に色を付ける
+#       zjstatus - zjstatus のステータスバー用に色を付ける (A / U は玉を点滅させる)
 #   なし     - 中継の生の1行をそのまま出す
 #
 # 取れなかったときは原因を3つに分ける。対処が違うため。
@@ -143,11 +143,19 @@ if [[ "$1" != "zjstatus" ]]; then
     exit 0
 fi
 
+blinking_light() {
+    # 玉だけ点滅させ、アラート名は同じ色のまま静止させる (点滅する文字は読み取れない)。
+    # 対応しない端末では blink が落ちて、色付きの静止した玉になるだけで済む。
+    #   $1 - 色指定 (zjstatus の書式)  $2 - 玉に続けて出す文字
+    print -r -- "#[$1,blink]●#[$1] $2"
+}
+
+# 点滅は A / U の予約席にする。W まで点滅させると「点滅＝今すぐ見る」の意味が薄まる。
 case "$level" in
     G) print -r -- "#[fg=#3DB88B]●${mark:+ !}" ;;
     I) print -r -- "#[fg=#3DB88B]● ${mark}${count}" ;;
     W) print -r -- "#[fg=#E28C36]● ${mark}${top}" ;;
-    A) print -r -- "#[fg=#d74242]● ${mark}${top}" ;;
-    U) print -r -- "#[bg=#d74242, fg=#F5E0E0]● ${mark}${top}" ;;
+    A) blinking_light "fg=#d74242" "${mark}${top}" ;;
+    U) blinking_light "bg=#d74242,fg=#F5E0E0" "${mark}${top}" ;;
     *) print -r -- "#[fg=${fail_color}]○ ${fail_label}" ;;
 esac
