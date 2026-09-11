@@ -24,7 +24,7 @@ layout {
 	// 「ペインがどう並んで見えるか」に合わせてある。カッコ内は自分で開いたペインの枚数。
 	//   vertical   → 上下に 1 列で積む       (最大 8)
 	//   horizontal → 左右に 1 行で並べる     (最大 8)
-	//   grid       → 田の字                  (最大 4)
+	//   grid       → 2〜4 列 × 2 段          (最大 8)
 	//   stacked    → 左 1 枚 + 右をスタック  (5 枚以上)
 	// 9 枚以上では vertical/horizontal/grid は該当なしになるので stacked に回る。
 	// 【max_panes / min_panes は実ペイン数 +2】判定はタブ内の全ペイン数で行われ、
@@ -47,11 +47,34 @@ layout {
 		}
 	}
 
+	// grid は枚数が増えたら列を足していく方式で 4 列 × 2 段 (実ペイン 8 枚) まで面倒を見る。
+	// 1 つの swap_tiled_layout に tab を複数書くと実ペイン数に合うものが選ばれる
+	// (組み込みの default.swap.kdl と同じ書き方)。上から順に判定されるので max_panes は昇順に並べる。
+	//   実 1-4 枚 → 2 列 × 2 段 (田の字)
+	//   実 5-6 枚 → 3 列 × 2 段
+	//   実 7-8 枚 → 4 列 × 2 段
+	// children は「残り全部」を引き受ける枠なので、下段に固定の pane を並べて上段を children に
+	// すると奇数枚では下段が 1 枚多くなる (実 7 枚なら上 3 / 下 4、実 5 枚なら上 2 / 下 3)。
+	// 実 1-2 枚のときは上段 (children) と下段の 1 枚だけが使われ、余った pane は無視されて上下 2 段になる。
+	// auto_layout false なのでペインを足しただけでは組み直らず、Alt+[ / Alt+] を押した時に整列する
+	// (増やした直後の 1 回目は前の形が残ることがあるので、その場合はもう一度押す)。
 	swap_tiled_layout name="grid" {
 		tab max_panes=6 {
 			pane split_direction="horizontal" {
 				pane split_direction="vertical" { children; }
 				pane split_direction="vertical" { pane; pane; }
+			}
+		}
+		tab max_panes=8 {
+			pane split_direction="horizontal" {
+				pane split_direction="vertical" { children; }
+				pane split_direction="vertical" { pane; pane; pane; }
+			}
+		}
+		tab max_panes=10 {
+			pane split_direction="horizontal" {
+				pane split_direction="vertical" { children; }
+				pane split_direction="vertical" { pane; pane; pane; pane; }
 			}
 		}
 	}
