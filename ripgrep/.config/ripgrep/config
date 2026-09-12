@@ -1,0 +1,14 @@
+#
+#	~/.config/ripgrep/config
+#		rg の既定オプション (RIPGREP_CONFIG_PATH から読まれる)
+#
+#	1 行 1 引数。引数付きは --opt=value 形式で書く (--opt value は不可)。
+#	コメントは行頭 # のみ。無効化したいときは rg --no-config を使う。
+
+# dotfiles リポジトリのように .zshrc.d/ 等の隠しディレクトリを日常的に
+# 検索するため、隠しファイル/ディレクトリを既定で対象にする。
+--hidden
+
+# ただし --hidden は .git/ も舐めてしまうので明示的に除外する
+# (.gitignore には .git 自身が載っていないため、これがないとオブジェクトが引っかかる)
+--glob=!.git/
