@@ -186,6 +186,9 @@ SPEED_COLORS = [
     (1.0, (70, 190, 90)),     # 緑 —— 実時間より速い
     (3.0, (70, 145, 240)),    # 青
 ]
+# 再圧縮して元より太った本を目立たせる色。速度帯のオレンジと同じ系統。
+GREW_RGB = (220, 130, 30)
+
 # これ以上はレインボー。色相がバー内を流れる。
 RAINBOW_SPEED = 7.0
 RAINBOW_SECONDS = 2.0     # 色相が1周する秒数
@@ -726,13 +729,23 @@ def size_change(src_size: int, dst_size: int, show_saved: bool = False) -> str:
     """「  1.3 MB →  800.0 KB ( 60%)」の形。単位は左右で揃える。
 
     結果行と合計行で同じ欄・同じ幅を使うため、整形はここ1箇所にまとめる。
-    show_saved=True では括弧の中に削減量も添える（合計行用）。
+    show_saved=True では括弧の中に増減量も添える（合計行用）。
+
+    再圧縮して元より太った場合は「増加」と書き、括弧ごとオレンジにする。
+    負の削減量（-113.3 MB 削減）は読み取りに一拍かかるうえ、見逃しやすいため。
     """
     unit = common_unit(src_size, dst_size)
     ratio = dst_size / src_size if src_size else 0
-    saved = f", {human(src_size - dst_size, unit)} 削減" if show_saved else ""
+    delta = src_size - dst_size
+    note = ""
+    if show_saved:
+        note = (f", {human(delta, unit)} 削減" if delta >= 0
+                else f", {human(-delta, unit)} 増加")
+    change = f"({ratio:>4.0%}{note})"
+    if delta < 0:
+        change = paint(change, GREW_RGB)
     return (f"{human(src_size, unit, align=True)} → {human(dst_size, unit, align=True)} "
-            f"({ratio:>4.0%}{saved})")
+            f"{change}")
 
 
 # SGR（色指定）。表示幅を持たないので、幅を数えるときは取り除く。
@@ -740,20 +753,27 @@ SGR_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
 SGR_RESET = "\033[0m"
 
 
+@functools.cache
 def use_color() -> bool:
     """24bit色を出してよい端末か。
 
     サブパラメータのコロン区切り（38:2::r:g:b）はTerminal.appが解釈しないので、
     綴りは必ずセミコロン区切りにすること。判定は COLORTERM のみを見る保守的な
     もので、分からなければ色を使わず今までどおりの見た目に落とす。
+    パイプやファイルへ流すときは、色が中身に混ざらないよう必ず落とす。
     """
-    if os.environ.get("NO_COLOR"):
+    if os.environ.get("NO_COLOR") or not sys.stdout.isatty():
         return False
     return os.environ.get("COLORTERM", "").lower() in ("truecolor", "24bit")
 
 
 def sgr(rgb: tuple[int, int, int]) -> str:
     return f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def paint(text: str, rgb: tuple[int, int, int]) -> str:
+    """色が使える端末なら着色する。使えないならそのまま返す。"""
+    return f"{sgr(rgb)}{text}{SGR_RESET}" if use_color() else text
 
 
 def band_color(speed: float) -> tuple[int, int, int]:
@@ -977,7 +997,7 @@ class ProgressReporter:
             self.enabled = False
 
     def _paint(self, text: str, rgb: tuple[int, int, int]) -> str:
-        return f"{sgr(rgb)}{text}{SGR_RESET}" if self.color else text
+        return paint(text, rgb) if self.color else text
 
     def _paint_bar(self, filled: int, speed: float, phase: float) -> str:
         """バーを組み立てる。色が使えるなら、速度に応じた光沢を流す。"""
