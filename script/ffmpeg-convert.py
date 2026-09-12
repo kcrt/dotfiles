@@ -44,8 +44,10 @@
 from __future__ import annotations
 
 import argparse
+import colorsys
 import functools
 import json
+import math
 import os
 import re
 import shlex
@@ -54,6 +56,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -167,6 +170,31 @@ DEFAULT_AUDIO_BITRATE = {"aac": {1: 128, 2: 128}, "libopus": {1: 64, 2: 96}}
 
 # 結果行でファイル名に割り当てる表示幅の上限。これを超える名前は欄からはみ出す。
 RESULT_NAME_MAX_WIDTH = 40
+
+# 進捗バーのアニメーション。ffmpegの -progress は0.5秒に1回しか来ないので、
+# 滑らかに動かすには独立したティックが要る。15fpsあれば波の流れは十分見える。
+PROGRESS_FPS = 15.0
+
+BAR_FILLED, BAR_EMPTY = "█", "░"
+BAR_EMPTY_RGB = (80, 80, 80)
+
+# 速度帯 → バーの色（下限, RGB）。実時間に対する倍率で、1.0が等速。
+# 「赤＝待たされる / 緑＝等速より速い / 青＝快調」が一目で分かるようにする。
+SPEED_COLORS = [
+    (0.0, (215, 60, 50)),     # 赤 —— 等速の1/3未満。かなり遅い
+    (0.3, (220, 130, 30)),    # オレンジ
+    (1.0, (70, 190, 90)),     # 緑 —— 実時間より速い
+    (3.0, (70, 145, 240)),    # 青
+]
+# これ以上はレインボー。色相がバー内を流れる。
+RAINBOW_SPEED = 7.0
+RAINBOW_SECONDS = 2.0     # 色相が1周する秒数
+RAINBOW_TURNS = 1.0       # バーの端から端で色相が何周するか
+
+# 単色帯では明度を波で揺らして光沢が流れているように見せる。
+BAR_WAVE_SECONDS = 1.6    # 波が左から右へ1周する秒数
+BAR_WAVES = 1.5           # バー内に見える波の数
+BAR_WAVE_FLOOR = 0.55     # 波の谷での明度（1.0が元の色）
 
 # ffmpegのエンコーダ名 → ストリームのcodec_name。表示とコンテナ適合判定で使う。
 ENCODER_CODEC_NAME = {"libopus": "opus", "libvorbis": "vorbis", "aac": "aac"}
@@ -707,14 +735,63 @@ def size_change(src_size: int, dst_size: int, show_saved: bool = False) -> str:
             f"({ratio:>4.0%}{saved})")
 
 
+# SGR（色指定）。表示幅を持たないので、幅を数えるときは取り除く。
+SGR_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
+SGR_RESET = "\033[0m"
+
+
+def use_color() -> bool:
+    """24bit色を出してよい端末か。
+
+    サブパラメータのコロン区切り（38:2::r:g:b）はTerminal.appが解釈しないので、
+    綴りは必ずセミコロン区切りにすること。判定は COLORTERM のみを見る保守的な
+    もので、分からなければ色を使わず今までどおりの見た目に落とす。
+    """
+    if os.environ.get("NO_COLOR"):
+        return False
+    return os.environ.get("COLORTERM", "").lower() in ("truecolor", "24bit")
+
+
+def sgr(rgb: tuple[int, int, int]) -> str:
+    return f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
+
+
+def band_color(speed: float) -> tuple[int, int, int]:
+    """その速度を表す色。波の変調は載せない（数字に添える用）。"""
+    if speed >= RAINBOW_SPEED:
+        return hue_rgb(0.0)
+    return next(rgb for limit, rgb in reversed(SPEED_COLORS) if speed >= limit)
+
+
+def hue_rgb(hue: float) -> tuple[int, int, int]:
+    r, g, b = colorsys.hsv_to_rgb(hue % 1.0, 0.85, 1.0)
+    return (round(r * 255), round(g * 255), round(b * 255))
+
+
+def bar_cell_color(speed: float, position: float, phase: float) -> tuple[int, int, int]:
+    """バー1マスの色。position はバー内の位置(0..1)、phase は経過秒。
+
+    速度が上がるほど帯の色が変わり、最上位の帯ではレインボーが流れる。
+    それ以外の帯では帯色の明度を波で揺らして、同じように流れて見せる。
+    """
+    if speed >= RAINBOW_SPEED:
+        return hue_rgb(position * RAINBOW_TURNS - phase / RAINBOW_SECONDS)
+    wave = math.sin(2 * math.pi * (position * BAR_WAVES - phase / BAR_WAVE_SECONDS))
+    level = BAR_WAVE_FLOOR + (1 - BAR_WAVE_FLOOR) * (wave + 1) / 2
+    return tuple(min(255, round(c * level)) for c in band_color(speed))   # type: ignore[return-value]
+
+
 def char_width(ch: str) -> int:
     """端末上での1文字の表示幅。全角（W/F）は2桁。"""
     return 2 if unicodedata.east_asian_width(ch) in "WF" else 1
 
 
 def display_width(text: str) -> int:
-    """端末上での表示幅。日本語などの全角文字は2桁として数える。"""
-    return sum(char_width(ch) for ch in text)
+    """端末上での表示幅。日本語などの全角文字は2桁として数える。
+
+    色指定（SGR）は桁を食わないので、数える前に取り除く。
+    """
+    return sum(char_width(ch) for ch in SGR_PATTERN.sub("", text))
 
 
 def pad_display(text: str, width: int) -> str:
@@ -723,16 +800,28 @@ def pad_display(text: str, width: int) -> str:
 
 
 def truncate_display(text: str, limit: int) -> str:
-    """表示幅が limit を超えないよう末尾を落とす。進捗行の折り返しを防ぐため。"""
+    """表示幅が limit を超えないよう末尾を落とす。進捗行の折り返しを防ぐため。
+
+    色指定（SGR）は桁を食わないのでそのまま通す。色の途中で切れても端末に色が
+    残らないよう、切り詰めたときはリセットを足す。
+    """
     if display_width(text) <= limit:
         return text
-    kept, width = [], 0
-    for ch in text:
-        width += char_width(ch)
+    kept: list[str] = []
+    width, index = 0, 0
+    while index < len(text):
+        match = SGR_PATTERN.match(text, index)
+        if match:
+            kept.append(match.group())
+            index = match.end()
+            continue
+        width += char_width(text[index])
         if width > limit - 1:
             break
-        kept.append(ch)
-    return "".join(kept) + "…"
+        kept.append(text[index])
+        index += 1
+    tail = SGR_RESET if SGR_PATTERN.search(text) else ""
+    return "".join(kept) + "…" + tail
 
 
 def clock(seconds: float) -> str:
@@ -805,10 +894,17 @@ class ProgressReporter:
         self.layout = layout
         self.enabled = enabled
         self.sequential = sequential
+        self.color = enabled and use_color()
         self.lock = threading.Lock()
         self.running: dict[Path, tuple[float, float]] = {}   # src -> (処理済み秒, 速度)
         self.done_duration = 0.0
         self.done_jobs = 0
+        self.started = time.monotonic()
+        # 本と本の合間は走っているものが無く速度が0になる。バーの色がそのたびに
+        # 最低速の帯（赤）へ落ちるのを避けるため、直近の速さを覚えておく。
+        self.last_per_file = 0.0
+        self._stop = threading.Event()
+        self._ticker: threading.Thread | None = None
 
     @classmethod
     def for_jobs(cls, jobs: list[Job], cfg: Config, layout: ResultLayout) -> ProgressReporter:
@@ -820,6 +916,25 @@ class ProgressReporter:
             enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stdout.isatty(),
         )
 
+    def __enter__(self) -> ProgressReporter:
+        """アニメーション用の再描画スレッドを回し始める。
+
+        ffmpegの -progress は0.5秒に1回しか来ないので、それだけを描画の契機に
+        すると波が飛び飛びになる。色を使わないときは動かす意味がないので回さない。
+        """
+        if self.color:
+            self._ticker = threading.Thread(target=self._tick, daemon=True)
+            self._ticker.start()
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+    def _tick(self) -> None:
+        while not self._stop.wait(1.0 / PROGRESS_FPS):
+            with self.lock:
+                self._render()
+
     def update(self, src: Path, out_time: float, speed: float) -> None:
         """ffmpegから届いた1本分の進捗を反映する。"""
         with self.lock:
@@ -827,24 +942,60 @@ class ProgressReporter:
             self._render()
 
     def finish(self, src: Path, duration: float) -> None:
-        """1本終わった分を完了側に移す。"""
+        """1本終わった分を完了側に移す。
+
+        本数は数えない。エンコードを終えたワーカーがここを通ってから、本体が結果行を
+        出すまでには間があり、その間にティックが走ると結果行より先にバーの番号が
+        進んでしまうため（実際 [11/12] のバーの後に [10/12] の結果行が出ていた）。
+        """
         with self.lock:
             self.running.pop(src, None)
             self.done_duration += duration
-            self.done_jobs += 1
 
     def report(self, line: str, error: bool = False) -> None:
-        """進捗行を潰さないように1行出力する。"""
+        """結果行を1本出す。進捗行を潰さないように、消す→出す→描き直す。
+
+        呼び出しは1本につき1回なので、ここで本数を数える。こうするとバーの番号は
+        「最後に出した結果行の次」に必ず一致し、追い越しが起きない。
+        """
         with self.lock:
+            self.done_jobs += 1
             self._erase()
             print(line, file=sys.stderr if error else sys.stdout, flush=True)
             self._render()
 
     def close(self) -> None:
         """進捗行を消して、以降は普通の出力に戻す。"""
+        # 先にティックを止める。ロックを持ったまま join すると、_render 待ちの
+        # スレッドと相討ちになって固まる。
+        self._stop.set()
+        if self._ticker is not None:
+            self._ticker.join(timeout=1.0)
+            self._ticker = None
         with self.lock:
             self._erase()
             self.enabled = False
+
+    def _paint(self, text: str, rgb: tuple[int, int, int]) -> str:
+        return f"{sgr(rgb)}{text}{SGR_RESET}" if self.color else text
+
+    def _paint_bar(self, filled: int, speed: float, phase: float) -> str:
+        """バーを組み立てる。色が使えるなら、速度に応じた光沢を流す。"""
+        if not self.color:
+            return f"[{BAR_FILLED * filled}{BAR_EMPTY * (self.BAR_WIDTH - filled)}]"
+        cells: list[str] = []
+        last: tuple[int, int, int] | None = None
+        for index in range(self.BAR_WIDTH):
+            if index < filled:
+                position = index / max(self.BAR_WIDTH - 1, 1)
+                rgb, char = bar_cell_color(speed, position, phase), BAR_FILLED
+            else:
+                rgb, char = BAR_EMPTY_RGB, BAR_EMPTY
+            if rgb != last:   # 同じ色が続くならSGRを繰り返さない
+                cells.append(sgr(rgb))
+                last = rgb
+            cells.append(char)
+        return f"[{''.join(cells)}{SGR_RESET}]"
 
     def _erase(self) -> None:
         if self.enabled:
@@ -854,7 +1005,15 @@ class ProgressReporter:
         if not self.enabled:
             return
         processed = self.done_duration + sum(t for t, _ in self.running.values())
+        running = len(self.running)
+        # 合算スループット。残り時間はこれで割る（全体が何倍速で進んでいるか）
         speed = sum(s for _, s in self.running.values())
+        # 1本あたりの速さ。色はこちらで決める。合算のままだと -j 3 で 6x×3=18x となり、
+        # 並行数を上げただけで最上位帯へ張り付いて色が情報を持たなくなるため。
+        per_file = speed / running if running else 0.0
+        if per_file > 0:
+            self.last_per_file = per_file
+        phase = time.monotonic() - self.started
 
         # 逐次実行では、いま処理している本が何本目かを出す。行末にファイル名が並ぶので、
         # 番号もそのファイルを指していないと「f2.mov が1本目」と読めてしまう。
@@ -870,18 +1029,21 @@ class ProgressReporter:
         if self.total_duration > 0:
             ratio = min(processed / self.total_duration, 1.0)
             filled = round(ratio * self.BAR_WIDTH)
-            parts.append(f"{ratio:4.0%} [{'█' * filled}{'░' * (self.BAR_WIDTH - filled)}]")
+            parts.append(f"{ratio:4.0%} "
+                         f"{self._paint_bar(filled, per_file or self.last_per_file, phase)}")
             parts.append(f"{clock(processed)}/{clock(self.total_duration)}")
             if speed > 0:
                 parts.append(f"残り {clock((self.total_duration - processed) / speed)}")
         else:
             parts.append(f"{clock(processed)} 処理済み")
         if speed > 0:
-            parts.append(f"{speed:.3g}x")
-        if len(self.running) == 1:
+            # 並行中は「1本あたり / 本数」で出す。色と同じ数字を見せないと、
+            # なぜその色なのかが分からなくなる。合算値は残り時間に現れている。
+            text = f"{per_file:.3g}x / {running}" if running > 1 else f"{speed:.3g}x"
+            # 数字にも帯の色を乗せて、バーの色が何を表しているのかを結び付ける
+            parts.append(self._paint(text, band_color(per_file)))
+        if running == 1:
             parts.append(next(iter(self.running)).name)
-        elif len(self.running) > 1:
-            parts.append(f"{len(self.running)}本並行")
 
         columns = shutil.get_terminal_size(fallback=(80, 24)).columns
         print("\r\033[K" + truncate_display(" ".join(parts), columns - 1), end="", flush=True)
@@ -1571,8 +1733,8 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
     """まとめてエンコードし、終わった順に結果行を出す。"""
     print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）")
     results: list[Result] = []
-    progress = ProgressReporter.for_jobs(jobs, cfg, layout)
-    with ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool:
+    with (ProgressReporter.for_jobs(jobs, cfg, layout) as progress,
+          ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool):
         futures = [pool.submit(encode, job, cfg, progress) for job in jobs]
         for done, future in enumerate(as_completed(futures), start=1):
             result = future.result()
@@ -1585,7 +1747,6 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
             elif not cfg.dry_run:
                 progress.report(f"{prefix} {size_change(result.src_size, result.dst_size)}"
                                 f" / {result.message}")
-    progress.close()
     return results
 
 
