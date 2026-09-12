@@ -3,12 +3,15 @@
 #		LLM (LM Studio) functions and configuration
 #
 
-LLM_MY_DEFAULT_MODEL='google/gemma-3-27b'
-LLM_MY_HEAVY_MODEL='qwen/qwen3.5-35b-a3b'
-LLM_MY_FAST_MODEL='google/gemma-3-4b'
-LLM_MY_VISION_MODEL='qwen/qwen3.5-35b-a3b'
+LLM_MY_DEFAULT_MODEL='google/gemma-4-12b-qat'
+LLM_MY_HEAVY_MODEL='qwen/qwen3.8-27b'
+# 4B 級の小型モデルは未ダウンロードのため、当面 DEFAULT と同じものを指す
+LLM_MY_FAST_MODEL='google/gemma-4-12b-qat'
+# gemma-4-12b-qat は mmproj 同梱でそのまま vision が使える
+LLM_MY_VISION_MODEL='google/gemma-4-12b-qat'
 LLM_MY_OCR_MODEL='deepseek-ocr-2'
-LLM_MY_TRANSLATE_MODEL='translategemma-12b-it'
+# 専用の翻訳モデルは未ダウンロードのため、当面 DEFAULT と同じものを指す
+LLM_MY_TRANSLATE_MODEL='google/gemma-4-12b-qat'
 LMS_BASE_URL='http://localhost:1234/v1'
 
 abbrev-alias llm-heavy-model="lms chat '$LLM_MY_HEAVY_MODEL'"
