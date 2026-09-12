@@ -565,8 +565,8 @@ def build_audio_args(info: MediaInfo, args: argparse.Namespace) -> AudioPlan:
 
 SIZE_UNITS = ("B", "KB", "MB", "GB", "TB")
 
-# サイズの数字に割り当てる桁数。単位は小さい方の値に合わせるので、圧縮率が高いと
-# 元のサイズが1024を超えて伸びる（9999.9 MB まで揃う。それ以上はその行だけずれる）。
+# サイズの数字に割り当てる桁数。単位は大きい方の値に合わせるので、どの値も1024未満に
+# 収まり、"1023.9" の6桁が上限になる。
 SIZE_NUMBER_WIDTH = 6
 
 
@@ -582,23 +582,29 @@ def size_unit(n: float) -> str:
 def common_unit(*sizes: float) -> str:
     """複数のサイズを並べて見せるときに共通で使う単位。
 
-    小さい方に合わせる。大きい方に合わせると「1.0 GB → 0.1 GB」のように
-    減った側の桁が潰れてしまうため、1024を超えてもその単位のまま伸ばす。
+    大きい方に合わせる。小さい方に合わせると、比が開いたときに大きい側が
+    「26774.3 KB」のように桁あふれして列が崩れるため。小さい側の桁は human() が
+    小数を増やして残す。
     """
-    return size_unit(min(sizes))
+    return size_unit(max(sizes))
 
 
 def human(n: float, unit: str | None = None, align: bool = False) -> str:
     """バイト数を読める単位にする。
 
     unitを渡すとその単位で表す。変換前後を並べるときに単位が食い違うと
-    「1.0 MB → 194.0 KB」のように増えたと錯覚するので、左右で揃えるために使う。
+    「1.0 MB → 194.0 KB」のように増えたと錯覚するので、左右で揃えるために使う
+    （揃える単位は common_unit で決める）。
     align=True では数字を右詰め・単位を左詰めにして幅を固定し、結果行のように縦に
     並べたとき桁が揃うようにする。
     """
     unit = unit or size_unit(n)
     value = n / 1024 ** SIZE_UNITS.index(unit)
-    return f"{value:{SIZE_NUMBER_WIDTH}.1f} {unit:<2}" if align else f"{value:.1f} {unit}"
+    # 1未満は桁数を増やす。大きい方に単位を合わせると小さい方が「0.9 MB」のように
+    # 潰れるので、有効数字を2桁保つ。どちらも幅は同じなので列は揃ったまま
+    decimals = 2 if 0 < abs(value) < 1 else 1
+    return (f"{value:{SIZE_NUMBER_WIDTH}.{decimals}f} {unit:<2}" if align
+            else f"{value:.{decimals}f} {unit}")
 
 
 def display_width(text: str) -> int:
