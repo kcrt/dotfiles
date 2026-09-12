@@ -23,15 +23,22 @@
   ffmpeg-convert.py . -o out --av1               自分用アーカイブ。AV1 + Opus + WebM
   ffmpeg-convert.py . -o out --apple --av1       AV1のままApple機で開ける形（A17 Pro/M3以降）
 
+出力が既にある場合は既定でスキップする。設定を変えて作り直したいときだけ --overwrite。
+
+--replace: 変換結果で元ファイルを置き換える（-o とは併用できない）。
+  ffmpeg-convert.py . --replace                  ディレクトリ丸ごと、その場で置き換える
+元ファイルは消さずゴミ箱へ移すので取り戻せる。出力が元より大きくなった本数は
+置き換えず元を残す（再圧縮して太るなら意味がないため）。
+
 --lecture: スライド主体のWeb講演動画向けモード。
   - 画面のほとんどが静止したスライド（動きが極端に少ない）
   - 細かい文字が多く、解像度と文字の可読性は落とせない
   - 音声はナレーションのみ
 こうした素材に合わせて、長いGOP・強めのAQ・保守的なCRFへ既定値を差し替える。
 
-端末から実行して素材・解像度・コーデック・Apple互換を省いた場合は、どれにするかを
-対話で聞く。パイプ・cron・--no-interactive では何も聞かず既定（汎用素材 + 元の解像度 +
-HEVC + MP4）で走るので、バッチ実行は変わらない。
+端末から実行して素材・解像度・Apple互換・映像コーデック・画質・音声コーデックを省いた
+場合は、どれにするかを対話で聞く。パイプ・cron・--no-interactive では何も聞かず既定
+（汎用素材 + 元の解像度 + HEVC + normal + MP4）で走るので、バッチ実行は変わらない。
 """
 
 from __future__ import annotations
@@ -39,6 +46,7 @@ from __future__ import annotations
 import argparse
 import functools
 import json
+import os
 import re
 import shlex
 import shutil
@@ -48,6 +56,7 @@ import tempfile
 import threading
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -91,7 +100,16 @@ LECTURE_CRF_MAP = {
     "libx265": {"low": 28, "portable": 25, "normal": 22, "high": 20, "veryhigh": 18},
     "libsvtav1": {"low": 50, "portable": 47, "normal": 44, "high": 40, "veryhigh": 36},
 }
-QUALITY_CHOICES = ["low", "portable", "normal", "high", "veryhigh"]
+# 対話モードで提示する品質段階（値, 説明）。CRFの実値はコーデックと素材で変わるので、
+# 説明には書かず、質問する時点で決まっているCRF表から引いて添える。
+QUALITY_DESCRIPTIONS = [
+    ("low", "low — 内容が分かれば良い。容量を最優先"),
+    ("portable", "portable — 持ち歩き・共有用。容量を抑える"),
+    ("normal", "normal — 一般的な視聴に十分"),
+    ("high", "high — 元の見た目をほぼ保つ"),
+    ("veryhigh", "veryhigh — 元と見分けがつきにくい。容量は大きい"),
+]
+QUALITY_CHOICES = [value for value, _ in QUALITY_DESCRIPTIONS]
 DEFAULT_QUALITY = "normal"
 
 DEFAULT_PRESET = {"libx264": "medium", "libx265": "medium", "libsvtav1": "6"}
@@ -128,6 +146,15 @@ CONTENT_CHOICES = [
 ]
 DEFAULT_CONTENT = CONTENT_CHOICES[0][0]
 
+# 対話モードで提示する音声コーデック（値, 説明）。先頭が既定。
+# ここで選ぶのは「再エンコードするときに何にするか」で、コピーで済むかは別の判断。
+AUDIO_CODEC_CHOICES = [
+    ("auto", "映像に合わせる — HEVC / H.264 ならAAC、AV1ならOpus"),
+    ("aac", "AAC — 互換性優先。どの機種でも鳴る。コピーで済む音声はコピーする"),
+    ("opus", "Opus — 容量優先。必ず再エンコードし、入れ物はMKV/WebMになる。Apple機では鳴らない"),
+]
+DEFAULT_AUDIO_CODEC = AUDIO_CODEC_CHOICES[0][0]
+
 # -t/--tune が効くエンコーダ。ffmpegのlibsvtav1ラッパーは tune オプションを
 # 公開していないため、-tune を渡してもエラーにならず黙って無視される。
 # 「指定したのに効かない」を避けるため、AV1では -t をエラーで返す。
@@ -137,6 +164,9 @@ TUNE_ENCODERS = frozenset({"libx264", "libx265"})
 # Opusは音声において AAC-LC の1.5〜2倍効率が良いので、同品質をより少ないビットで買える。
 # 64k mono ≒ 128k AAC mono。
 DEFAULT_AUDIO_BITRATE = {"aac": {1: 128, 2: 128}, "libopus": {1: 64, 2: 96}}
+
+# 結果行でファイル名に割り当てる表示幅の上限。これを超える名前は欄からはみ出す。
+RESULT_NAME_MAX_WIDTH = 40
 
 # ffmpegのエンコーダ名 → ストリームのcodec_name。表示とコンテナ適合判定で使う。
 ENCODER_CODEC_NAME = {"libopus": "opus", "libvorbis": "vorbis", "aac": "aac"}
@@ -205,6 +235,8 @@ class Result:
     message: str
     src_size: int = 0
     dst_size: int = 0
+    # --replace で「出力の方が大きいので置き換えなかった」印。失敗ではないが成果でもない
+    kept: bool = False
 
 
 def run_json(cmd: list[str]) -> dict:
@@ -531,17 +563,52 @@ def build_audio_args(info: MediaInfo, args: argparse.Namespace) -> AudioPlan:
     return encode(downmixed(), f"{kbps}kから圧縮")
 
 
-def human(n: float) -> str:
-    for unit in ("B", "KB", "MB", "GB", "TB"):
-        if abs(n) < 1024 or unit == "TB":
-            return f"{n:.1f} {unit}"
+SIZE_UNITS = ("B", "KB", "MB", "GB", "TB")
+
+# サイズの数字に割り当てる桁数。単位は小さい方の値に合わせるので、圧縮率が高いと
+# 元のサイズが1024を超えて伸びる（9999.9 MB まで揃う。それ以上はその行だけずれる）。
+SIZE_NUMBER_WIDTH = 6
+
+
+def size_unit(n: float) -> str:
+    """そのバイト数を読みやすく表せる単位。"""
+    for unit in SIZE_UNITS[:-1]:
+        if abs(n) < 1024:
+            return unit
         n /= 1024
-    return f"{n:.1f} TB"
+    return SIZE_UNITS[-1]
+
+
+def common_unit(*sizes: float) -> str:
+    """複数のサイズを並べて見せるときに共通で使う単位。
+
+    小さい方に合わせる。大きい方に合わせると「1.0 GB → 0.1 GB」のように
+    減った側の桁が潰れてしまうため、1024を超えてもその単位のまま伸ばす。
+    """
+    return size_unit(min(sizes))
+
+
+def human(n: float, unit: str | None = None, align: bool = False) -> str:
+    """バイト数を読める単位にする。
+
+    unitを渡すとその単位で表す。変換前後を並べるときに単位が食い違うと
+    「1.0 MB → 194.0 KB」のように増えたと錯覚するので、左右で揃えるために使う。
+    align=True では数字を右詰め・単位を左詰めにして幅を固定し、結果行のように縦に
+    並べたとき桁が揃うようにする。
+    """
+    unit = unit or size_unit(n)
+    value = n / 1024 ** SIZE_UNITS.index(unit)
+    return f"{value:{SIZE_NUMBER_WIDTH}.1f} {unit:<2}" if align else f"{value:.1f} {unit}"
 
 
 def display_width(text: str) -> int:
     """端末上での表示幅。日本語などの全角文字は2桁として数える。"""
     return sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
+
+
+def pad_display(text: str, width: int) -> str:
+    """表示幅が width になるよう右を空白で埋める。既に超えていればそのまま返す。"""
+    return text + " " * max(width - display_width(text), 0)
 
 
 def truncate_display(text: str, limit: int) -> str:
@@ -681,6 +748,40 @@ def run_with_progress(cmd: list[str], src: Path, progress: ProgressReporter) -> 
         return returncode, errfile.read()
 
 
+def trash_directory(path: Path) -> Path:
+    """path と同じボリュームにあるゴミ箱。無ければ作る。
+
+    ボリュームを跨ぐ移動は実体のコピーになり、動画では一瞬で終わらない。
+    起動ボリュームなら ~/.Trash、外付けならそのボリュームの .Trashes/<uid>。
+    """
+    device = path.stat().st_dev
+    home = Path.home()
+    if device == home.stat().st_dev:
+        trash = home / ".Trash"
+    else:
+        volume = path.parent
+        while volume.parent != volume and volume.parent.stat().st_dev == device:
+            volume = volume.parent
+        trash = volume / ".Trashes" / str(os.getuid())
+    trash.mkdir(parents=True, exist_ok=True)
+    return trash
+
+
+def move_to_trash(path: Path) -> None:
+    """ファイルをゴミ箱へ移す。移せなければ OSError。
+
+    unlinkではなくゴミ箱にするのは、--replace が消すのが変換前の原本だから。
+    Finder経由（osascript）なら「戻す」も効くが、ssh・launchdではFinderに
+    繋がらず必ず失敗する。ゴミ箱から取り出せれば足りるので、mv相当で済ませる。
+    """
+    trash = trash_directory(path)
+    destination = trash / path.name
+    if destination.exists():
+        # 同名が既にゴミ箱にある。日時を足して、先に捨てた方を上書きしない
+        destination = trash / f"{path.stem} {datetime.now():%Y-%m-%d-%H-%M-%S}{path.suffix}"
+    path.rename(destination)
+
+
 def encode(info: MediaInfo, dst: Path, audio_plan: AudioPlan, args: argparse.Namespace,
            progress: ProgressReporter) -> Result:
     src = info.path
@@ -698,12 +799,14 @@ def encode(info: MediaInfo, dst: Path, audio_plan: AudioPlan, args: argparse.Nam
         cmd += ["-map", "0:a:0", *audio_plan.args]
     else:
         cmd += ["-an"]
-    if dst.suffix == ".mp4":
+    if dst.suffix.lower() == ".mp4":
         cmd += ["-movflags", "+faststart"]
     cmd += [str(tmp)]
 
     if args.dry_run:
-        print(f"[dry-run] {src.name}\n          audio: {audio_plan.note}\n          {shlex.join(cmd)}")
+        destination = f"\n          → {dst.name}（元はゴミ箱へ）" if args.replace else ""
+        print(f"[dry-run] {src.name}\n          audio: {audio_plan.note}{destination}"
+              f"\n          {shlex.join(cmd)}")
         return Result(src, dst, True, "dry-run", info.size, 0)
 
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -735,6 +838,24 @@ def encode(info: MediaInfo, dst: Path, audio_plan: AudioPlan, args: argparse.Nam
         tmp.unlink(missing_ok=True)
         return Result(src, dst, False, f"尺が不一致 ({out_duration:.1f}s vs {info.duration:.1f}s)", info.size, 0)
 
+    if args.replace:
+        new_size = tmp.stat().st_size
+        unit = common_unit(info.size, new_size)
+        # 太るなら置き換える理由がない。容量は増え画質は落ちるので、原本の方が上
+        if new_size >= info.size:
+            tmp.unlink(missing_ok=True)
+            return Result(src, dst, True,
+                          f"元より大きいので置き換えません"
+                          f"（{human(new_size, unit)} ≥ {human(info.size, unit)}）",
+                          info.size, info.size, kept=True)
+        # ゴミ箱へ移すのが先。拡張子が変わらず dst と src が同じパスのとき、
+        # 後回しにすると下の replace が原本を上書きして消してしまう
+        try:
+            move_to_trash(src)
+        except OSError as exc:
+            tmp.unlink(missing_ok=True)
+            return Result(src, dst, False, f"元ファイルをゴミ箱へ移せません: {exc}", info.size, 0)
+
     tmp.replace(dst)
     return Result(src, dst, True, audio_plan.note, info.size, dst.stat().st_size)
 
@@ -747,11 +868,12 @@ def probe_duration(path: Path) -> float:
 
 
 def collect_inputs(roots: list[Path], outdir: Path | None, recursive: bool) -> list[Path]:
-    """入力を集める。出力先が入力ツリーの内側にある場合、そこは走査しない。
+    """入力を集める。書きかけの一時ファイルと、入力ツリーの内側の出力先は除く。
 
     `ffmpeg-convert.py . -o compressed` のように出力先を入力の内側に置くのは
     自然な使い方だが、素朴に走査すると2回目の実行で出力済みファイルを入力として
-    拾い、再圧縮してしまう（中断時に残る *.part.mp4 も同様）。
+    拾い、再圧縮してしまう。中断時に残る *.part.mp4 は出力先の外（--replace なら
+    元ファイルの隣）にも生まれるので、拡張子で別に弾く。
     """
     def under_outdir(p: Path) -> bool:
         return outdir is not None and (p == outdir or outdir in p.parents)
@@ -763,7 +885,8 @@ def collect_inputs(roots: list[Path], outdir: Path | None, recursive: bool) -> l
         elif root.is_dir():
             it = root.rglob("*") if recursive else root.glob("*")
             found += [p for p in it
-                      if p.is_file() and p.suffix.lower() in VIDEO_SUFFIXES and not under_outdir(p)]
+                      if p.is_file() and p.suffix.lower() in VIDEO_SUFFIXES
+                      and not under_outdir(p) and ".part" not in p.suffixes]
     return sorted(set(found))
 
 
@@ -793,8 +916,14 @@ def destination_for(info: MediaInfo, roots: list[Path], suffix: str,
     単発ファイルの変換では「元名 [720p hevc high].mp4」のように設定を名前に書く。
     元ファイルの隣に置いても区別でき、設定を変えて作り直しても衝突しないため。
     ディレクトリを渡された場合は元の名前のまま、入力の構成を出力先に写す。
+    --replace では元の名前をそのまま引き継ぐ（設定を名前に書いても、置き換えた先には
+    見比べる相手が残らない）。
     """
     src = info.path
+    if args.replace:
+        # 入れ物が変わらないなら拡張子はそのまま。hello.MP4 を hello.mp4 に
+        # 改名するのは求められていない
+        return src if src.suffix.lower() == suffix else src.with_suffix(suffix)
     if args.output_file is not None:
         return args.output_file
     if args.single_file:
@@ -825,9 +954,17 @@ def resolve_output_target(parser: argparse.ArgumentParser, args: argparse.Namesp
       single_file  単発ファイルの変換か（出力名の付け方が変わる）
       output_file  出力パスが確定していればそのPath、でなければNone
       outdir       出力先ディレクトリ。Noneは「入力と同じ場所」
+
+    --replace は出力先が元ファイルの場所に決まるので、-o を受け取る余地がない。
     """
     args.single_file = len(args.inputs) == 1 and args.inputs[0].is_file()
     args.output_file = None
+
+    if args.replace:
+        if args.output is not None:
+            parser.error("--replace は -o/--output と併用できません（出力先は元ファイルの場所です）")
+        args.outdir = None
+        return
 
     if args.output is None:
         # 単発ファイルは元と同じ場所へ。ディレクトリ入力は compressed/ へ。
@@ -902,8 +1039,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help=f"短辺の目標画素数。{' / '.join(SIZE_ALIASES)} か画素数を指定する。"
                         f"横長なら高さ、縦長なら幅に効く。拡大はしない"
                         f"（{SIZE_SOURCE} / 0=縮小しない。既定はこれで、端末実行なら聞く）")
-    p.add_argument("-q", "--quality", choices=QUALITY_CHOICES, default=DEFAULT_QUALITY,
-                   help="品質段階。コーデックと素材ごとのCRF表を引く")
+    p.add_argument("-q", "--quality", choices=QUALITY_CHOICES, default=argparse.SUPPRESS,
+                   help=f"品質段階。コーデックと素材ごとのCRF表を引く"
+                        f"（既定は {DEFAULT_QUALITY}。端末実行なら聞く）")
     p.add_argument("-t", "--tune", default=None,
                    help="エンコーダのtune（animation / film / stillimage 等）。x264/x265のみ")
     p.add_argument("--crf", type=int, default=None,
@@ -927,7 +1065,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--mono-bitrate", type=int, default=None,
                    help="モノラル再エンコード時のkbps（既定: aac 128 / opus 64）")
     p.add_argument("-j", "--jobs", type=int, default=1, help="並列実行数")
-    p.add_argument("--skip-existing", action="store_true", help="出力が既にあればスキップ")
+    p.add_argument("--overwrite", action="store_true",
+                   help="出力が既にあっても上書きする（既定はスキップ）")
+    p.add_argument("--replace", action="store_true",
+                   help="変換結果で元ファイルを置き換える（元はゴミ箱へ / -o とは併用不可）")
     p.add_argument("--no-interactive", dest="interactive", action="store_false",
                    help="未指定のオプションを聞かず既定で実行する（端末以外では常にこの挙動）")
     p.add_argument("--no-progress", dest="progress", action="store_false",
@@ -942,6 +1083,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     args.content = getattr(args, "content", None)
     # 未指定(None)と「明示的に縮小しない」(0)を区別する。前者だけ対話で聞く。
     args.size = getattr(args, "size", None)
+    args.quality = getattr(args, "quality", None)
     # --crf を明示されたかは出力ファイル名にも出すので覚えておく
     args.crf_explicit = args.crf is not None
 
@@ -950,6 +1092,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     missing = [tool for tool in ("ffmpeg", "ffprobe") if shutil.which(tool) is None]
     if missing:
         p.exit(1, f"{' / '.join(missing)} が見つかりません\n")
+
+    if args.replace and sys.platform != "darwin":
+        p.error("--replace はmacOS専用です（元ファイルの退避先が ~/.Trash 決め打ちのため）")
 
     resolve_output_target(p, args)
 
@@ -1034,6 +1179,18 @@ def resolve_options(args: argparse.Namespace) -> None:
         else:
             args.size = 0
 
+    # Apple互換を先に聞く。ここでYesなら入れ物と音声が決まり、後の音声の質問が要らなくなる。
+    # --apple が固定するのは入れ物と音声だけ。矛盾する指定があるときは聞かない。
+    if interactive and not args.apple and args.audio_codec != "opus" and args.container in ("auto", "mp4"):
+        args.apple = prompt_choice(
+            "Apple機（写真.app / ファイル.app / QuickTime）で開ける形に固定しますか",
+            [("no", "しない — 入れ物と音声は入力に合わせて決める"),
+             ("yes", "する — MP4 + AAC に固定する")],
+            "no",
+        ) == "yes"
+        if args.apple:
+            answered.append("--apple")
+
     if args.encoder is None:
         # 明示された --container / -t に合わないコーデックは選ばせない
         choices = [(value, label) for value, label in ENCODER_CHOICES
@@ -1048,16 +1205,19 @@ def resolve_options(args: argparse.Namespace) -> None:
         else:
             args.encoder = fallback
 
-    # --apple が固定するのは入れ物と音声だけ。矛盾する指定があるときは聞かない。
-    if interactive and not args.apple and args.audio_codec != "opus" and args.container in ("auto", "mp4"):
-        args.apple = prompt_choice(
-            "Apple機（写真.app / ファイル.app / QuickTime）で開ける形に固定しますか",
-            [("no", "しない — 入れ物と音声は入力に合わせて決める"),
-             ("yes", "する — MP4 + AAC に固定する")],
-            "no",
-        ) == "yes"
-        if args.apple:
-            answered.append("--apple")
+    if args.quality is None:
+        # --crf を明示されていれば -q は使われない。聞いても答えが捨てられるだけ
+        if interactive and args.crf is None:
+            crf_map = (LECTURE_CRF_MAP if args.lecture else CRF_MAP)[args.encoder]
+            args.quality = prompt_choice(
+                "画質を選んでください",
+                [(value, f"{label}（CRF {crf_map[value]}）") for value, label in QUALITY_DESCRIPTIONS],
+                DEFAULT_QUALITY,
+            )
+            if args.quality != DEFAULT_QUALITY:
+                answered.append(f"-q {args.quality}")
+        else:
+            args.quality = DEFAULT_QUALITY
 
     if args.apple:
         args.audio_codec, args.container = "aac", "mp4"
@@ -1065,6 +1225,15 @@ def resolve_options(args: argparse.Namespace) -> None:
         # MP4を指定されている。autoのままではOpusになるが、MP4のOpusはQuickTimeで
         # 鳴らないので、明示されたコンテナを優先してAACへ寄せる。
         args.audio_codec = "aac"
+
+    # 入れ物を明示されていると、そこに入る音声も決まるので選ぶ余地がない
+    # （MP4のOpusはQuickTimeで鳴らず、WebMにAACは入らない）。--apple も上の行で
+    # aac を入れているので、ここは素通りする。
+    if interactive and args.audio_codec == "auto" and args.container in ("auto", "mkv"):
+        args.audio_codec = prompt_choice("音声コーデックを選んでください",
+                                         AUDIO_CODEC_CHOICES, DEFAULT_AUDIO_CODEC)
+        if args.audio_codec != DEFAULT_AUDIO_CODEC:
+            answered.append(f"--audio-codec {args.audio_codec}")
 
     if args.crf is None:
         args.crf = (LECTURE_CRF_MAP if args.lecture else CRF_MAP)[args.encoder][args.quality]
@@ -1097,8 +1266,11 @@ def main(argv: list[str]) -> int:
         # 通すが、再生できる機種が限られることは黙っていられない。
         print("注意: AV1はA17 Pro / M3世代以降のApple機でのみ再生できます"
               "（M1・M2世代では再生できません）")
-    print(f"出力先: {args.output_file or args.outdir or roots[0].parent}"
-          "（元ファイルは変更しません）")
+    if args.replace:
+        print("出力先: 元ファイルと同じ場所（元ファイルはゴミ箱へ移します）")
+    else:
+        print(f"出力先: {args.output_file or args.outdir or roots[0].parent}"
+              "（元ファイルは変更しません）")
     print(f"{len(sources)} 本を解析中…")
     for src in sources:
         try:
@@ -1117,11 +1289,15 @@ def main(argv: list[str]) -> int:
             skipped += 1
             continue
         dst = destination_for(info, roots, suffix, args)
-        if args.skip_existing and dst.exists():
-            print(f"  skip   {src.name}")
-            continue
-        if dst.resolve() == src:
+        # --replace で拡張子が変わらないときは dst が src そのもの。それは想定どおり
+        # 大文字小文字を区別しないAPFSでは hello.MP4 と hello.mp4 は同じファイル。
+        # 文字列で比べると別物に見えるので、inode で確かめる
+        same_path = dst.exists() and dst.samefile(src)
+        if same_path and not args.replace:
             print(f"  skip   {src.name}（出力先が入力と同一）")
+            continue
+        if dst.exists() and not same_path and not args.overwrite:
+            print(f"  skip   {src.name}（出力が既にあります。作り直すなら --overwrite）")
             continue
 
         audio_desc = "音声なし"
@@ -1145,6 +1321,13 @@ def main(argv: list[str]) -> int:
     if args.lecture:
         settings.append("講演スライド向け")
     print(f"\n{len(jobs)} 本を {' / '.join(settings)} で圧縮します（並列 {args.jobs}）")
+    # 結果行の「[ 1/11] name: 」までの幅。ここを固定すると、後ろに続くサイズが縦に並ぶ。
+    # 名前の欄には上限を設けて、極端に長い1本に全部を引きずられないようにする
+    # （超えた行だけがはみ出し、他の行は揃ったまま）
+    counter_width = len(str(len(jobs)))
+    name_width = min(max(display_width(info.path.name) for info, _, _ in jobs),
+                     RESULT_NAME_MAX_WIDTH)
+    prefix_width = display_width(f"[{0:>{counter_width}}/{len(jobs)}] ") + name_width + 1
     progress = ProgressReporter(
         total_duration=sum(info.duration for info, _, _ in jobs),
         total_jobs=len(jobs),
@@ -1157,26 +1340,36 @@ def main(argv: list[str]) -> int:
         for done, future in enumerate(as_completed(futures), start=1):
             result = future.result()
             results.append(result)
+            prefix = pad_display(f"[{done:>{counter_width}}/{len(jobs)}] {result.src.name}:",
+                                 prefix_width)
             if not result.ok:
-                progress.report(f"[{done}/{len(jobs)}] NG {result.src.name}: {result.message}",
-                                error=True)
+                progress.report(f"{prefix} NG {result.message}", error=True)
+            elif result.kept:
+                progress.report(f"{prefix} {result.message}")
             elif not args.dry_run:
                 ratio = result.dst_size / result.src_size if result.src_size else 0
-                progress.report(f"[{done}/{len(jobs)}] {result.src.name}: "
-                                f"{human(result.src_size)} → {human(result.dst_size)} "
-                                f"({ratio:.0%}) / {result.message}")
+                unit = common_unit(result.src_size, result.dst_size)
+                progress.report(f"{prefix} {human(result.src_size, unit, align=True)} → "
+                                f"{human(result.dst_size, unit, align=True)} "
+                                f"({ratio:>4.0%}) / {result.message}")
     progress.close()
 
     if args.dry_run:
         return 1 if skipped else 0
 
     ok = [r for r in results if r.ok]
+    kept = [r for r in ok if r.kept]
     src_total = sum(r.src_size for r in ok)
     dst_total = sum(r.dst_size for r in ok)
     print(f"\n完了 {len(ok)}/{len(results)} 本")
+    if kept:
+        print(f"うち {len(kept)} 本は元より大きくなったため置き換えていません")
     if src_total:
-        print(f"合計 {human(src_total)} → {human(dst_total)} "
-              f"({dst_total / src_total:.0%}, {human(src_total - dst_total)} 削減)")
+        # 結果行と同じ欄に合計を置く
+        unit = common_unit(src_total, dst_total)
+        print(f"{pad_display('合計', prefix_width)} {human(src_total, unit, align=True)} → "
+              f"{human(dst_total, unit, align=True)} "
+              f"({dst_total / src_total:>4.0%}, {human(src_total - dst_total, unit)} 削減)")
     return 0 if len(ok) == len(results) and not skipped else 1
 
 
