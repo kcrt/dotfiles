@@ -37,3 +37,13 @@ fi
 if [[ -f "/opt/homebrew/opt/ghidra/libexec/ghidraRun" ]]; then
 	alias ghidra='/opt/homebrew/opt/ghidra/libexec/ghidraRun'
 fi
+
+# ============================================================================
+# lms (LM Studio CLI)
+# ============================================================================
+
+# 標準パスに symlink されない実体バイナリなので alias で解決する。
+# インストーラは .zshrc に絶対パスの PATH を追記してくるが、それは削除済み。
+if [[ -x "$HOME/.lmstudio/bin/lms" ]]; then
+	alias lms="$HOME/.lmstudio/bin/lms"
+fi

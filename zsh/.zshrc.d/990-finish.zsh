@@ -20,7 +20,7 @@ if [ -z "$BENCHMARK_ZSHRC" ] && command -v fortune &> /dev/null; then
 		echo -n "\e[0m"
 		echo ""
 		function what_is_this_fortune(){
-			lms chat --model "$LLM_MY_DEFAULT_MODEL" "下記の文章を日本語で解説してください。\n$STARTUP_FORTUNE"
+			lms chat "$LLM_MY_DEFAULT_MODEL" --prompt "下記の文章を日本語で解説してください。"$'\n'"$STARTUP_FORTUNE"
 		}
 	fi
 fi
