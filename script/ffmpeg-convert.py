@@ -180,10 +180,73 @@ LOSSY_AUDIO_CODECS = frozenset({
     "amr_nb", "amr_wb", "speex", "atrac3", "dts", "cook", "sipr", "nellymoser",
 })
 
+# x264とx265はエンコーダ固有パラメータを専用フラグで受ける。SVT-AV1は持たない。
+PARAMS_FLAG = {"libx264": "-x264-params", "libx265": "-x265-params"}
+
+# WebMはMatroskaのサブセットで、収容できるコーデックが限られる。
+WEBM_VIDEO_CODECS = frozenset({"libsvtav1", "libvpx-vp9", "libvpx"})
+WEBM_AUDIO_CODECS = frozenset({"libopus", "libvorbis"})
+WEBM_AUDIO_CODEC_NAMES = frozenset(ENCODER_CODEC_NAME[enc] for enc in WEBM_AUDIO_CODECS)
+
+# -o をファイル名として受け取れる拡張子。ここから出力コンテナも決まる。
+CONTAINER_SUFFIXES = {".mp4": "mp4", ".mkv": "mkv", ".webm": "webm"}
+
 
 class ProbeError(RuntimeError):
     pass
 
+
+def crf_table(lecture: bool, encoder: str) -> dict[str, int]:
+    """そのコーデック・素材での 品質段階 → CRF の対応表。"""
+    return (LECTURE_CRF_MAP if lecture else CRF_MAP)[encoder]
+
+
+@dataclass(frozen=True)
+class Config:
+    """解決済みの実行設定。コマンドライン引数と対話の答えを1つにまとめたもの。
+
+    argparse.Namespace と違い、ここに来る時点で全項目が確定している（「未指定」を
+    表す None は残らない）ので、受け取る側は既定値の埋め直しを気にしなくてよい。
+    """
+
+    # --- 入力と出力先 ---
+    roots: tuple[Path, ...]          # 走査の起点（絶対パス）
+    outdir: Path | None              # 出力先ディレクトリ。Noneは「入力と同じ場所」
+    output_file: Path | None         # 出力パスが1つに確定していればそのPath
+    single_file: bool                # 単発ファイルの変換か（出力名の付け方が変わる）
+    recursive: bool
+    overwrite: bool
+    replace: bool
+
+    # --- 映像 ---
+    encoder: str
+    size: int                        # 短辺の目標画素数。0は縮小しない
+    quality: str
+    crf: int
+    crf_explicit: bool               # --crf を明示されたか（出力ファイル名に出す）
+    preset: str
+    tune: str | None
+    gop_seconds: float               # 0はエンコーダ任せ
+    lecture: bool
+
+    # --- 音声と入れ物 ---
+    apple: bool
+    container: str
+    audio_mode: str
+    audio_codec: str
+    audio_bitrate: int | None
+    mono_bitrate: int | None
+
+    # --- 実行のしかた ---
+    jobs: int
+    dry_run: bool
+    verbose: bool
+    progress: bool
+
+    @property
+    def mp4_audio_codecs(self) -> frozenset[str]:
+        """MP4に入れてそのまま鳴ると認める音声コーデック。--apple ならより厳しく絞る。"""
+        return APPLE_SAFE_AUDIO_CODECS if self.apple else MP4_SAFE_AUDIO_CODECS
 
 @dataclass(frozen=True)
 class AudioInfo:
@@ -227,6 +290,15 @@ class AudioPlan:
         return self.codec == "libopus"
 
 
+@dataclass(frozen=True)
+class Job:
+    """1本分の変換内容。解析の時点で確定し、そのままエンコードへ渡る。"""
+
+    info: MediaInfo
+    dst: Path
+    plan: AudioPlan
+
+
 @dataclass
 class Result:
     src: Path
@@ -237,6 +309,11 @@ class Result:
     dst_size: int = 0
     # --replace で「出力の方が大きいので置き換えなかった」印。失敗ではないが成果でもない
     kept: bool = False
+
+
+# ---------------------------------------------------------------------------
+# ffprobe による解析
+# ---------------------------------------------------------------------------
 
 
 def run_json(cmd: list[str]) -> dict:
@@ -261,9 +338,9 @@ def parse_fraction(value: str | None) -> float:
     return n / d if d else 0.0
 
 
-def to_int(value) -> int | None:
+def to_int(value: object) -> int | None:
     try:
-        return int(value)
+        return int(value)   # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
 
@@ -360,8 +437,16 @@ def probe(path: Path) -> MediaInfo:
     )
 
 
-# x264とx265はエンコーダ固有パラメータを専用フラグで受ける。SVT-AV1は持たない。
-PARAMS_FLAG = {"libx264": "-x264-params", "libx265": "-x265-params"}
+def probe_duration(path: Path) -> float:
+    data = run_json([
+        "ffprobe", "-v", "error", "-print_format", "json", "-show_format", str(path),
+    ])
+    return float(data.get("format", {}).get("duration") or 0.0)
+
+
+# ---------------------------------------------------------------------------
+# 映像の組み立て
+# ---------------------------------------------------------------------------
 
 
 def keyint_frames(info: MediaInfo, gop_seconds: float) -> int:
@@ -388,64 +473,63 @@ def scale_filter(info: MediaInfo, target_short_side: int) -> str | None:
     return f"scale=-2:{target_short_side}:flags=lanczos"
 
 
-def build_video_args(info: MediaInfo, args: argparse.Namespace) -> list[str]:
-    out = ["-c:v", args.encoder, "-preset", args.preset, "-crf", str(args.crf)]
+def build_video_args(info: MediaInfo, cfg: Config) -> list[str]:
+    out = ["-c:v", cfg.encoder, "-preset", cfg.preset, "-crf", str(cfg.crf)]
 
     # AV1では -tune が黙って無視されるため parse_args で弾いてある。
-    # ここに来る args.tune は x264/x265 に渡る値だけ。
-    if args.tune:
-        out += ["-tune", args.tune]
+    # ここに来る cfg.tune は x264/x265 に渡る値だけ。
+    if cfg.tune:
+        out += ["-tune", cfg.tune]
 
-    if args.encoder == "libsvtav1":
+    if cfg.encoder == "libsvtav1":
         # 同品質ならHEVCの半分程度で済むが、再生環境を選ぶ。
         # screen content mode (scm=1) は測定上ほぼ無効果だったので使わない
         # ―― 日本語のアンチエイリアス文字だけでパレットモードの色数上限を超えるため。
-        if args.gop_seconds:
-            out += ["-g", str(keyint_frames(info, args.gop_seconds))]
+        if cfg.gop_seconds:
+            out += ["-g", str(keyint_frames(info, cfg.gop_seconds))]
     else:
         params: list[str] = []
-        if args.gop_seconds:
+        if cfg.gop_seconds:
             params += [
-                f"keyint={keyint_frames(info, args.gop_seconds)}",
+                f"keyint={keyint_frames(info, cfg.gop_seconds)}",
                 f"min-keyint={keyint_frames(info, 1.0)}",
             ]
-        if args.lecture:
+        if cfg.lecture:
             # 平坦な背景上の細い文字にビットを回す
             params += ["aq-mode=3", "rc-lookahead=60", "bframes=6"]
-            if args.encoder == "libx265":
+            if cfg.encoder == "libx265":
                 # x264のpsy-rdは2値指定で既定が既に1.0なので、x265だけ明示する
                 params.append("psy-rd=1.0")
-        if args.encoder == "libx265":
+        if cfg.encoder == "libx265":
             params.append("log-level=error")   # x265は既定で冗長
         if params:
-            out += [PARAMS_FLAG[args.encoder], ":".join(params)]
+            out += [PARAMS_FLAG[cfg.encoder], ":".join(params)]
 
-    scale = scale_filter(info, args.size)
+    scale = scale_filter(info, cfg.size)
     if scale:
         out += ["-vf", scale]
 
     out += ["-pix_fmt", "yuv420p"]
-    if args.encoder == "libx265":
+    if cfg.encoder == "libx265":
         # QuickTime等がHEVCと認識するためのブランド。AV1(av01)/H.264には不要。
         out += ["-tag:v", "hvc1"]
     return out
 
 
-# WebMはMatroskaのサブセットで、収容できるコーデックが限られる。
-WEBM_VIDEO_CODECS = frozenset({"libsvtav1", "libvpx-vp9", "libvpx"})
-WEBM_AUDIO_CODECS = frozenset({"libopus", "libvorbis"})
-WEBM_AUDIO_CODEC_NAMES = frozenset(ENCODER_CODEC_NAME[enc] for enc in WEBM_AUDIO_CODECS)
+# ---------------------------------------------------------------------------
+# 音声とコンテナの組み立て
+# ---------------------------------------------------------------------------
 
 
-def container_suffix(plan: AudioPlan, args: argparse.Namespace) -> str:
+def container_suffix(plan: AudioPlan, cfg: Config) -> str:
     """出力コンテナの拡張子。映像・音声コーデックの組み合わせで決まる。"""
-    if args.container != "auto":
-        return f".{args.container}"
+    if cfg.container != "auto":
+        return f".{cfg.container}"
     if not plan.needs_matroska:
         return ".mp4"
     # Opusを使う場合。AV1と組めばWebMに収まり、こちらの方が対応環境が広い。
     # HEVC+OpusはWebMに入らないのでMKVにする。
-    if args.encoder in WEBM_VIDEO_CODECS and plan.codec in WEBM_AUDIO_CODECS:
+    if cfg.encoder in WEBM_VIDEO_CODECS and plan.codec in WEBM_AUDIO_CODECS:
         return ".webm"
     return ".mkv"
 
@@ -460,7 +544,7 @@ def output_audio_codec(plan: AudioPlan, info: MediaInfo) -> str | None:
 
 
 def container_audio_conflict(plan: AudioPlan, info: MediaInfo, suffix: str,
-                             args: argparse.Namespace) -> str | None:
+                             cfg: Config) -> str | None:
     """コンテナに入らない音声の組み合わせを、ffmpegを起動する前に見つける。
 
     --container を明示するとauto時の安全な組み合わせから外れることがある。
@@ -471,44 +555,39 @@ def container_audio_conflict(plan: AudioPlan, info: MediaInfo, suffix: str,
     codec = output_audio_codec(plan, info)
     if codec is None:
         return None
-    allowed = {".mp4": mp4_audio_codecs(args), ".webm": WEBM_AUDIO_CODEC_NAMES}.get(suffix)
+    allowed = {".mp4": cfg.mp4_audio_codecs, ".webm": WEBM_AUDIO_CODEC_NAMES}.get(suffix)
     if allowed is None or codec in allowed:
         return None
     return (f"{suffix.lstrip('.')} に {codec} 音声は入れられません"
             f"（--container / --audio-codec / --audio-mode を見直してください）")
 
 
-def mp4_audio_codecs(args: argparse.Namespace) -> frozenset[str]:
-    """MP4に入れてそのまま鳴ると認める音声コーデック。--apple ならより厳しく絞る。"""
-    return APPLE_SAFE_AUDIO_CODECS if args.apple else MP4_SAFE_AUDIO_CODECS
-
-
-def resolve_audio_codec(args: argparse.Namespace) -> str:
+def resolve_audio_codec(cfg: Config) -> str:
     """再エンコードする場合に使う音声コーデック。
 
     AV1を選んだ場合はアーカイブ用途とみなし、対になるOpusを既定にする。
     映像が半分になると音声が容量の約半分を占めるようになるため。
     """
-    if args.audio_codec == "opus":
+    if cfg.audio_codec == "opus":
         return "libopus"
-    if args.audio_codec == "aac":
+    if cfg.audio_codec == "aac":
         return "aac"
-    return "libopus" if args.encoder == "libsvtav1" else "aac"
+    return "libopus" if cfg.encoder == "libsvtav1" else "aac"
 
 
-def build_audio_args(info: MediaInfo, args: argparse.Namespace) -> AudioPlan:
+def build_audio_args(info: MediaInfo, cfg: Config) -> AudioPlan:
     audio = info.audio
     if audio is None:
         return AudioPlan(["-an"], "音声なし")
 
     codec = (audio.codec or "").lower()
-    mp4_safe = codec in mp4_audio_codecs(args)
-    unsafe_reason = "はApple環境で確実に鳴らない" if args.apple else "はMP4で再生できない"
+    mp4_safe = codec in cfg.mp4_audio_codecs
+    unsafe_reason = "はApple環境で確実に鳴らない" if cfg.apple else "はMP4で再生できない"
     kbps = audio.bitrate // 1000 if audio.bitrate else None
-    out_codec = resolve_audio_codec(args)
+    out_codec = resolve_audio_codec(cfg)
 
     def encode(channels: int, reason: str) -> AudioPlan:
-        override = args.mono_bitrate if channels == 1 else args.audio_bitrate
+        override = cfg.mono_bitrate if channels == 1 else cfg.audio_bitrate
         target = override if override else DEFAULT_AUDIO_BITRATE[out_codec][channels]
         layout = "mono" if channels == 1 else "stereo"
         name = ENCODER_CODEC_NAME.get(out_codec, out_codec)
@@ -521,11 +600,11 @@ def build_audio_args(info: MediaInfo, args: argparse.Namespace) -> AudioPlan:
     def copy(reason: str) -> AudioPlan:
         return AudioPlan(["-c:a", "copy"], f"copy ({reason})")
 
-    if args.audio_mode == "mono":
+    if cfg.audio_mode == "mono":
         return encode(1, "指定")
-    if args.audio_mode == "stereo":
+    if cfg.audio_mode == "stereo":
         return encode(min(audio.channels, 2), "指定")
-    if args.audio_mode == "prefer-copy":
+    if cfg.audio_mode == "prefer-copy":
         if mp4_safe:
             return copy(f"{codec} {audio.channels}ch")
         return encode(min(audio.channels, 2), f"{codec}{unsafe_reason}")
@@ -562,6 +641,10 @@ def build_audio_args(info: MediaInfo, args: argparse.Namespace) -> AudioPlan:
         return encode(downmixed(), f"{codec}{unsafe_reason}")
     return encode(downmixed(), f"{kbps}kから圧縮")
 
+
+# ---------------------------------------------------------------------------
+# 表示の整形
+# ---------------------------------------------------------------------------
 
 SIZE_UNITS = ("B", "KB", "MB", "GB", "TB")
 
@@ -607,9 +690,27 @@ def human(n: float, unit: str | None = None, align: bool = False) -> str:
             else f"{value:.{decimals}f} {unit}")
 
 
+def size_change(src_size: int, dst_size: int, show_saved: bool = False) -> str:
+    """「  1.3 MB →  800.0 KB ( 60%)」の形。単位は左右で揃える。
+
+    結果行と合計行で同じ欄・同じ幅を使うため、整形はここ1箇所にまとめる。
+    show_saved=True では括弧の中に削減量も添える（合計行用）。
+    """
+    unit = common_unit(src_size, dst_size)
+    ratio = dst_size / src_size if src_size else 0
+    saved = f", {human(src_size - dst_size, unit)} 削減" if show_saved else ""
+    return (f"{human(src_size, unit, align=True)} → {human(dst_size, unit, align=True)} "
+            f"({ratio:>4.0%}{saved})")
+
+
+def char_width(ch: str) -> int:
+    """端末上での1文字の表示幅。全角（W/F）は2桁。"""
+    return 2 if unicodedata.east_asian_width(ch) in "WF" else 1
+
+
 def display_width(text: str) -> int:
     """端末上での表示幅。日本語などの全角文字は2桁として数える。"""
-    return sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
+    return sum(char_width(ch) for ch in text)
 
 
 def pad_display(text: str, width: int) -> str:
@@ -623,7 +724,7 @@ def truncate_display(text: str, limit: int) -> str:
         return text
     kept, width = [], 0
     for ch in text:
-        width += 2 if unicodedata.east_asian_width(ch) in "WF" else 1
+        width += char_width(ch)
         if width > limit - 1:
             break
         kept.append(ch)
@@ -646,6 +747,35 @@ def parse_speed(value: str) -> float:
         return 0.0
 
 
+@dataclass(frozen=True)
+class ResultLayout:
+    """結果行の桁を揃えるための幅。
+
+    「[ 1/11] name: 」までを固定幅にすると、後ろに続くサイズが縦に並ぶ。
+    名前の欄には上限を設けて、極端に長い1本に全部を引きずられないようにする
+    （超えた行だけがはみ出し、他の行は揃ったまま）。
+    """
+
+    total: int
+    counter_width: int
+    prefix_width: int
+
+    @classmethod
+    def for_jobs(cls, jobs: list[Job]) -> ResultLayout:
+        counter_width = len(str(len(jobs)))
+        name_width = min(max(display_width(job.info.path.name) for job in jobs),
+                         RESULT_NAME_MAX_WIDTH)
+        prefix_width = display_width(f"[{0:>{counter_width}}/{len(jobs)}] ") + name_width + 1
+        return cls(len(jobs), counter_width, prefix_width)
+
+    def prefix(self, done: int, name: str) -> str:
+        return self.label(f"[{done:>{self.counter_width}}/{self.total}] {name}:")
+
+    def label(self, text: str) -> str:
+        """結果行と同じ欄に置く見出し（合計行など）。"""
+        return pad_display(text, self.prefix_width)
+
+
 class ProgressReporter:
     """エンコード中の進捗を1行にまとめて表示する。
 
@@ -665,6 +795,15 @@ class ProgressReporter:
         self.running: dict[Path, tuple[float, float]] = {}   # src -> (処理済み秒, 速度)
         self.done_duration = 0.0
         self.done_jobs = 0
+
+    @classmethod
+    def for_jobs(cls, jobs: list[Job], cfg: Config) -> ProgressReporter:
+        return cls(
+            total_duration=sum(job.info.duration for job in jobs),
+            total_jobs=len(jobs),
+            # ffmpegの進捗をそのまま流す--verboseや、行を書き換えられない端末以外では出さない
+            enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stdout.isatty(),
+        )
 
     def update(self, src: Path, out_time: float, speed: float) -> None:
         """ffmpegから届いた1本分の進捗を反映する。"""
@@ -721,6 +860,11 @@ class ProgressReporter:
 
         columns = shutil.get_terminal_size(fallback=(80, 24)).columns
         print("\r\033[K" + truncate_display(" ".join(parts), columns - 1), end="", flush=True)
+
+
+# ---------------------------------------------------------------------------
+# エンコードの実行
+# ---------------------------------------------------------------------------
 
 
 def run_with_progress(cmd: list[str], src: Path, progress: ProgressReporter) -> tuple[int, str]:
@@ -788,43 +932,88 @@ def move_to_trash(path: Path) -> None:
     path.rename(destination)
 
 
-def encode(info: MediaInfo, dst: Path, audio_plan: AudioPlan, args: argparse.Namespace,
-           progress: ProgressReporter) -> Result:
-    src = info.path
-    tmp = dst.with_name(dst.name + ".part" + dst.suffix)
-
+def build_encode_command(info: MediaInfo, tmp: Path, plan: AudioPlan, cfg: Config,
+                         with_progress: bool) -> list[str]:
+    """1本分のffmpegコマンドライン。出力は書きかけの一時ファイル。"""
     cmd = [
         "ffmpeg", "-y", "-nostdin",
-        *(["-v", "info", "-stats"] if args.verbose else ["-v", "error", "-nostats"]),
-        *(["-progress", "pipe:1"] if progress.enabled else []),
-        "-i", str(src),
+        *(["-v", "info", "-stats"] if cfg.verbose else ["-v", "error", "-nostats"]),
+        *(["-progress", "pipe:1"] if with_progress else []),
+        "-i", str(info.path),
         "-map", "0:v:0",
-        *build_video_args(info, args),
+        *build_video_args(info, cfg),
     ]
     if info.audio is not None:
-        cmd += ["-map", "0:a:0", *audio_plan.args]
+        cmd += ["-map", "0:a:0", *plan.args]
     else:
         cmd += ["-an"]
-    if dst.suffix.lower() == ".mp4":
+    if tmp.suffix.lower() == ".mp4":
         cmd += ["-movflags", "+faststart"]
     cmd += [str(tmp)]
+    return cmd
 
-    if args.dry_run:
-        destination = f"\n          → {dst.name}（元はゴミ箱へ）" if args.replace else ""
-        print(f"[dry-run] {src.name}\n          audio: {audio_plan.note}{destination}"
+
+def run_encoder(cmd: list[str], src: Path, cfg: Config,
+                progress: ProgressReporter) -> tuple[int, str]:
+    """ffmpegを走らせて (終了コード, stderr) を返す。受け取り方は表示方法で変わる。"""
+    if cfg.verbose:
+        # ffmpeg自身の進捗をそのまま流したいので捕捉しない
+        return subprocess.run(cmd).returncode, ""
+    if progress.enabled:
+        return run_with_progress(cmd, src, progress)
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    return proc.returncode, proc.stderr
+
+
+def verify_output(tmp: Path, expected_duration: float) -> str | None:
+    """尺が合っているかで壊れた出力を弾く。問題なければNone、あれば理由を返す。"""
+    try:
+        out_duration = probe_duration(tmp)
+    except ProbeError as exc:
+        return f"出力を検証できません: {exc}"
+    if expected_duration > 0 and abs(out_duration - expected_duration) > 1.0:
+        return f"尺が不一致 ({out_duration:.1f}s vs {expected_duration:.1f}s)"
+    return None
+
+
+def prepare_replace(info: MediaInfo, tmp: Path, dst: Path) -> Result | None:
+    """--replace の下準備。置き換えずに終えるならその Result、進めてよければ None。"""
+    src = info.path
+    new_size = tmp.stat().st_size
+    # 太るなら置き換える理由がない。容量は増え画質は落ちるので、原本の方が上
+    if new_size >= info.size:
+        tmp.unlink(missing_ok=True)
+        unit = common_unit(info.size, new_size)
+        return Result(src, dst, True,
+                      f"元より大きいので置き換えません"
+                      f"（{human(new_size, unit)} ≥ {human(info.size, unit)}）",
+                      info.size, info.size, kept=True)
+    # ゴミ箱へ移すのが先。拡張子が変わらず dst と src が同じパスのとき、
+    # 後回しにすると呼び出し元の replace が原本を上書きして消してしまう
+    try:
+        move_to_trash(src)
+    except OSError as exc:
+        tmp.unlink(missing_ok=True)
+        return Result(src, dst, False, f"元ファイルをゴミ箱へ移せません: {exc}", info.size, 0)
+    return None
+
+
+def encode(job: Job, cfg: Config, progress: ProgressReporter) -> Result:
+    info, dst = job.info, job.dst
+    src = info.path
+    tmp = dst.with_name(dst.name + ".part" + dst.suffix)
+    cmd = build_encode_command(info, tmp, job.plan, cfg, progress.enabled)
+
+    if cfg.dry_run:
+        destination = f"\n          → {dst.name}（元はゴミ箱へ）" if cfg.replace else ""
+        print(f"[dry-run] {src.name}\n          audio: {job.plan.note}{destination}"
               f"\n          {shlex.join(cmd)}")
         return Result(src, dst, True, "dry-run", info.size, 0)
 
     dst.parent.mkdir(parents=True, exist_ok=True)
-    if args.verbose:
-        # ffmpeg自身の進捗をそのまま流したいので捕捉しない
-        print(f"--- {src.name}\n    audio: {audio_plan.note}\n    {shlex.join(cmd)}", flush=True)
-        returncode, stderr = subprocess.run(cmd).returncode, ""
-    elif progress.enabled:
-        returncode, stderr = run_with_progress(cmd, src, progress)
-    else:
-        proc = subprocess.run(cmd, capture_output=True, text=True)
-        returncode, stderr = proc.returncode, proc.stderr
+    if cfg.verbose:
+        print(f"--- {src.name}\n    audio: {job.plan.note}\n    {shlex.join(cmd)}", flush=True)
+    returncode, stderr = run_encoder(cmd, src, cfg, progress)
     progress.finish(src, info.duration)
 
     if returncode != 0:
@@ -833,47 +1022,26 @@ def encode(info: MediaInfo, dst: Path, audio_plan: AudioPlan, args: argparse.Nam
         return Result(src, dst, False, tail[-1] if tail else f"ffmpeg failed ({returncode})",
                       info.size, 0)
 
-    # 尺が合っているかで壊れた出力を弾く
-    try:
-        out_duration = probe_duration(tmp)
-    except ProbeError as exc:
+    problem = verify_output(tmp, info.duration)
+    if problem:
         tmp.unlink(missing_ok=True)
-        return Result(src, dst, False, f"出力を検証できません: {exc}", info.size, 0)
+        return Result(src, dst, False, problem, info.size, 0)
 
-    if info.duration > 0 and abs(out_duration - info.duration) > 1.0:
-        tmp.unlink(missing_ok=True)
-        return Result(src, dst, False, f"尺が不一致 ({out_duration:.1f}s vs {info.duration:.1f}s)", info.size, 0)
-
-    if args.replace:
-        new_size = tmp.stat().st_size
-        unit = common_unit(info.size, new_size)
-        # 太るなら置き換える理由がない。容量は増え画質は落ちるので、原本の方が上
-        if new_size >= info.size:
-            tmp.unlink(missing_ok=True)
-            return Result(src, dst, True,
-                          f"元より大きいので置き換えません"
-                          f"（{human(new_size, unit)} ≥ {human(info.size, unit)}）",
-                          info.size, info.size, kept=True)
-        # ゴミ箱へ移すのが先。拡張子が変わらず dst と src が同じパスのとき、
-        # 後回しにすると下の replace が原本を上書きして消してしまう
-        try:
-            move_to_trash(src)
-        except OSError as exc:
-            tmp.unlink(missing_ok=True)
-            return Result(src, dst, False, f"元ファイルをゴミ箱へ移せません: {exc}", info.size, 0)
+    if cfg.replace:
+        stopped = prepare_replace(info, tmp, dst)
+        if stopped is not None:
+            return stopped
 
     tmp.replace(dst)
-    return Result(src, dst, True, audio_plan.note, info.size, dst.stat().st_size)
+    return Result(src, dst, True, job.plan.note, info.size, dst.stat().st_size)
 
 
-def probe_duration(path: Path) -> float:
-    data = run_json([
-        "ffprobe", "-v", "error", "-print_format", "json", "-show_format", str(path),
-    ])
-    return float(data.get("format", {}).get("duration") or 0.0)
+# ---------------------------------------------------------------------------
+# 入力の収集と出力先の決定
+# ---------------------------------------------------------------------------
 
 
-def collect_inputs(roots: list[Path], outdir: Path | None, recursive: bool) -> list[Path]:
+def collect_inputs(cfg: Config) -> list[Path]:
     """入力を集める。書きかけの一時ファイルと、入力ツリーの内側の出力先は除く。
 
     `ffmpeg-convert.py . -o compressed` のように出力先を入力の内側に置くのは
@@ -882,41 +1050,40 @@ def collect_inputs(roots: list[Path], outdir: Path | None, recursive: bool) -> l
     元ファイルの隣）にも生まれるので、拡張子で別に弾く。
     """
     def under_outdir(p: Path) -> bool:
-        return outdir is not None and (p == outdir or outdir in p.parents)
+        return cfg.outdir is not None and (p == cfg.outdir or cfg.outdir in p.parents)
 
     found: list[Path] = []
-    for root in roots:
+    for root in cfg.roots:
         if root.is_file():
             found.append(root)
         elif root.is_dir():
-            it = root.rglob("*") if recursive else root.glob("*")
+            it = root.rglob("*") if cfg.recursive else root.glob("*")
             found += [p for p in it
                       if p.is_file() and p.suffix.lower() in VIDEO_SUFFIXES
                       and not under_outdir(p) and ".part" not in p.suffixes]
     return sorted(set(found))
 
 
-def parameter_suffix(info: MediaInfo, args: argparse.Namespace) -> str:
+def parameter_suffix(info: MediaInfo, cfg: Config) -> str:
     """出力名に添える設定の要約。元ファイルと並べても、設定を変えて作り直しても区別できる。"""
     parts = []
     # 元より小さい指定でなければ縮小は起きないので、そのときは名前にも出さない。
     # 判定は scale_filter に任せて「名前と中身が食い違う」ことを防ぐ。
-    if scale_filter(info, args.size):
-        parts.append(f"{args.size}p")
-    parts.append(ENCODER_NAMES[args.encoder])
-    if args.crf_explicit:
-        parts.append(f"crf{args.crf}")     # -q より強いので、こちらだけを出す
-    elif args.quality != DEFAULT_QUALITY:
-        parts.append(args.quality)
-    if args.tune:
-        parts.append(args.tune)
-    if args.lecture:
+    if scale_filter(info, cfg.size):
+        parts.append(f"{cfg.size}p")
+    parts.append(ENCODER_NAMES[cfg.encoder])
+    if cfg.crf_explicit:
+        parts.append(f"crf{cfg.crf}")     # -q より強いので、こちらだけを出す
+    elif cfg.quality != DEFAULT_QUALITY:
+        parts.append(cfg.quality)
+    if cfg.tune:
+        parts.append(cfg.tune)
+    if cfg.lecture:
         parts.append("lecture")
     return " ".join(parts)
 
 
-def destination_for(info: MediaInfo, roots: list[Path], suffix: str,
-                    args: argparse.Namespace) -> Path:
+def destination_for(info: MediaInfo, suffix: str, cfg: Config) -> Path:
     """出力パスを決める。
 
     単発ファイルの変換では「元名 [720p hevc high].mp4」のように設定を名前に書く。
@@ -926,26 +1093,27 @@ def destination_for(info: MediaInfo, roots: list[Path], suffix: str,
     見比べる相手が残らない）。
     """
     src = info.path
-    if args.replace:
+    if cfg.replace:
         # 入れ物が変わらないなら拡張子はそのまま。hello.MP4 を hello.mp4 に
         # 改名するのは求められていない
         return src if src.suffix.lower() == suffix else src.with_suffix(suffix)
-    if args.output_file is not None:
-        return args.output_file
-    if args.single_file:
-        parent = args.outdir if args.outdir is not None else src.parent
-        return parent / f"{src.stem} [{parameter_suffix(info, args)}]{suffix}"
-    for root in roots:
+    if cfg.output_file is not None:
+        return cfg.output_file
+    if cfg.single_file:
+        parent = cfg.outdir if cfg.outdir is not None else src.parent
+        return parent / f"{src.stem} [{parameter_suffix(info, cfg)}]{suffix}"
+    for root in cfg.roots:
         if root.is_dir():
             try:
-                return (args.outdir / src.relative_to(root)).with_suffix(suffix)
+                return (cfg.outdir / src.relative_to(root)).with_suffix(suffix)
             except ValueError:
                 continue
-    return (args.outdir / src.name).with_suffix(suffix)
+    return (cfg.outdir / src.name).with_suffix(suffix)
 
 
-# -o をファイル名として受け取れる拡張子。ここから出力コンテナも決まる。
-CONTAINER_SUFFIXES = {".mp4": "mp4", ".mkv": "mkv", ".webm": "webm"}
+# ---------------------------------------------------------------------------
+# コマンドライン
+# ---------------------------------------------------------------------------
 
 
 def resolve_output_target(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -974,12 +1142,12 @@ def resolve_output_target(parser: argparse.ArgumentParser, args: argparse.Namesp
 
     if args.output is None:
         # 単発ファイルは元と同じ場所へ。ディレクトリ入力は compressed/ へ。
-        args.outdir = None if args.single_file else Path("compressed")
+        args.outdir = None if args.single_file else Path("compressed").resolve()
         return
 
     container = CONTAINER_SUFFIXES.get(args.output.suffix.lower())
     if container is None or args.output.is_dir():
-        args.outdir = args.output
+        args.outdir = args.output.resolve()
         return
 
     if not args.single_file:
@@ -989,8 +1157,42 @@ def resolve_output_target(parser: argparse.ArgumentParser, args: argparse.Namesp
     if args.container not in ("auto", container):
         parser.error(f"-o {args.output.name} は --container {args.container} と矛盾します")
     args.container = container
-    args.output_file = args.output
-    args.outdir = args.output.parent
+    args.output_file = args.output.resolve()
+    args.outdir = args.output_file.parent
+
+
+def validate_combinations(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """成り立たない指定の組み合わせを、解析を始める前に弾く。
+
+    黙って片方を上書きすると「指定したのに効かない」になるので、必ずエラーで返す。
+    ここで見るのは両方が明示された場合だけ。片方がautoで結果的に食い違う場合は、
+    本数ごとに container_audio_conflict が見る。
+    """
+    if args.tune and args.encoder is not None and args.encoder not in TUNE_ENCODERS:
+        parser.error(f"-t/--tune は {ENCODER_NAMES[args.encoder]} では効きません"
+                     "（x264/x265のみ。ffmpegのlibsvtav1は-tuneを黙って無視します）")
+
+    if args.apple:
+        # --apple が担うのは「入れ物と音声」だけで、映像コーデックには手を出さない。
+        # MP4+AACは機種に関係なくAVFoundationが扱える一方、どの映像コーデックが
+        # 再生できるかは機種依存（AV1はA17 Pro / M3以降のみ）なので、そこは
+        # --hevc / --av1 の判断に委ねる。だから --apple --av1 は矛盾ではない。
+        if args.audio_codec == "opus":
+            parser.error("--apple は --audio-codec opus と併用できません（AVFoundationにOpusデコーダがありません）")
+        if args.container not in ("auto", "mp4"):
+            parser.error(f"--apple は --container {args.container} と併用できません")
+
+    if args.container == "mp4" and args.audio_codec == "opus":
+        parser.error("--container mp4 は --audio-codec opus と併用できません"
+                     "（AVFoundationにOpusデコーダがありません）")
+    if args.container == "webm":
+        if args.audio_codec == "aac":
+            parser.error("--container webm は --audio-codec aac と併用できません（WebMはOpus/Vorbisのみ）")
+        if args.encoder is not None and args.encoder not in WEBM_VIDEO_CODECS:
+            parser.error(f"--container webm は {args.encoder} を収容できません（--av1 と併用してください）")
+        if args.tune:
+            parser.error("--container webm は -t/--tune と併用できません"
+                         "（WebMに入るのはAV1/VP9で、-tune が効くのは x264/x265 だけです）")
 
 
 def parse_size(value: str) -> int:
@@ -1092,6 +1294,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     args.quality = getattr(args, "quality", None)
     # --crf を明示されたかは出力ファイル名にも出すので覚えておく
     args.crf_explicit = args.crf is not None
+    # 以降はすべて絶対パスで扱う（出力先が入力ツリーの内側かの判定が単純になる）
+    args.inputs = [p.resolve() for p in args.inputs]
 
     # ffmpegの有無は対話で質問する前に確かめる。--help はここに到達しないので、
     # ffmpegが無い環境でも使い方だけは読める。
@@ -1103,34 +1307,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         p.error("--replace はmacOS専用です（元ファイルの退避先が ~/.Trash 決め打ちのため）")
 
     resolve_output_target(p, args)
-
-    if args.tune and args.encoder is not None and args.encoder not in TUNE_ENCODERS:
-        p.error(f"-t/--tune は {ENCODER_NAMES[args.encoder]} では効きません"
-                "（x264/x265のみ。ffmpegのlibsvtav1は-tuneを黙って無視します）")
-
-    if args.apple:
-        # --apple が担うのは「入れ物と音声」だけで、映像コーデックには手を出さない。
-        # MP4+AACは機種に関係なくAVFoundationが扱える一方、どの映像コーデックが
-        # 再生できるかは機種依存（AV1はA17 Pro / M3以降のみ）なので、そこは
-        # --hevc / --av1 の判断に委ねる。だから --apple --av1 は矛盾ではない。
-        # 黙って上書きすると「指定したのに効かない」になるので、矛盾はエラーで返す。
-        if args.audio_codec == "opus":
-            p.error("--apple は --audio-codec opus と併用できません（AVFoundationにOpusデコーダがありません）")
-        if args.container not in ("auto", "mp4"):
-            p.error(f"--apple は --container {args.container} と併用できません")
-    # コンテナと音声コーデックを両方明示された場合は必ず矛盾するので、先に弾く。
-    # 片方がautoで結果的に食い違う場合は container_audio_conflict が本数ごとに見る。
-    if args.container == "mp4" and args.audio_codec == "opus":
-        p.error("--container mp4 は --audio-codec opus と併用できません"
-                "（AVFoundationにOpusデコーダがありません）")
-    if args.container == "webm" and args.audio_codec == "aac":
-        p.error("--container webm は --audio-codec aac と併用できません（WebMはOpus/Vorbisのみ）")
-    if args.container == "webm" and args.encoder is not None and args.encoder not in WEBM_VIDEO_CODECS:
-        p.error(f"--container webm は {args.encoder} を収容できません（--av1 と併用してください）")
-    if args.container == "webm" and args.tune:
-        p.error("--container webm は -t/--tune と併用できません"
-                "（WebMに入るのはAV1/VP9で、-tune が効くのは x264/x265 だけです）")
+    validate_combinations(p, args)
     return args
+
+
+# ---------------------------------------------------------------------------
+# 対話による設定の確定
+# ---------------------------------------------------------------------------
 
 
 def prompt_choice(question: str, options: list[tuple[str, str]], default: str) -> str:
@@ -1158,8 +1341,8 @@ def prompt_choice(question: str, options: list[tuple[str, str]], default: str) -
         print(f"  1〜{len(options)} の番号で答えてください")
 
 
-def resolve_options(args: argparse.Namespace) -> None:
-    """未指定のオプションを、対話で聞くか既定値で埋める。
+def resolve_options(args: argparse.Namespace) -> Config:
+    """未指定のオプションを対話か既定値で埋め、実行設定を組み立てる。
 
     端末から人が実行したときだけ質問する。パイプ・cron・--no-interactive では
     黙って既定（HEVC + MP4）に落ちるので、バッチ実行の挙動は変わらない。
@@ -1167,117 +1350,148 @@ def resolve_options(args: argparse.Namespace) -> None:
     interactive = args.interactive and sys.stdin.isatty() and sys.stdout.isatty()
     answered: list[str] = []
 
-    if args.content is None:
+    content = args.content
+    if content is None:
         if interactive:
-            args.content = prompt_choice("素材の種類を選んでください", CONTENT_CHOICES, DEFAULT_CONTENT)
-            if args.content != DEFAULT_CONTENT:
-                answered.append(f"--{args.content}")
+            content = prompt_choice("素材の種類を選んでください", CONTENT_CHOICES, DEFAULT_CONTENT)
+            if content != DEFAULT_CONTENT:
+                answered.append(f"--{content}")
         else:
-            args.content = DEFAULT_CONTENT
-    args.lecture = args.content == "lecture"
+            content = DEFAULT_CONTENT
+    lecture = content == "lecture"
 
-    if args.size is None:
+    size = args.size
+    if size is None:
         if interactive:
             chosen = prompt_choice("出力解像度を選んでください", SIZE_CHOICES, SIZE_SOURCE)
-            args.size = parse_size(chosen)
+            size = parse_size(chosen)
             if chosen != SIZE_SOURCE:
                 answered.append(f"-s {chosen}")
         else:
-            args.size = 0
+            size = 0
+
+    apple, container, audio_codec = args.apple, args.container, args.audio_codec
 
     # Apple互換を先に聞く。ここでYesなら入れ物と音声が決まり、後の音声の質問が要らなくなる。
     # --apple が固定するのは入れ物と音声だけ。矛盾する指定があるときは聞かない。
-    if interactive and not args.apple and args.audio_codec != "opus" and args.container in ("auto", "mp4"):
-        args.apple = prompt_choice(
+    if interactive and not apple and audio_codec != "opus" and container in ("auto", "mp4"):
+        apple = prompt_choice(
             "Apple機（写真.app / ファイル.app / QuickTime）で開ける形に固定しますか",
             [("no", "しない — 入れ物と音声は入力に合わせて決める"),
              ("yes", "する — MP4 + AAC に固定する")],
             "no",
         ) == "yes"
-        if args.apple:
+        if apple:
             answered.append("--apple")
 
-    if args.encoder is None:
+    encoder = args.encoder
+    if encoder is None:
         # 明示された --container / -t に合わないコーデックは選ばせない
         choices = [(value, label) for value, label in ENCODER_CHOICES
-                   if (args.container != "webm" or value in WEBM_VIDEO_CODECS)
+                   if (container != "webm" or value in WEBM_VIDEO_CODECS)
                    and (not args.tune or value in TUNE_ENCODERS)]
         fallback = DEFAULT_ENCODER if any(v == DEFAULT_ENCODER for v, _ in choices) else choices[0][0]
         if len(choices) == 1:
-            args.encoder = choices[0][0]
+            encoder = choices[0][0]
         elif interactive:
-            args.encoder = prompt_choice("映像コーデックを選んでください", choices, fallback)
-            answered.append(f"--{ENCODER_NAMES[args.encoder]}")
+            encoder = prompt_choice("映像コーデックを選んでください", choices, fallback)
+            answered.append(f"--{ENCODER_NAMES[encoder]}")
         else:
-            args.encoder = fallback
+            encoder = fallback
 
-    if args.quality is None:
+    quality = args.quality
+    if quality is None:
         # --crf を明示されていれば -q は使われない。聞いても答えが捨てられるだけ
         if interactive and args.crf is None:
-            crf_map = (LECTURE_CRF_MAP if args.lecture else CRF_MAP)[args.encoder]
-            args.quality = prompt_choice(
+            crf_map = crf_table(lecture, encoder)
+            quality = prompt_choice(
                 "画質を選んでください",
                 [(value, f"{label}（CRF {crf_map[value]}）") for value, label in QUALITY_DESCRIPTIONS],
                 DEFAULT_QUALITY,
             )
-            if args.quality != DEFAULT_QUALITY:
-                answered.append(f"-q {args.quality}")
+            if quality != DEFAULT_QUALITY:
+                answered.append(f"-q {quality}")
         else:
-            args.quality = DEFAULT_QUALITY
+            quality = DEFAULT_QUALITY
 
-    if args.apple:
-        args.audio_codec, args.container = "aac", "mp4"
-    elif args.container == "mp4" and args.audio_codec == "auto" and args.encoder == "libsvtav1":
+    if apple:
+        audio_codec, container = "aac", "mp4"
+    elif container == "mp4" and audio_codec == "auto" and encoder == "libsvtav1":
         # MP4を指定されている。autoのままではOpusになるが、MP4のOpusはQuickTimeで
         # 鳴らないので、明示されたコンテナを優先してAACへ寄せる。
-        args.audio_codec = "aac"
+        audio_codec = "aac"
 
     # 入れ物を明示されていると、そこに入る音声も決まるので選ぶ余地がない
     # （MP4のOpusはQuickTimeで鳴らず、WebMにAACは入らない）。--apple も上の行で
     # aac を入れているので、ここは素通りする。
-    if interactive and args.audio_codec == "auto" and args.container in ("auto", "mkv"):
-        args.audio_codec = prompt_choice("音声コーデックを選んでください",
-                                         AUDIO_CODEC_CHOICES, DEFAULT_AUDIO_CODEC)
-        if args.audio_codec != DEFAULT_AUDIO_CODEC:
-            answered.append(f"--audio-codec {args.audio_codec}")
+    if interactive and audio_codec == "auto" and container in ("auto", "mkv"):
+        audio_codec = prompt_choice("音声コーデックを選んでください",
+                                    AUDIO_CODEC_CHOICES, DEFAULT_AUDIO_CODEC)
+        if audio_codec != DEFAULT_AUDIO_CODEC:
+            answered.append(f"--audio-codec {audio_codec}")
 
-    if args.crf is None:
-        args.crf = (LECTURE_CRF_MAP if args.lecture else CRF_MAP)[args.encoder][args.quality]
-    if args.preset is None:
-        args.preset = DEFAULT_PRESET[args.encoder]
-    if args.gop_seconds is None:
-        # 汎用素材ではエンコーダの既定に任せる（0で「指定しない」を表す）
-        args.gop_seconds = LECTURE_GOP_SECONDS if args.lecture else 0.0
     if answered:
         print(f"（次回から {' '.join(answered)} を付けるか、--no-interactive で質問を省けます）")
 
+    return Config(
+        roots=tuple(args.inputs),
+        outdir=args.outdir,
+        output_file=args.output_file,
+        single_file=args.single_file,
+        recursive=args.recursive,
+        overwrite=args.overwrite,
+        replace=args.replace,
+        encoder=encoder,
+        size=size,
+        quality=quality,
+        crf=args.crf if args.crf is not None else crf_table(lecture, encoder)[quality],
+        crf_explicit=args.crf_explicit,
+        preset=args.preset if args.preset is not None else DEFAULT_PRESET[encoder],
+        tune=args.tune,
+        # 汎用素材ではエンコーダの既定に任せる（0で「指定しない」を表す）
+        gop_seconds=args.gop_seconds if args.gop_seconds is not None
+        else (LECTURE_GOP_SECONDS if lecture else 0.0),
+        lecture=lecture,
+        apple=apple,
+        container=container,
+        audio_mode=args.audio_mode,
+        audio_codec=audio_codec,
+        audio_bitrate=args.audio_bitrate,
+        mono_bitrate=args.mono_bitrate,
+        jobs=args.jobs,
+        dry_run=args.dry_run,
+        verbose=args.verbose,
+        progress=args.progress,
+    )
 
-def main(argv: list[str]) -> int:
-    args = parse_args(argv)
-    resolve_options(args)
-    roots = [p.resolve() for p in args.inputs]
-    if args.outdir is not None:
-        args.outdir = args.outdir.resolve()
-    if args.output_file is not None:
-        args.output_file = args.output_file.resolve()
-    sources = collect_inputs(roots, args.outdir, args.recursive)
-    if not sources:
-        print("対象の動画が見つかりませんでした", file=sys.stderr)
-        return 1
 
-    jobs: list[tuple[MediaInfo, Path, AudioPlan]] = []
-    skipped = 0   # 解析・組み合わせの都合で処理できなかった本数（終了コードに出す）
+# ---------------------------------------------------------------------------
+# 全体の進行
+# ---------------------------------------------------------------------------
 
-    if args.apple and args.encoder == "libsvtav1":
+
+def announce(cfg: Config, total: int) -> None:
+    """これから何をどこへ書くのかを最初に伝える。"""
+    if cfg.apple and cfg.encoder == "libsvtav1":
         # 通すが、再生できる機種が限られることは黙っていられない。
         print("注意: AV1はA17 Pro / M3世代以降のApple機でのみ再生できます"
               "（M1・M2世代では再生できません）")
-    if args.replace:
+    if cfg.replace:
         print("出力先: 元ファイルと同じ場所（元ファイルはゴミ箱へ移します）")
     else:
-        print(f"出力先: {args.output_file or args.outdir or roots[0].parent}"
+        print(f"出力先: {cfg.output_file or cfg.outdir or cfg.roots[0].parent}"
               "（元ファイルは変更しません）")
-    print(f"{len(sources)} 本を解析中…")
+    print(f"{total} 本を解析中…")
+
+
+def plan_jobs(sources: list[Path], cfg: Config) -> tuple[list[Job], int]:
+    """1本ずつ解析して変換内容を決める。
+
+    (変換する仕事の一覧, 解析・組み合わせの都合で処理できなかった本数) を返す。
+    後者は終了コードに出す。既に出力がある等で意図どおり飛ばした分は数えない。
+    """
+    jobs: list[Job] = []
+    skipped = 0
     for src in sources:
         try:
             info = probe(src)
@@ -1287,22 +1501,22 @@ def main(argv: list[str]) -> int:
             continue
 
         # コンテナは音声の計画で決まる（Opusを使うならMKV）ので、先に立てる
-        plan = build_audio_args(info, args)
-        suffix = container_suffix(plan, args)
-        conflict = container_audio_conflict(plan, info, suffix, args)
+        plan = build_audio_args(info, cfg)
+        suffix = container_suffix(plan, cfg)
+        conflict = container_audio_conflict(plan, info, suffix, cfg)
         if conflict:
             print(f"  NG     {src.name}: {conflict}", file=sys.stderr)
             skipped += 1
             continue
-        dst = destination_for(info, roots, suffix, args)
+        dst = destination_for(info, suffix, cfg)
         # --replace で拡張子が変わらないときは dst が src そのもの。それは想定どおり
         # 大文字小文字を区別しないAPFSでは hello.MP4 と hello.mp4 は同じファイル。
         # 文字列で比べると別物に見えるので、inode で確かめる
         same_path = dst.exists() and dst.samefile(src)
-        if same_path and not args.replace:
+        if same_path and not cfg.replace:
             print(f"  skip   {src.name}（出力先が入力と同一）")
             continue
-        if dst.exists() and not same_path and not args.overwrite:
+        if dst.exists() and not same_path and not cfg.overwrite:
             print(f"  skip   {src.name}（出力が既にあります。作り直すなら --overwrite）")
             continue
 
@@ -1312,57 +1526,46 @@ def main(argv: list[str]) -> int:
             audio_desc = f"{info.audio.codec} {info.audio.channels}ch {kbps}"
         print(f"  {src.name}: {info.width}x{info.height} {info.fps:.3g}fps "
               f"{info.video_codec} / {audio_desc} / {human(info.size)}")
-        jobs.append((info, dst, plan))
+        jobs.append(Job(info, dst, plan))
+    return jobs, skipped
 
-    if not jobs:
-        print("処理対象がありません")
-        return 1 if skipped else 0
 
-    results: list[Result] = []
-    settings = [ENCODER_NAMES[args.encoder], f"CRF {args.crf}", f"preset {args.preset}"]
-    if args.size:
-        settings.append(f"短辺{args.size}px以下へ縮小")
-    if args.tune:
-        settings.append(f"tune {args.tune}")
-    if args.lecture:
+def settings_summary(cfg: Config) -> str:
+    """「hevc / CRF 28 / preset medium / …」という設定の一行要約。"""
+    settings = [ENCODER_NAMES[cfg.encoder], f"CRF {cfg.crf}", f"preset {cfg.preset}"]
+    if cfg.size:
+        settings.append(f"短辺{cfg.size}px以下へ縮小")
+    if cfg.tune:
+        settings.append(f"tune {cfg.tune}")
+    if cfg.lecture:
         settings.append("講演スライド向け")
-    print(f"\n{len(jobs)} 本を {' / '.join(settings)} で圧縮します（並列 {args.jobs}）")
-    # 結果行の「[ 1/11] name: 」までの幅。ここを固定すると、後ろに続くサイズが縦に並ぶ。
-    # 名前の欄には上限を設けて、極端に長い1本に全部を引きずられないようにする
-    # （超えた行だけがはみ出し、他の行は揃ったまま）
-    counter_width = len(str(len(jobs)))
-    name_width = min(max(display_width(info.path.name) for info, _, _ in jobs),
-                     RESULT_NAME_MAX_WIDTH)
-    prefix_width = display_width(f"[{0:>{counter_width}}/{len(jobs)}] ") + name_width + 1
-    progress = ProgressReporter(
-        total_duration=sum(info.duration for info, _, _ in jobs),
-        total_jobs=len(jobs),
-        # ffmpegの進捗をそのまま流す--verboseや、行を書き換えられない端末以外では出さない
-        enabled=args.progress and not args.verbose and not args.dry_run and sys.stdout.isatty(),
-    )
-    with ThreadPoolExecutor(max_workers=max(args.jobs, 1)) as pool:
-        futures = {pool.submit(encode, info, dst, plan, args, progress): info
-                   for info, dst, plan in jobs}
+    return " / ".join(settings)
+
+
+def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]:
+    """まとめてエンコードし、終わった順に結果行を出す。"""
+    print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）")
+    results: list[Result] = []
+    progress = ProgressReporter.for_jobs(jobs, cfg)
+    with ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool:
+        futures = [pool.submit(encode, job, cfg, progress) for job in jobs]
         for done, future in enumerate(as_completed(futures), start=1):
             result = future.result()
             results.append(result)
-            prefix = pad_display(f"[{done:>{counter_width}}/{len(jobs)}] {result.src.name}:",
-                                 prefix_width)
+            prefix = layout.prefix(done, result.src.name)
             if not result.ok:
                 progress.report(f"{prefix} NG {result.message}", error=True)
             elif result.kept:
                 progress.report(f"{prefix} {result.message}")
-            elif not args.dry_run:
-                ratio = result.dst_size / result.src_size if result.src_size else 0
-                unit = common_unit(result.src_size, result.dst_size)
-                progress.report(f"{prefix} {human(result.src_size, unit, align=True)} → "
-                                f"{human(result.dst_size, unit, align=True)} "
-                                f"({ratio:>4.0%}) / {result.message}")
+            elif not cfg.dry_run:
+                progress.report(f"{prefix} {size_change(result.src_size, result.dst_size)}"
+                                f" / {result.message}")
     progress.close()
+    return results
 
-    if args.dry_run:
-        return 1 if skipped else 0
 
+def report(results: list[Result], skipped: int, layout: ResultLayout) -> int:
+    """結果をまとめて、終了コードを返す。"""
     ok = [r for r in results if r.ok]
     kept = [r for r in ok if r.kept]
     src_total = sum(r.src_size for r in ok)
@@ -1372,11 +1575,28 @@ def main(argv: list[str]) -> int:
         print(f"うち {len(kept)} 本は元より大きくなったため置き換えていません")
     if src_total:
         # 結果行と同じ欄に合計を置く
-        unit = common_unit(src_total, dst_total)
-        print(f"{pad_display('合計', prefix_width)} {human(src_total, unit, align=True)} → "
-              f"{human(dst_total, unit, align=True)} "
-              f"({dst_total / src_total:>4.0%}, {human(src_total - dst_total, unit)} 削減)")
+        print(f"{layout.label('合計')} {size_change(src_total, dst_total, show_saved=True)}")
     return 0 if len(ok) == len(results) and not skipped else 1
+
+
+def main(argv: list[str]) -> int:
+    cfg = resolve_options(parse_args(argv))
+    sources = collect_inputs(cfg)
+    if not sources:
+        print("対象の動画が見つかりませんでした", file=sys.stderr)
+        return 1
+
+    announce(cfg, len(sources))
+    jobs, skipped = plan_jobs(sources, cfg)
+    if not jobs:
+        print("処理対象がありません")
+        return 1 if skipped else 0
+
+    layout = ResultLayout.for_jobs(jobs)
+    results = run_jobs(jobs, cfg, layout)
+    if cfg.dry_run:
+        return 1 if skipped else 0
+    return report(results, skipped, layout)
 
 
 if __name__ == "__main__":
