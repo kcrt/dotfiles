@@ -352,6 +352,10 @@ def measure_channel_difference(path: Path) -> float:
     音声を実際にデコードするので安くはない。再エンコードすると決まった後に
     「ついでにモノへまとめられるか」を判断するためだけに呼ぶこと。
     コピーで済む入力に対しては呼ばれない。
+
+    -vn は必須。filter_complex が [0:a] しか使っていなくても、-map が無いと
+    ffmpegの自動ストリーム選択が映像も拾い、null muxerへ向けて律儀に全フレームを
+    デコードしてしまう（1080p・180秒で実測5秒）。音量の測定値は -vn の有無で変わらない。
     """
     filt = (
         "[0:a]channelsplit=channel_layout=stereo[l][r];"
@@ -359,7 +363,7 @@ def measure_channel_difference(path: Path) -> float:
     )
     proc = subprocess.run(
         ["ffmpeg", "-hide_banner", "-t", str(AUDIO_PROBE_SECONDS), "-i", str(path),
-         "-filter_complex", filt, "-f", "null", "-"],
+         "-vn", "-filter_complex", filt, "-f", "null", "-"],
         capture_output=True, text=True,
     )
     matches = re.findall(r"max_volume:\s*(-?\d+(?:\.\d+)?) dB", proc.stderr)
