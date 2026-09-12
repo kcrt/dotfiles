@@ -252,9 +252,7 @@ class Config:
     # --- 映像 ---
     encoder: str
     size: int                        # 短辺の目標画素数。0は縮小しない
-    quality: str
     crf: int
-    crf_explicit: bool               # --crf を明示されたか（出力ファイル名に出す）
     preset: str
     tune: str | None
     gop_seconds: float               # 0はエンコーダ任せ
@@ -1272,17 +1270,20 @@ def collect_inputs(cfg: Config) -> list[Path]:
 
 
 def parameter_suffix(info: MediaInfo, cfg: Config) -> str:
-    """出力名に添える設定の要約。元ファイルと並べても、設定を変えて作り直しても区別できる。"""
-    parts = []
+    """出力名に添える設定の要約。元ファイルと並べても、設定を変えて作り直しても区別できる。
+
+    「元名 [av1 720p crf35].webm」の形で、コーデック・解像度・CRFの順に並べる。
+    画質は段階名ではなくCRFの実値を書く。段階名はコーデックと素材で指す値が変わり
+    （同じ portable でも x265なら30、AV1なら35、--lecture ならまた別）、名前を見ても
+    何をしたのか分からないため。CRFは常に書くので、既定のまま変換した本も名前から
+    設定を読み取れる。
+    """
+    parts = [ENCODER_NAMES[cfg.encoder]]
     # 元より小さい指定でなければ縮小は起きないので、そのときは名前にも出さない。
     # 判定は scale_filter に任せて「名前と中身が食い違う」ことを防ぐ。
     if scale_filter(info, cfg.size):
         parts.append(f"{cfg.size}p")
-    parts.append(ENCODER_NAMES[cfg.encoder])
-    if cfg.crf_explicit:
-        parts.append(f"crf{cfg.crf}")     # -q より強いので、こちらだけを出す
-    elif cfg.quality != DEFAULT_QUALITY:
-        parts.append(cfg.quality)
+    parts.append(f"crf{cfg.crf}")
     if cfg.tune:
         parts.append(cfg.tune)
     if cfg.lecture:
@@ -1499,8 +1500,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     # 未指定(None)と「明示的に縮小しない」(0)を区別する。前者だけ対話で聞く。
     args.size = getattr(args, "size", None)
     args.quality = getattr(args, "quality", None)
-    # --crf を明示されたかは出力ファイル名にも出すので覚えておく
-    args.crf_explicit = args.crf is not None
     # 以降はすべて絶対パスで扱う（出力先が入力ツリーの内側かの判定が単純になる）
     args.inputs = [p.resolve() for p in args.inputs]
 
@@ -1650,9 +1649,7 @@ def resolve_options(args: argparse.Namespace) -> Config:
         replace=args.replace,
         encoder=encoder,
         size=size,
-        quality=quality,
         crf=args.crf if args.crf is not None else crf_table(lecture, encoder)[quality],
-        crf_explicit=args.crf_explicit,
         preset=args.preset if args.preset is not None else DEFAULT_PRESET[encoder],
         tune=args.tune,
         # 汎用素材ではエンコーダの既定に任せる（0で「指定しない」を表す）
