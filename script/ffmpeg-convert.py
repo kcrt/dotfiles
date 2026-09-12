@@ -178,6 +178,16 @@ PROGRESS_FPS = 15.0
 BAR_FILLED, BAR_EMPTY = "█", "░"
 BAR_EMPTY_RGB = (80, 80, 80)
 
+# 端数のマスを埋める部分ブロック（1/8〜7/8）。桁を増やさずに解像度が8倍になるので、
+# 遅い素材でもバーが常に動いて見える。全角ではないので1マス1桁のまま。
+BAR_PARTIALS = "▏▎▍▌▋▊▉"
+
+# バーの幅は端末の空きに合わせて伸縮させる。固定幅だと、狭い端末では枠だけで行の半分以上を
+# 食って数字が消え（40桁なら56%）、広い端末では右に余白が残ったまま解像度も上がらない。
+BAR_MIN_WIDTH, BAR_MAX_WIDTH = 8, 40
+# 進捗行でファイル名に譲る表示幅の上限。長い名前にバーを潰させない。
+BAR_NAME_MAX_WIDTH = 24
+
 # 速度帯 → バーの色（下限, RGB）。実時間に対する倍率で、1.0が等速。
 # 「赤＝待たされる / 緑＝等速より速い / 青＝快調」が一目で分かるようにする。
 SPEED_COLORS = [
@@ -317,6 +327,14 @@ class AudioPlan:
         Opusデコーダが無いのでQuickTimeでは音が出ない。
         """
         return self.codec == "libopus"
+
+
+@dataclass(frozen=True)
+class BarSlot:
+    """進捗行の中でバーが入る位置。幅は他の欄を測ってから決まるので、後から差し込む。"""
+
+    ratio: float
+    speed: float
 
 
 @dataclass(frozen=True)
@@ -904,8 +922,6 @@ class ProgressReporter:
     ログの見た目は今までどおり。
     """
 
-    BAR_WIDTH = 20
-
     def __init__(self, durations: dict[Path, float], layout: ResultLayout, enabled: bool,
                  sequential: bool) -> None:
         self.durations = durations                      # src -> 尺。1本ごとの進捗に使う
@@ -927,6 +943,9 @@ class ProgressReporter:
         # ときだけ None にして、割合の代わりに経過時間を出す。初期値は0（空のバー）。
         self.file_ratio: float | None = 0.0
         self.file_elapsed = 0.0
+        # バー以外の欄に割り当てた桁数（この実行で見た最大）と、そのときの端末幅
+        self.fixed_columns = 0
+        self.last_columns = 0
         self._stop = threading.Event()
         self._ticker: threading.Thread | None = None
 
@@ -1007,18 +1026,32 @@ class ProgressReporter:
     def _paint(self, text: str, rgb: tuple[int, int, int]) -> str:
         return paint(text, rgb) if self.color else text
 
-    def _paint_bar(self, filled: int, speed: float, phase: float) -> str:
-        """バーを組み立てる。色が使えるなら、速度に応じた光沢を流す。"""
+    def _paint_bar(self, ratio: float, speed: float, phase: float, width: int) -> str:
+        """バーを組み立てる。色が使えるなら、速度に応じた光沢を流す。
+
+        満たない端数のマスは部分ブロック（▏〜▉）で埋める。1マスを8段に割れるので、
+        幅20でも0.625%刻みになり、5%刻みだった頃のような「しばらく動かない」が消える。
+        """
+        exact = ratio * width
+        full = min(int(exact), width)
+        eighths = int((exact - full) * 8)
+        chars: list[str] = []
+        for index in range(width):
+            if index < full:
+                chars.append(BAR_FILLED)
+            elif index == full and eighths > 0:
+                chars.append(BAR_PARTIALS[eighths - 1])
+            else:
+                chars.append(BAR_EMPTY)
         if not self.color:
-            return f"[{BAR_FILLED * filled}{BAR_EMPTY * (self.BAR_WIDTH - filled)}]"
+            return f"[{''.join(chars)}]"
         cells: list[str] = []
         last: tuple[int, int, int] | None = None
-        for index in range(self.BAR_WIDTH):
-            if index < filled:
-                position = index / max(self.BAR_WIDTH - 1, 1)
-                rgb, char = bar_cell_color(speed, position, phase), BAR_FILLED
+        for index, char in enumerate(chars):
+            if char == BAR_EMPTY:
+                rgb = BAR_EMPTY_RGB
             else:
-                rgb, char = BAR_EMPTY_RGB, BAR_EMPTY
+                rgb = bar_cell_color(speed, index / max(width - 1, 1), phase)
             if rgb != last:   # 同じ色が続くならSGRを繰り返さない
                 cells.append(sgr(rgb))
                 last = rgb
@@ -1043,12 +1076,31 @@ class ProgressReporter:
             self.last_per_file = per_file
         phase = time.monotonic() - self.started
 
-        parts = (self._file_parts(processed, speed, phase) if self.sequential
-                 else self._batch_parts(processed, speed, per_file, running, phase))
+        parts = (self._file_parts(processed, speed) if self.sequential
+                 else self._batch_parts(processed, speed, per_file, running))
         columns = shutil.get_terminal_size(fallback=(80, 24)).columns
-        print("\r\033[K" + truncate_display(" ".join(parts), columns - 1), end="", flush=True)
+        line = self._compose(parts, phase, columns)
+        print("\r\033[K" + truncate_display(line, columns - 1), end="", flush=True)
 
-    def _file_parts(self, processed: float, speed: float, phase: float) -> list[str]:
+    def _compose(self, parts: list[str | BarSlot], phase: float, columns: int) -> str:
+        """バー以外の欄を先に測り、余った桁をバーに与えて1行にする。
+
+        欄はその時々で出たり消えたりする（本の合間は速度も残り時間もファイル名も無い）。
+        そのつど測って割り当てると、欄が戻るたびにバーが縮んで幅が踊るので、この実行で
+        見た最大の桁数で確保する。端末幅が変わったら測り直す。
+        """
+        fixed = sum(display_width(p) for p in parts if isinstance(p, str)) + len(parts) - 1
+        if columns != self.last_columns:
+            self.last_columns, self.fixed_columns = columns, 0
+        self.fixed_columns = max(self.fixed_columns, fixed)
+        room = columns - 1 - self.fixed_columns - 2          # 2 はバーの枠 []
+        width = max(BAR_MIN_WIDTH, min(BAR_MAX_WIDTH, room))
+        return " ".join(
+            self._paint_bar(part.ratio, part.speed, phase, width) if isinstance(part, BarSlot)
+            else part
+            for part in parts)
+
+    def _file_parts(self, processed: float, speed: float) -> list[str | BarSlot]:
         """逐次実行（-j 1）の1行。バーは「今の1本」、全体の進み具合は数字で添える。
 
         全体バーは本数が増えるほど動かなくなる。20マスに31本なら1本あたり0.65マスで、
@@ -1071,27 +1123,27 @@ class ProgressReporter:
         # 指していないと「f2.mov が1本目」と読めてしまう。この番号は、その本が終わった
         # ときに出る結果行の番号と必ず一致する。本と本の合間も次の1本の番号のまま
         # 据え置く（完了本数へ戻すと、合間だけ表示幅が変わって行が横にずれるため）。
-        parts = [self.layout.counter(min(self.done_jobs + 1, self.layout.total))]
+        parts: list[str | BarSlot] = [self.layout.counter(min(self.done_jobs + 1,
+                                                              self.layout.total))]
         if self.file_ratio is None:
             # 尺が読めなかった入力。割合が出せないので経過時間で代える
             parts.append(f"{clock(self.file_elapsed)} 処理済み")
         else:
-            filled = round(self.file_ratio * self.BAR_WIDTH)
-            parts.append(f"{self._paint_bar(filled, self.last_per_file, phase)} "
-                         f"{self.file_ratio:4.0%}")
+            parts.append(BarSlot(self.file_ratio, self.last_per_file))
+            parts.append(f"{self.file_ratio:4.0%}")
         if speed > 0:
             # 数字にも帯の色を乗せて、バーの色が何を表しているのかを結び付ける
-            parts.append(self._paint(f"{speed:.3g}x", band_color(speed)))
+            parts.append(self._paint(f"{speed:>5.3g}x", band_color(speed)))
         if self.total_duration > 0:
             parts.append(f"全体 {min(processed / self.total_duration, 1.0):4.0%}")
             if speed > 0:
                 parts.append(f"残り {clock((self.total_duration - processed) / speed)}")
         if name:
-            parts.append(name)
+            parts.append(truncate_display(name, BAR_NAME_MAX_WIDTH))
         return parts
 
     def _batch_parts(self, processed: float, speed: float, per_file: float,
-                     running: int, phase: float) -> list[str]:
+                     running: int) -> list[str | BarSlot]:
         """並行実行（-j 2以上）の1行。バーは全体の進み具合。
 
         走っている本が複数あると「今の1本」を指せないので、バーは全体に充てる。
@@ -1099,12 +1151,11 @@ class ProgressReporter:
         次に終わるとは限らず、先に出した番号が別のファイルに付いてしまう。
         特定の1本を指せない以上、完了本数だと分かる書き方にする。
         """
-        parts = [self.layout.done_counter(self.done_jobs)]
+        parts: list[str | BarSlot] = [self.layout.done_counter(self.done_jobs)]
         if self.total_duration > 0:
             ratio = min(processed / self.total_duration, 1.0)
-            filled = round(ratio * self.BAR_WIDTH)
-            parts.append(f"{ratio:4.0%} "
-                         f"{self._paint_bar(filled, per_file or self.last_per_file, phase)}")
+            parts.append(f"{ratio:4.0%}")
+            parts.append(BarSlot(ratio, per_file or self.last_per_file))
             parts.append(f"{clock(processed)}/{clock(self.total_duration)}")
             if speed > 0:
                 parts.append(f"残り {clock((self.total_duration - processed) / speed)}")
@@ -1113,10 +1164,11 @@ class ProgressReporter:
         if speed > 0:
             # 「1本あたり / 本数」で出す。色と同じ数字を見せないと、なぜその色なのかが
             # 分からなくなる。合算値は残り時間に現れている。
-            text = f"{per_file:.3g}x / {running}" if running > 1 else f"{speed:.3g}x"
+            text = (f"{per_file:>5.3g}x / {running}" if running > 1
+                    else f"{speed:>5.3g}x")
             parts.append(self._paint(text, band_color(per_file)))
         if running == 1:
-            parts.append(next(iter(self.running)).name)
+            parts.append(truncate_display(next(iter(self.running)).name, BAR_NAME_MAX_WIDTH))
         return parts
 
 
