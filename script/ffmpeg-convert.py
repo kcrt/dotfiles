@@ -906,9 +906,10 @@ class ProgressReporter:
 
     BAR_WIDTH = 20
 
-    def __init__(self, total_duration: float, layout: ResultLayout, enabled: bool,
+    def __init__(self, durations: dict[Path, float], layout: ResultLayout, enabled: bool,
                  sequential: bool) -> None:
-        self.total_duration = total_duration
+        self.durations = durations                      # src -> 尺。1本ごとの進捗に使う
+        self.total_duration = sum(durations.values())
         self.layout = layout
         self.enabled = enabled
         self.sequential = sequential
@@ -921,13 +922,18 @@ class ProgressReporter:
         # 本と本の合間は走っているものが無く速度が0になる。バーの色がそのたびに
         # 最低速の帯（赤）へ落ちるのを避けるため、直近の速さを覚えておく。
         self.last_per_file = 0.0
+        # 1本ごとのバーの状態。合間も直前の値を保つ（数フレームのことなので、
+        # バーが一瞬消えるより繋がって見えるほうがよい）。尺が読めない入力に当たった
+        # ときだけ None にして、割合の代わりに経過時間を出す。初期値は0（空のバー）。
+        self.file_ratio: float | None = 0.0
+        self.file_elapsed = 0.0
         self._stop = threading.Event()
         self._ticker: threading.Thread | None = None
 
     @classmethod
     def for_jobs(cls, jobs: list[Job], cfg: Config, layout: ResultLayout) -> ProgressReporter:
         return cls(
-            total_duration=sum(job.info.duration for job in jobs),
+            durations={job.info.path: job.info.duration for job in jobs},
             layout=layout,
             sequential=cfg.jobs <= 1,
             # ffmpegの進捗をそのまま流す--verboseや、行を書き換えられない端末以外では出さない
@@ -959,7 +965,7 @@ class ProgressReporter:
             self.running[src] = (out_time, speed)
             self._render()
 
-    def finish(self, src: Path, duration: float) -> None:
+    def finish(self, src: Path) -> None:
         """1本終わった分を完了側に移す。
 
         本数は数えない。エンコードを終えたワーカーがここを通ってから、本体が結果行を
@@ -968,7 +974,7 @@ class ProgressReporter:
         """
         with self.lock:
             self.running.pop(src, None)
-            self.done_duration += duration
+            self.done_duration += self.durations.get(src, 0.0)
 
     def report(self, line: str, error: bool = False) -> None:
         """結果行を1本出す。進捗行を潰さないように、消す→出す→描き直す。
@@ -978,6 +984,10 @@ class ProgressReporter:
         """
         with self.lock:
             self.done_jobs += 1
+            # 1本ごとのバーも同じ場所で次の本へ送る。カウンタと別の場所で戻すと、
+            # 合間に「[2/3] なのにバーは前の本の100%」という食い違いが出る
+            # （次のffmpegが起動して最初の進捗を出すまで1秒近くある）。
+            self.file_ratio, self.file_elapsed = 0.0, 0.0
             self._erase()
             print(line, file=sys.stderr if error else sys.stdout, flush=True)
             self._render()
@@ -1033,17 +1043,63 @@ class ProgressReporter:
             self.last_per_file = per_file
         phase = time.monotonic() - self.started
 
-        # 逐次実行では、いま処理している本が何本目かを出す。行末にファイル名が並ぶので、
-        # 番号もそのファイルを指していないと「f2.mov が1本目」と読めてしまう。
-        # この番号は、その本が終わったときに出る結果行の番号と必ず一致する。
-        # 本と本の合間（走っているものが無い）も次の1本の番号のまま据え置く。完了本数へ
-        # 戻すと、合間だけ表示幅が変わって行が横にずれるため。
-        #
-        # 並行実行では先読みできない。結果行の番号は完了順に振られるので、走っている
-        # 1本が次に終わるとは限らず、先に出した番号が別のファイルに付いてしまう。
-        # 特定の1本を指せない以上、完了本数だと分かる書き方にする。
-        parts = [self.layout.counter(min(self.done_jobs + 1, self.layout.total))
-                 if self.sequential else self.layout.done_counter(self.done_jobs)]
+        parts = (self._file_parts(processed, speed, phase) if self.sequential
+                 else self._batch_parts(processed, speed, per_file, running, phase))
+        columns = shutil.get_terminal_size(fallback=(80, 24)).columns
+        print("\r\033[K" + truncate_display(" ".join(parts), columns - 1), end="", flush=True)
+
+    def _file_parts(self, processed: float, speed: float, phase: float) -> list[str]:
+        """逐次実行（-j 1）の1行。バーは「今の1本」、全体の進み具合は数字で添える。
+
+        全体バーは本数が増えるほど動かなくなる。20マスに31本なら1本あたり0.65マスで、
+        3分のファイルを1本まるごと変換してもマスが動かないことがあり、目で追う対象と
+        して機能しない。そこでバーは毎回フルスイングする「今の1本」に充て、
+        「あと何分で全部終わるか」は数字（全体% と 残り）で持つ。
+        """
+        # ファイル名は走っている間だけ出す。合間も直前の名前を出し続けると、カウンタが
+        # 次の本へ進んだ後に前の本の名前が残り（[2/3] ... k1.mp4）、次のffmpegが起動して
+        # 最初の進捗を出すまでの1秒近く、番号と名前が食い違って見えるため。
+        name = ""
+        if self.running:
+            src, (out_time, _) = next(iter(self.running.items()))
+            duration = self.durations.get(src, 0.0)
+            self.file_ratio = min(out_time / duration, 1.0) if duration > 0 else None
+            self.file_elapsed = out_time
+            name = src.name
+
+        # いま処理している本が何本目か。行末にファイル名が並ぶので、番号もそのファイルを
+        # 指していないと「f2.mov が1本目」と読めてしまう。この番号は、その本が終わった
+        # ときに出る結果行の番号と必ず一致する。本と本の合間も次の1本の番号のまま
+        # 据え置く（完了本数へ戻すと、合間だけ表示幅が変わって行が横にずれるため）。
+        parts = [self.layout.counter(min(self.done_jobs + 1, self.layout.total))]
+        if self.file_ratio is None:
+            # 尺が読めなかった入力。割合が出せないので経過時間で代える
+            parts.append(f"{clock(self.file_elapsed)} 処理済み")
+        else:
+            filled = round(self.file_ratio * self.BAR_WIDTH)
+            parts.append(f"{self._paint_bar(filled, self.last_per_file, phase)} "
+                         f"{self.file_ratio:4.0%}")
+        if speed > 0:
+            # 数字にも帯の色を乗せて、バーの色が何を表しているのかを結び付ける
+            parts.append(self._paint(f"{speed:.3g}x", band_color(speed)))
+        if self.total_duration > 0:
+            parts.append(f"全体 {min(processed / self.total_duration, 1.0):4.0%}")
+            if speed > 0:
+                parts.append(f"残り {clock((self.total_duration - processed) / speed)}")
+        if name:
+            parts.append(name)
+        return parts
+
+    def _batch_parts(self, processed: float, speed: float, per_file: float,
+                     running: int, phase: float) -> list[str]:
+        """並行実行（-j 2以上）の1行。バーは全体の進み具合。
+
+        走っている本が複数あると「今の1本」を指せないので、バーは全体に充てる。
+        番号も先読みできない。結果行の番号は完了順に振られるので、走っている1本が
+        次に終わるとは限らず、先に出した番号が別のファイルに付いてしまう。
+        特定の1本を指せない以上、完了本数だと分かる書き方にする。
+        """
+        parts = [self.layout.done_counter(self.done_jobs)]
         if self.total_duration > 0:
             ratio = min(processed / self.total_duration, 1.0)
             filled = round(ratio * self.BAR_WIDTH)
@@ -1055,16 +1111,13 @@ class ProgressReporter:
         else:
             parts.append(f"{clock(processed)} 処理済み")
         if speed > 0:
-            # 並行中は「1本あたり / 本数」で出す。色と同じ数字を見せないと、
-            # なぜその色なのかが分からなくなる。合算値は残り時間に現れている。
+            # 「1本あたり / 本数」で出す。色と同じ数字を見せないと、なぜその色なのかが
+            # 分からなくなる。合算値は残り時間に現れている。
             text = f"{per_file:.3g}x / {running}" if running > 1 else f"{speed:.3g}x"
-            # 数字にも帯の色を乗せて、バーの色が何を表しているのかを結び付ける
             parts.append(self._paint(text, band_color(per_file)))
         if running == 1:
             parts.append(next(iter(self.running)).name)
-
-        columns = shutil.get_terminal_size(fallback=(80, 24)).columns
-        print("\r\033[K" + truncate_display(" ".join(parts), columns - 1), end="", flush=True)
+        return parts
 
 
 # ---------------------------------------------------------------------------
@@ -1219,7 +1272,7 @@ def encode(job: Job, cfg: Config, progress: ProgressReporter) -> Result:
     if cfg.verbose:
         print(f"--- {src.name}\n    audio: {job.plan.note}\n    {shlex.join(cmd)}", flush=True)
     returncode, stderr = run_encoder(cmd, src, cfg, progress)
-    progress.finish(src, info.duration)
+    progress.finish(src)
 
     if returncode != 0:
         tmp.unlink(missing_ok=True)
