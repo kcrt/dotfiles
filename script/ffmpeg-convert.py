@@ -772,8 +772,16 @@ class ResultLayout:
         prefix_width = display_width(f"[{0:>{counter_width}}/{len(jobs)}] ") + name_width + 1
         return cls(len(jobs), counter_width, prefix_width)
 
+    def counter(self, n: int) -> str:
+        """「[ 3/31]」。結果行と進捗バーで同じ幅になるよう、整形はここだけで行う。"""
+        return f"[{n:>{self.counter_width}}/{self.total}]"
+
+    def done_counter(self, n: int) -> str:
+        """「完了  3/31」。特定の1本を指せないとき（並行実行中）に使う。"""
+        return f"完了 {n:>{self.counter_width}}/{self.total}"
+
     def prefix(self, done: int, name: str) -> str:
-        return self.label(f"[{done:>{self.counter_width}}/{self.total}] {name}:")
+        return self.label(f"{self.counter(done)} {name}:")
 
     def label(self, text: str) -> str:
         """結果行と同じ欄に置く見出し（合計行など）。"""
@@ -791,20 +799,23 @@ class ProgressReporter:
 
     BAR_WIDTH = 20
 
-    def __init__(self, total_duration: float, total_jobs: int, enabled: bool) -> None:
+    def __init__(self, total_duration: float, layout: ResultLayout, enabled: bool,
+                 sequential: bool) -> None:
         self.total_duration = total_duration
-        self.total_jobs = total_jobs
+        self.layout = layout
         self.enabled = enabled
+        self.sequential = sequential
         self.lock = threading.Lock()
         self.running: dict[Path, tuple[float, float]] = {}   # src -> (処理済み秒, 速度)
         self.done_duration = 0.0
         self.done_jobs = 0
 
     @classmethod
-    def for_jobs(cls, jobs: list[Job], cfg: Config) -> ProgressReporter:
+    def for_jobs(cls, jobs: list[Job], cfg: Config, layout: ResultLayout) -> ProgressReporter:
         return cls(
             total_duration=sum(job.info.duration for job in jobs),
-            total_jobs=len(jobs),
+            layout=layout,
+            sequential=cfg.jobs <= 1,
             # ffmpegの進捗をそのまま流す--verboseや、行を書き換えられない端末以外では出さない
             enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stdout.isatty(),
         )
@@ -845,7 +856,17 @@ class ProgressReporter:
         processed = self.done_duration + sum(t for t, _ in self.running.values())
         speed = sum(s for _, s in self.running.values())
 
-        parts = [f"[{self.done_jobs}/{self.total_jobs}]"]
+        # 逐次実行では、いま処理している本が何本目かを出す。行末にファイル名が並ぶので、
+        # 番号もそのファイルを指していないと「f2.mov が1本目」と読めてしまう。
+        # この番号は、その本が終わったときに出る結果行の番号と必ず一致する。
+        # 本と本の合間（走っているものが無い）も次の1本の番号のまま据え置く。完了本数へ
+        # 戻すと、合間だけ表示幅が変わって行が横にずれるため。
+        #
+        # 並行実行では先読みできない。結果行の番号は完了順に振られるので、走っている
+        # 1本が次に終わるとは限らず、先に出した番号が別のファイルに付いてしまう。
+        # 特定の1本を指せない以上、完了本数だと分かる書き方にする。
+        parts = [self.layout.counter(min(self.done_jobs + 1, self.layout.total))
+                 if self.sequential else self.layout.done_counter(self.done_jobs)]
         if self.total_duration > 0:
             ratio = min(processed / self.total_duration, 1.0)
             filled = round(ratio * self.BAR_WIDTH)
@@ -1550,7 +1571,7 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
     """まとめてエンコードし、終わった順に結果行を出す。"""
     print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）")
     results: list[Result] = []
-    progress = ProgressReporter.for_jobs(jobs, cfg)
+    progress = ProgressReporter.for_jobs(jobs, cfg, layout)
     with ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool:
         futures = [pool.submit(encode, job, cfg, progress) for job in jobs]
         for done, future in enumerate(as_completed(futures), start=1):
