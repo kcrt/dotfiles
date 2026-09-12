@@ -286,7 +286,7 @@ read -r pause
 cd ~
 git clone --depth=1 https://github.com/kcrt/dotfiles.git
 cd ~/dotfiles
-stow R asdf chawan git mutt nethack ripgrep ripgrep-all screen tmux vim zsh cloudshell
+stow R asdf ccstatusline chawan claude cloudshell git hammerspoon mutt nethack opencode ripgrep ripgrep-all screen tmux vim zellij zsh
 
 # neovim
 # mkdir -p "${XDG_CONFIG_HOME:=$HOME/.config}"
