@@ -36,6 +36,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+# 同じディレクトリの script/lib/。uv run は sys.path[0] をこのスクリプトの実体の
+# あるディレクトリにするので、パスをいじらずそのまま import できる。
+# lib 側は標準ライブラリだけで書くこと（PEP 723 の dependencies はここにしか
+# 書けないため）。
+from lib.humanize import human
+from lib.termcolor import color_enabled, paint256, set_color_mode
+
 DATA_VOLUME = Path("/System/Volumes/Data")
 SNAPSHOT_PREFIX = "com.apple.TimeMachine."
 SNAPSHOT_SUFFIX = ".local"
@@ -44,29 +51,13 @@ CHUNK = 1024 * 1024
 # 世代グループの ● に振る色（256色）。明背景・暗背景どちらでも読める範囲で選んだ。
 GROUP_COLORS = (39, 214, 76, 170, 178, 203, 44, 129)
 MISSING_COLOR = 244  # 「なし」の世代はグレー
-_USE_COLOR = False
-
-
-def set_color(mode: str) -> None:
-    """`--color auto|always|never` を解釈して色を使うか決める。"""
-    global _USE_COLOR
-    if mode == "always":
-        _USE_COLOR = True
-    elif mode == "never":
-        _USE_COLOR = False
-    else:  # auto: 端末に出すときだけ。NO_COLOR と TERM=dumb は尊重する
-        _USE_COLOR = (sys.stdout.isatty()
-                      and os.environ.get("NO_COLOR") is None
-                      and os.environ.get("TERM") != "dumb")
-
-
 def marker(row: dict) -> str:
     """行頭の色付き ●。色が使えないときは記号だけで区別できるので何も出さない。"""
-    if not _USE_COLOR:
+    if not color_enabled():
         return ""
     color = (MISSING_COLOR if row["group"] == "-"
              else GROUP_COLORS[row["group_index"] % len(GROUP_COLORS)])
-    return f"\033[38;5;{color}m●\033[0m "
+    return paint256("●", color) + " "
 
 
 # --------------------------------------------------------------------------
@@ -227,17 +218,8 @@ def describe(path: Path, with_hash: bool) -> dict:
 def volume(row: dict) -> str:
     """一覧に出す「量」の欄。ファイルならサイズだけ、ディレクトリなら件数も添える。"""
     if row["kind"] == "dir":
-        return f"{row['files']:>4}ファイル  {human(row['size']):>9}"
-    return f"{'':>4}          {human(row['size']):>9}"
-
-
-def human(size: int) -> str:
-    value = float(size)
-    for unit in ("B", "KB", "MB", "GB", "TB"):
-        if value < 1024:
-            return f"{value:.1f}{unit}"
-        value /= 1024
-    return f"{value:.1f}PB"
+        return f"{row['files']:>4}ファイル  {human(row['size'], sep=''):>9}"
+    return f"{'':>4}          {human(row['size'], sep=''):>9}"
 
 
 def group_name(index: int) -> str:
@@ -461,10 +443,6 @@ def ref_label(snapshot: Snapshot | None) -> str:
     return f"{snapshot.stamp}（{snapshot.age}）" if snapshot else "現在のファイル"
 
 
-def paint(text: str, code: int) -> str:
-    return f"\033[38;5;{code}m{text}\033[0m" if _USE_COLOR else text
-
-
 def unified(before: bytes, after: bytes, left: str, right: str) -> list[str] | None:
     """テキストとして読めるなら unified diff を返す。バイナリなら None。"""
     try:
@@ -527,11 +505,11 @@ def cmd_diff(args: argparse.Namespace) -> int:
         return 0
 
     for name in changed:
-        print(paint(f"  ~ {name}", 214))
+        print(paint256(f"  ~ {name}", 214))
     for name in added:
-        print(paint(f"  + {name}", 76))
+        print(paint256(f"  + {name}", 76))
     for name in removed:
-        print(paint(f"  - {name}", 203))
+        print(paint256(f"  - {name}", 203))
     print(f"  差分 {len(changed) + len(added) + len(removed)} 件"
           f"（変更 {len(changed)} / 追加 {len(added)} / 削除 {len(removed)}）")
 
@@ -546,7 +524,7 @@ def cmd_diff(args: argparse.Namespace) -> int:
             for line in lines:
                 color = 76 if line.startswith("+") else 203 if line.startswith("-") else None
                 text = line.rstrip("\n")
-                print(paint(text, color) if color else text)
+                print(paint256(text, color) if color else text)
     return 0
 
 
@@ -657,7 +635,7 @@ def main() -> int:
         return 1
 
     args = parser.parse_args()
-    set_color(args.color_after or args.color)
+    set_color_mode(args.color_after or args.color)
     if sys.platform != "darwin":
         print("macOS 専用です。", file=sys.stderr)
         return 1

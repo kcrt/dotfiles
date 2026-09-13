@@ -59,6 +59,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Iterable, Sequence
 
+# Shared helpers next to this script (script/lib/). uv run puts the script's own
+# directory on sys.path, so no path juggling is needed. Keep lib/ stdlib-only:
+# PEP 723 dependencies can only be declared here, in the script that runs.
+from lib.termtext import clip_display, display_width, fit_display
+
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -165,41 +170,11 @@ EDDYSTONE_EXPANSIONS = {
 # Device names arrive from the air and are full Unicode: "カード" is three code
 # points but six terminal cells. Every column is measured in cells, never in
 # code points, or one Japanese name shifts the whole rest of the row.
-
-
-def cell_width(char: str) -> int:
-    """How many terminal cells one character occupies."""
-    if unicodedata.combining(char):
-        return 0
-    # "W"ide and "F"ullwidth take two cells. "A"mbiguous (box drawing, ★, the
-    # sparkline blocks) is one cell in a terminal's default configuration.
-    return 2 if unicodedata.east_asian_width(char) in ("W", "F") else 1
-
-
-def display_width(text: str) -> int:
-    return sum(cell_width(char) for char in text)
-
-
-def truncate_to_cells(text: str, width: int) -> tuple[str, int]:
-    """Cut `text` so it fits `width` cells; never splits a wide character."""
-    used = 0
-    for index, char in enumerate(text):
-        char_width = cell_width(char)
-        if used + char_width > width:
-            return text[:index], used
-        used += char_width
-    return text, used
+# The measuring itself lives in lib/termtext.py, shared with the other scripts.
 
 
 def clip(text: str, width: int) -> str:
-    return truncate_to_cells(text, max(0, width))[0]
-
-
-def fit(text: str, width: int, align: str = "<") -> str:
-    """Truncate and pad `text` to exactly `width` terminal cells."""
-    body, used = truncate_to_cells(text, max(0, width))
-    padding = " " * (max(0, width) - used)
-    return padding + body if align == ">" else body + padding
+    return clip_display(text, max(0, width))[0]
 
 
 def printable(text: str) -> str:
@@ -713,11 +688,11 @@ def layout_columns(total_width: int, address_width: int) -> list[Column]:
 
 def format_row(columns: Sequence[Column], device: DeviceRecord, as_of: float,
                stats: Stats) -> str:
-    return " ".join(fit(c.render(device, as_of, stats), c.width, c.align) for c in columns)
+    return " ".join(fit_display(c.render(device, as_of, stats), c.width, c.align) for c in columns)
 
 
 def format_header(columns: Sequence[Column]) -> str:
-    return " ".join(fit(c.header, c.width, c.align) for c in columns)
+    return " ".join(fit_display(c.header, c.width, c.align) for c in columns)
 
 
 #: Final bytes of CSI/SS3 sequences, and the key codes they stand for.
@@ -808,7 +783,7 @@ class Screen:
 
     def bar(self, y: int, text: str, attr: int) -> None:
         """Fill a whole row, so the highlight reaches the right edge."""
-        self.put(y, 0, fit(text, self.width - (y == self.height - 1)), attr)
+        self.put(y, 0, fit_display(text, self.width - (y == self.height - 1)), attr)
 
 
 class UI:
@@ -983,7 +958,7 @@ class UI:
                 attr = curses.color_pair(CP_DIM) | curses.A_DIM
             if device.address == self.selected:
                 attr = curses.color_pair(CP_SEL) | curses.A_BOLD
-            self.screen.put(2 + line, 0, fit(text, self.screen.width - 1), attr)
+            self.screen.put(2 + line, 0, fit_display(text, self.screen.width - 1), attr)
 
         if not devices:
             self.screen.put(3, 2, "waiting for advertisements...",
@@ -1001,7 +976,7 @@ class UI:
                 self.screen.put(y, 0, clip(value, left_width),
                                 curses.color_pair(CP_LABEL) | curses.A_BOLD)
                 continue
-            self.screen.put(y, 0, fit(label, 14), curses.A_DIM)
+            self.screen.put(y, 0, fit_display(label, 14), curses.A_DIM)
             attr = rssi_attr(device.rssi) if label.startswith("RSSI") else 0
             self.screen.put(y, 15, clip(value, left_width - 15), attr)
 
@@ -1165,15 +1140,15 @@ async def run_list(args: argparse.Namespace, monitor: Monitor) -> None:
 
     now = time.monotonic()
     devices = monitor.sorted_devices("rssi", args.filter, True, now)
-    print(f"{fit('ADDRESS', 38)} {fit('ADV NAME', 20)} {fit('OS NAME', 20)} "
+    print(f"{fit_display('ADDRESS', 38)} {fit_display('ADV NAME', 20)} {fit_display('OS NAME', 20)} "
           f"{'RSSI':>5} {'AVG':>6} {'MIN':>5} {'MAX':>5} {'PKT':>5}  COMPANY")
     for device in devices:
         stats = device.stats()
         numbers = (f"{stats[2]:>6.1f} {stats[0]:>5d} {stats[1]:>5d}" if stats
                    else f"{'-':>6} {'-':>5} {'-':>5}")
         companies = ", ".join(company_name(c) for c in device.manufacturer_data) or "-"
-        print(f"{fit(device.address, 38)} {fit(device.adv_name or '-', 20)} "
-              f"{fit(device.os_name or '-', 20)} "
+        print(f"{fit_display(device.address, 38)} {fit_display(device.adv_name or '-', 20)} "
+              f"{fit_display(device.os_name or '-', 20)} "
               f"{device.rssi if device.rssi is not None else '-':>5} {numbers} "
               f"{device.packets:>5d}  {companies}")
     print(f"\n{len(devices)} device(s), {monitor.packets} advertisement(s) "

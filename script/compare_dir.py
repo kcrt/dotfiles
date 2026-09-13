@@ -9,13 +9,18 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import hashlib
 from pathlib import Path
 from typing import Set, Dict, Tuple, List
 from collections import defaultdict
-from tqdm import tqdm
 import argparse
+
+from tqdm import tqdm
+
+# Shared helpers next to this script (script/lib/). uv run puts the script's own
+# directory on sys.path, so no path juggling is needed. Keep lib/ stdlib-only:
+# PEP 723 dependencies can only be declared here, in the script that runs.
+from lib.humanize import human
 
 IGNORED_FILES = {'Thumbs.db', '.DS_Store'}
 
@@ -41,13 +46,6 @@ def get_file_data_dict(directory: Path) -> Dict[int, List[Path]]:
             file_dict[file_info[1]].append(file_path)  # Group by file size
     return file_dict
 
-def human_readable_size(size: int) -> str:
-    """Convert a file size to human-readable form."""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size < 1024.0:
-            return f"{size:.1f} {unit}"
-        size /= 1024.0
-
 def compare_directories(directory_a: Path, directory_b: Path) -> Set[Tuple[str, str]]:
     """Compare two directories and return a set of unique files in directory_a."""
     dir_a_file_dict = get_file_data_dict(directory_a)
@@ -57,13 +55,13 @@ def compare_directories(directory_a: Path, directory_b: Path) -> Set[Tuple[str, 
     for size, files in tqdm(dir_a_file_dict.items(), desc="Comparing files"):
         if size not in dir_b_file_dict:  # If there's no file with the same size in folder B
             for file in files:
-                unique_files.add((str(file), human_readable_size(size)))
+                unique_files.add((str(file), human(size)))
         else:
             for file in files:
                 # Compute MD5 only when there are files with the same size in folder B
                 file_md5 = compute_md5(file)
                 if not any(compute_md5(file_b) == file_md5 for file_b in dir_b_file_dict[size]):
-                    unique_files.add((str(file), human_readable_size(size)))
+                    unique_files.add((str(file), human(size)))
 
     return unique_files
 

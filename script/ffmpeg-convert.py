@@ -51,10 +51,8 @@ normal + MP4 + 先頭の音声 + 入る字幕）で走るので、バッチ実�
 from __future__ import annotations
 
 import argparse
-import colorsys
 import functools
 import json
-import math
 import os
 import re
 import shlex
@@ -62,15 +60,22 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import threading
-import time
-import unicodedata
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TextIO
+
+# 同じディレクトリの script/lib/。uv run は sys.path[0] をこのスクリプトの実体の
+# あるディレクトリにするので（シンボリックリンク経由でも解決される）、
+# パスをいじらずにそのまま import できる。
+# lib 側は標準ライブラリだけで書くこと。PEP 723 の dependencies はこのスクリプトに
+# しか書けないため。
+from lib.humanize import clock, common_unit, human, size_change
+from lib.progressbar import BarSlot, LiveLine, rainbow_rgb, wave_level
+from lib.prompt import interactive as stdio_is_interactive, prompt_choice
+from lib.termcolor import RGB, hue_rgb, paint, scale_rgb, status_line
+from lib.termtext import display_width, pad_display, truncate_display
+from lib.trash import move_to_trash
 
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".m4v", ".mkv", ".avi", ".wmv", ".flv", ".ts", ".webm"})
 
@@ -188,52 +193,28 @@ DEFAULT_AUDIO_BITRATE = {"aac": {1: 128, 2: 128}, "libopus": {1: 64, 2: 96}}
 
 # 結果行でファイル名に割り当てる表示幅の上限。これを超える名前は欄からはみ出す。
 RESULT_NAME_MAX_WIDTH = 40
-
-# 進捗バーのアニメーション。ffmpegの -progress は0.5秒に1回しか来ないので、
-# 滑らかに動かすには独立したティックが要る。15fpsあれば波の流れは十分見える。
-PROGRESS_FPS = 15.0
-
-BAR_FILLED, BAR_EMPTY = "█", "░"
-BAR_EMPTY_RGB = (80, 80, 80)
-
-# 端数のマスを埋める部分ブロック（1/8〜7/8）。桁を増やさずに解像度が8倍になるので、
-# 遅い素材でもバーが常に動いて見える。全角ではないので1マス1桁のまま。
-BAR_PARTIALS = "▏▎▍▌▋▊▉"
-
-# バーの幅は端末の空きに合わせて伸縮させる。固定幅だと、狭い端末では枠だけで行の半分以上を
-# 食って数字が消え（40桁なら56%）、広い端末では右に余白が残ったまま解像度も上がらない。
-BAR_MIN_WIDTH, BAR_MAX_WIDTH = 8, 40
 # 進捗行でファイル名に譲る表示幅の上限。長い名前にバーを潰させない。
 BAR_NAME_MAX_WIDTH = 24
 
 # 速度帯 → バーの色（下限, RGB）。実時間に対する倍率で、1.0が等速。
 # 「赤＝待たされる / 緑＝等速より速い / 青＝快調」が一目で分かるようにする。
+# バーの描き方そのものは lib.progressbar が持っている。ここにあるのは
+# 「倍速という尺度をどう色に割り当てるか」という、動画再圧縮に固有の部分だけ。
 SPEED_COLORS = [
     (0.0, (215, 60, 50)),     # 赤 —— 等速の1/3未満。かなり遅い
     (0.3, (220, 130, 30)),    # オレンジ
     (1.0, (70, 190, 90)),     # 緑 —— 実時間より速い
     (3.0, (70, 145, 240)),    # 青
 ]
-# 再圧縮して元より太った本を目立たせる色。速度帯のオレンジと同じ系統。
-GREW_RGB = (220, 130, 30)
-
-# 行頭の状態マーカー（NG / skip / 注意）に割り当てる表示幅。
-MARKER_WIDTH = 7
-# 失敗した本の印。大量の行が流れる中から拾えることが目的なので、赤はNGだけに使う。
-# skip は意図どおり飛ばした印なので色を付けない（付けると赤が埋もれる）。
-NG_RGB = (215, 60, 50)    # 速度帯の赤と同じ
-# 変換はするが黙って欠けるものがある、の印。太った本と同系統のオレンジ。
-NOTE_RGB = GREW_RGB
 
 # これ以上はレインボー。色相がバー内を流れる。
 RAINBOW_SPEED = 7.0
-RAINBOW_SECONDS = 2.0     # 色相が1周する秒数
-RAINBOW_TURNS = 1.0       # バーの端から端で色相が何周するか
 
-# 単色帯では明度を波で揺らして光沢が流れているように見せる。
-BAR_WAVE_SECONDS = 1.6    # 波が左から右へ1周する秒数
-BAR_WAVES = 1.5           # バー内に見える波の数
-BAR_WAVE_FLOOR = 0.55     # 波の谷での明度（1.0が元の色）
+# 失敗した本の印。大量の行が流れる中から拾えることが目的なので、赤はNGだけに使う。
+# skip は意図どおり飛ばした印なので色を付けない（付けると赤が埋もれる）。
+NG_RGB = (215, 60, 50)    # 速度帯の赤と同じ
+# 変換はするが黙って欠けるものがある、の印。再圧縮して太った本と同系統のオレンジ。
+NOTE_RGB = (220, 130, 30)
 
 # ffmpegのエンコーダ名 → ストリームのcodec_name。表示とコンテナ適合判定で使う。
 ENCODER_CODEC_NAME = {"libopus": "opus", "libvorbis": "vorbis", "aac": "aac"}
@@ -432,14 +413,6 @@ class SubtitlePlan:
     args: list[str]
     dropped: tuple[SubtitleInfo, ...] = ()   # 入れ物に入らず落とすもの。plan_jobsが報告する
     note: str = ""
-
-
-@dataclass(frozen=True)
-class BarSlot:
-    """進捗行の中でバーが入る位置。幅は他の欄を測ってから決まるので、後から差し込む。"""
-
-    ratio: float
-    speed: float
 
 
 @dataclass(frozen=True)
@@ -1006,194 +979,26 @@ def doomed_subtitles(info: MediaInfo, suffix: str) -> tuple[SubtitleInfo, ...]:
 # 表示の整形
 # ---------------------------------------------------------------------------
 
-SIZE_UNITS = ("B", "KB", "MB", "GB", "TB")
-
-# サイズの数字に割り当てる桁数。単位は大きい方の値に合わせるので、どの値も1024未満に
-# 収まり、"1023.9" の6桁が上限になる。
-SIZE_NUMBER_WIDTH = 6
+# 速度（実時間に対する倍率）をバーの色へ割り当てる。バーの描き方そのものは
+# lib.progressbar が持っているので、ここにあるのは動画再圧縮に固有の対応付けだけ。
 
 
-def size_unit(n: float) -> str:
-    """そのバイト数を読みやすく表せる単位。"""
-    for unit in SIZE_UNITS[:-1]:
-        if abs(n) < 1024:
-            return unit
-        n /= 1024
-    return SIZE_UNITS[-1]
-
-
-def common_unit(*sizes: float) -> str:
-    """複数のサイズを並べて見せるときに共通で使う単位。
-
-    大きい方に合わせる。小さい方に合わせると、比が開いたときに大きい側が
-    「26774.3 KB」のように桁あふれして列が崩れるため。小さい側の桁は human() が
-    小数を増やして残す。
-    """
-    return size_unit(max(sizes))
-
-
-def human(n: float, unit: str | None = None, align: bool = False) -> str:
-    """バイト数を読める単位にする。
-
-    unitを渡すとその単位で表す。変換前後を並べるときに単位が食い違うと
-    「1.0 MB → 194.0 KB」のように増えたと錯覚するので、左右で揃えるために使う
-    （揃える単位は common_unit で決める）。
-    align=True では数字を右詰め・単位を左詰めにして幅を固定し、結果行のように縦に
-    並べたとき桁が揃うようにする。
-    """
-    unit = unit or size_unit(n)
-    value = n / 1024 ** SIZE_UNITS.index(unit)
-    # 1未満は桁数を増やす。大きい方に単位を合わせると小さい方が「0.9 MB」のように
-    # 潰れるので、有効数字を2桁保つ。どちらも幅は同じなので列は揃ったまま
-    decimals = 2 if 0 < abs(value) < 1 else 1
-    return (f"{value:{SIZE_NUMBER_WIDTH}.{decimals}f} {unit:<2}" if align
-            else f"{value:.{decimals}f} {unit}")
-
-
-def size_change(src_size: int, dst_size: int, show_saved: bool = False) -> str:
-    """「  1.3 MB →  800.0 KB ( 60%)」の形。単位は左右で揃える。
-
-    結果行と合計行で同じ欄・同じ幅を使うため、整形はここ1箇所にまとめる。
-    show_saved=True では括弧の中に増減量も添える（合計行用）。
-
-    再圧縮して元より太った場合は「増加」と書き、括弧ごとオレンジにする。
-    負の削減量（-113.3 MB 削減）は読み取りに一拍かかるうえ、見逃しやすいため。
-    """
-    unit = common_unit(src_size, dst_size)
-    ratio = dst_size / src_size if src_size else 0
-    delta = src_size - dst_size
-    note = ""
-    if show_saved:
-        note = (f", {human(delta, unit)} 削減" if delta >= 0
-                else f", {human(-delta, unit)} 増加")
-    change = f"({ratio:>4.0%}{note})"
-    if delta < 0:
-        change = paint(change, GREW_RGB)
-    return (f"{human(src_size, unit, align=True)} → {human(dst_size, unit, align=True)} "
-            f"{change}")
-
-
-# SGR（色指定）。表示幅を持たないので、幅を数えるときは取り除く。
-SGR_PATTERN = re.compile(r"\x1b\[[0-9;]*m")
-SGR_RESET = "\033[0m"
-
-
-@functools.cache
-def use_color_for(stream: TextIO) -> bool:
-    """その出力先に24bit色を出してよいか。
-
-    サブパラメータのコロン区切り（38:2::r:g:b）はTerminal.appが解釈しないので、
-    綴りは必ずセミコロン区切りにすること。判定は COLORTERM のみを見る保守的な
-    もので、分からなければ色を使わず今までどおりの見た目に落とす。
-    パイプやファイルへ流すときは、色が中身に混ざらないよう必ず落とす。
-
-    stdoutとstderrは別々に判定する。NG行はstderrへ出るので、stdoutだけを見ると
-    `cmd 2> err.log` でログにエスケープが混ざる。
-    """
-    if os.environ.get("NO_COLOR") or not stream.isatty():
-        return False
-    return os.environ.get("COLORTERM", "").lower() in ("truecolor", "24bit")
-
-
-def use_color() -> bool:
-    return use_color_for(sys.stdout)
-
-
-def sgr(rgb: tuple[int, int, int]) -> str:
-    return f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
-
-
-def paint(text: str, rgb: tuple[int, int, int], stream: TextIO | None = None) -> str:
-    """色が使える端末なら着色する。使えないならそのまま返す。"""
-    return (f"{sgr(rgb)}{text}{SGR_RESET}"
-            if use_color_for(stream or sys.stdout) else text)
-
-
-def status_line(marker: str, rgb: tuple[int, int, int] | None, text: str,
-                stream: TextIO | None = None) -> str:
-    """「  NG     名前: 理由」の形。マーカーだけ色を付ける。
-
-    桁揃えは display_width（色指定を除いて数える）に任せるので、
-    色の有無で欄がずれることはない。
-    """
-    painted = paint(marker, rgb, stream) if rgb else marker
-    return f"  {pad_display(painted, MARKER_WIDTH)}{text}"
-
-
-def band_color(speed: float) -> tuple[int, int, int]:
+def band_color(speed: float) -> RGB:
     """その速度を表す色。波の変調は載せない（数字に添える用）。"""
     if speed >= RAINBOW_SPEED:
         return hue_rgb(0.0)
     return next(rgb for limit, rgb in reversed(SPEED_COLORS) if speed >= limit)
 
 
-def hue_rgb(hue: float) -> tuple[int, int, int]:
-    r, g, b = colorsys.hsv_to_rgb(hue % 1.0, 0.85, 1.0)
-    return (round(r * 255), round(g * 255), round(b * 255))
-
-
-def bar_cell_color(speed: float, position: float, phase: float) -> tuple[int, int, int]:
+def bar_cell_color(speed: float, position: float, phase: float) -> RGB:
     """バー1マスの色。position はバー内の位置(0..1)、phase は経過秒。
 
     速度が上がるほど帯の色が変わり、最上位の帯ではレインボーが流れる。
     それ以外の帯では帯色の明度を波で揺らして、同じように流れて見せる。
     """
     if speed >= RAINBOW_SPEED:
-        return hue_rgb(position * RAINBOW_TURNS - phase / RAINBOW_SECONDS)
-    wave = math.sin(2 * math.pi * (position * BAR_WAVES - phase / BAR_WAVE_SECONDS))
-    level = BAR_WAVE_FLOOR + (1 - BAR_WAVE_FLOOR) * (wave + 1) / 2
-    return tuple(min(255, round(c * level)) for c in band_color(speed))   # type: ignore[return-value]
-
-
-def char_width(ch: str) -> int:
-    """端末上での1文字の表示幅。全角（W/F）は2桁。"""
-    return 2 if unicodedata.east_asian_width(ch) in "WF" else 1
-
-
-def display_width(text: str) -> int:
-    """端末上での表示幅。日本語などの全角文字は2桁として数える。
-
-    色指定（SGR）は桁を食わないので、数える前に取り除く。
-    """
-    return sum(char_width(ch) for ch in SGR_PATTERN.sub("", text))
-
-
-def pad_display(text: str, width: int) -> str:
-    """表示幅が width になるよう右を空白で埋める。既に超えていればそのまま返す。"""
-    return text + " " * max(width - display_width(text), 0)
-
-
-def truncate_display(text: str, limit: int) -> str:
-    """表示幅が limit を超えないよう末尾を落とす。進捗行の折り返しを防ぐため。
-
-    色指定（SGR）は桁を食わないのでそのまま通す。色の途中で切れても端末に色が
-    残らないよう、切り詰めたときはリセットを足す。
-    """
-    if display_width(text) <= limit:
-        return text
-    kept: list[str] = []
-    width, index = 0, 0
-    while index < len(text):
-        match = SGR_PATTERN.match(text, index)
-        if match:
-            kept.append(match.group())
-            index = match.end()
-            continue
-        width += char_width(text[index])
-        if width > limit - 1:
-            break
-        kept.append(text[index])
-        index += 1
-    tail = SGR_RESET if SGR_PATTERN.search(text) else ""
-    return "".join(kept) + "…" + tail
-
-
-def clock(seconds: float) -> str:
-    """秒を 1:02:03 / 2:03 形式にする。"""
-    total = int(max(seconds, 0))
-    hours, rest = divmod(total, 3600)
-    minutes, secs = divmod(rest, 60)
-    return f"{hours}:{minutes:02d}:{secs:02d}" if hours else f"{minutes}:{secs:02d}"
+        return rainbow_rgb(position, phase)
+    return scale_rgb(band_color(speed), wave_level(position, phase))
 
 
 def parse_speed(value: str) -> float:
@@ -1241,8 +1046,12 @@ class ResultLayout:
         return pad_display(text, self.prefix_width)
 
 
-class ProgressReporter:
+class ProgressReporter(LiveLine):
     """エンコード中の進捗を1行にまとめて表示する。
+
+    1行を書き換え続ける機構そのもの（再描画スレッド・行の消去・端末幅に応じた
+    欄の配分）は lib.progressbar.LiveLine が持っている。ここで決めるのは
+    「どの欄を、どんな文言で出すか」と、速度をどう色に割り当てるかだけ。
 
     総尺は解析時に分かっているので、全体に対する処理済み秒数で進捗率を出せる。
     -j で並列にしても行が混ざらないよう、本数ごとではなく全体を1行だけ書き換える。
@@ -1252,17 +1061,14 @@ class ProgressReporter:
 
     def __init__(self, durations: dict[Path, float], layout: ResultLayout, enabled: bool,
                  sequential: bool) -> None:
+        super().__init__(enabled=enabled)
         self.durations = durations                      # src -> 尺。1本ごとの進捗に使う
         self.total_duration = sum(durations.values())
         self.layout = layout
-        self.enabled = enabled
         self.sequential = sequential
-        self.color = enabled and use_color()
-        self.lock = threading.Lock()
         self.running: dict[Path, tuple[float, float]] = {}   # src -> (処理済み秒, 速度)
         self.done_duration = 0.0
         self.done_jobs = 0
-        self.started = time.monotonic()
         # 本と本の合間は走っているものが無く速度が0になる。バーの色がそのたびに
         # 最低速の帯（赤）へ落ちるのを避けるため、直近の速さを覚えておく。
         self.last_per_file = 0.0
@@ -1271,11 +1077,6 @@ class ProgressReporter:
         # ときだけ None にして、割合の代わりに経過時間を出す。初期値は0（空のバー）。
         self.file_ratio: float | None = 0.0
         self.file_elapsed = 0.0
-        # バー以外の欄に割り当てた桁数（この実行で見た最大）と、そのときの端末幅
-        self.fixed_columns = 0
-        self.last_columns = 0
-        self._stop = threading.Event()
-        self._ticker: threading.Thread | None = None
 
     @classmethod
     def for_jobs(cls, jobs: list[Job], cfg: Config, layout: ResultLayout) -> ProgressReporter:
@@ -1287,30 +1088,11 @@ class ProgressReporter:
             enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stdout.isatty(),
         )
 
-    def __enter__(self) -> ProgressReporter:
-        """アニメーション用の再描画スレッドを回し始める。
-
-        ffmpegの -progress は0.5秒に1回しか来ないので、それだけを描画の契機に
-        すると波が飛び飛びになる。色を使わないときは動かす意味がないので回さない。
-        """
-        if self.color:
-            self._ticker = threading.Thread(target=self._tick, daemon=True)
-            self._ticker.start()
-        return self
-
-    def __exit__(self, *exc: object) -> None:
-        self.close()
-
-    def _tick(self) -> None:
-        while not self._stop.wait(1.0 / PROGRESS_FPS):
-            with self.lock:
-                self._render()
-
     def update(self, src: Path, out_time: float, speed: float) -> None:
         """ffmpegから届いた1本分の進捗を反映する。"""
         with self.lock:
             self.running[src] = (out_time, speed)
-            self._render()
+            self.refresh()
 
     def finish(self, src: Path) -> None:
         """1本終わった分を完了側に移す。
@@ -1324,7 +1106,7 @@ class ProgressReporter:
             self.done_duration += self.durations.get(src, 0.0)
 
     def report(self, line: str, error: bool = False) -> None:
-        """結果行を1本出す。進捗行を潰さないように、消す→出す→描き直す。
+        """結果行を1本出す。
 
         呼び出しは1本につき1回なので、ここで本数を数える。こうするとバーの番号は
         「最後に出した結果行の次」に必ず一致し、追い越しが起きない。
@@ -1335,64 +1117,17 @@ class ProgressReporter:
             # 合間に「[2/3] なのにバーは前の本の100%」という食い違いが出る
             # （次のffmpegが起動して最初の進捗を出すまで1秒近くある）。
             self.file_ratio, self.file_elapsed = 0.0, 0.0
-            self._erase()
-            print(line, file=sys.stderr if error else sys.stdout, flush=True)
-            self._render()
+            super().report(line, error)
 
-    def close(self) -> None:
-        """進捗行を消して、以降は普通の出力に戻す。"""
-        # 先にティックを止める。ロックを持ったまま join すると、_render 待ちの
-        # スレッドと相討ちになって固まる。
-        self._stop.set()
-        if self._ticker is not None:
-            self._ticker.join(timeout=1.0)
-            self._ticker = None
-        with self.lock:
-            self._erase()
-            self.enabled = False
+    def cell_color(self, slot: BarSlot, position: float, phase: float) -> RGB:
+        """速度に応じた光沢をバーに流す。"""
+        return bar_cell_color(slot.intensity, position, phase)
 
-    def _paint(self, text: str, rgb: tuple[int, int, int]) -> str:
+    def _paint(self, text: str, rgb: RGB) -> str:
         return paint(text, rgb) if self.color else text
 
-    def _paint_bar(self, ratio: float, speed: float, phase: float, width: int) -> str:
-        """バーを組み立てる。色が使えるなら、速度に応じた光沢を流す。
-
-        満たない端数のマスは部分ブロック（▏〜▉）で埋める。1マスを8段に割れるので、
-        幅20でも0.625%刻みになり、5%刻みだった頃のような「しばらく動かない」が消える。
-        """
-        exact = ratio * width
-        full = min(int(exact), width)
-        eighths = int((exact - full) * 8)
-        chars: list[str] = []
-        for index in range(width):
-            if index < full:
-                chars.append(BAR_FILLED)
-            elif index == full and eighths > 0:
-                chars.append(BAR_PARTIALS[eighths - 1])
-            else:
-                chars.append(BAR_EMPTY)
-        if not self.color:
-            return f"[{''.join(chars)}]"
-        cells: list[str] = []
-        last: tuple[int, int, int] | None = None
-        for index, char in enumerate(chars):
-            if char == BAR_EMPTY:
-                rgb = BAR_EMPTY_RGB
-            else:
-                rgb = bar_cell_color(speed, index / max(width - 1, 1), phase)
-            if rgb != last:   # 同じ色が続くならSGRを繰り返さない
-                cells.append(sgr(rgb))
-                last = rgb
-            cells.append(char)
-        return f"[{''.join(cells)}{SGR_RESET}]"
-
-    def _erase(self) -> None:
-        if self.enabled:
-            print("\r\033[K", end="", flush=True)
-
-    def _render(self) -> None:
-        if not self.enabled:
-            return
+    def parts(self) -> list[str | BarSlot]:
+        """1行に並べる欄。逐次と並行で見せ方を変える。"""
         processed = self.done_duration + sum(t for t, _ in self.running.values())
         running = len(self.running)
         # 合算スループット。残り時間はこれで割る（全体が何倍速で進んでいるか）
@@ -1402,31 +1137,8 @@ class ProgressReporter:
         per_file = speed / running if running else 0.0
         if per_file > 0:
             self.last_per_file = per_file
-        phase = time.monotonic() - self.started
-
-        parts = (self._file_parts(processed, speed) if self.sequential
-                 else self._batch_parts(processed, speed, per_file, running))
-        columns = shutil.get_terminal_size(fallback=(80, 24)).columns
-        line = self._compose(parts, phase, columns)
-        print("\r\033[K" + truncate_display(line, columns - 1), end="", flush=True)
-
-    def _compose(self, parts: list[str | BarSlot], phase: float, columns: int) -> str:
-        """バー以外の欄を先に測り、余った桁をバーに与えて1行にする。
-
-        欄はその時々で出たり消えたりする（本の合間は速度も残り時間もファイル名も無い）。
-        そのつど測って割り当てると、欄が戻るたびにバーが縮んで幅が踊るので、この実行で
-        見た最大の桁数で確保する。端末幅が変わったら測り直す。
-        """
-        fixed = sum(display_width(p) for p in parts if isinstance(p, str)) + len(parts) - 1
-        if columns != self.last_columns:
-            self.last_columns, self.fixed_columns = columns, 0
-        self.fixed_columns = max(self.fixed_columns, fixed)
-        room = columns - 1 - self.fixed_columns - 2          # 2 はバーの枠 []
-        width = max(BAR_MIN_WIDTH, min(BAR_MAX_WIDTH, room))
-        return " ".join(
-            self._paint_bar(part.ratio, part.speed, phase, width) if isinstance(part, BarSlot)
-            else part
-            for part in parts)
+        return (self._file_parts(processed, speed) if self.sequential
+                else self._batch_parts(processed, speed, per_file, running))
 
     def _file_parts(self, processed: float, speed: float) -> list[str | BarSlot]:
         """逐次実行（-j 1）の1行。バーは「今の1本」、全体の進み具合は数字で添える。
@@ -1534,40 +1246,6 @@ def run_with_progress(cmd: list[str], src: Path, progress: ProgressReporter) -> 
         returncode = proc.wait()
         errfile.seek(0)
         return returncode, errfile.read()
-
-
-def trash_directory(path: Path) -> Path:
-    """path と同じボリュームにあるゴミ箱。無ければ作る。
-
-    ボリュームを跨ぐ移動は実体のコピーになり、動画では一瞬で終わらない。
-    起動ボリュームなら ~/.Trash、外付けならそのボリュームの .Trashes/<uid>。
-    """
-    device = path.stat().st_dev
-    home = Path.home()
-    if device == home.stat().st_dev:
-        trash = home / ".Trash"
-    else:
-        volume = path.parent
-        while volume.parent != volume and volume.parent.stat().st_dev == device:
-            volume = volume.parent
-        trash = volume / ".Trashes" / str(os.getuid())
-    trash.mkdir(parents=True, exist_ok=True)
-    return trash
-
-
-def move_to_trash(path: Path) -> None:
-    """ファイルをゴミ箱へ移す。移せなければ OSError。
-
-    unlinkではなくゴミ箱にするのは、--replace が消すのが変換前の原本だから。
-    Finder経由（osascript）なら「戻す」も効くが、ssh・launchdではFinderに
-    繋がらず必ず失敗する。ゴミ箱から取り出せれば足りるので、mv相当で済ませる。
-    """
-    trash = trash_directory(path)
-    destination = trash / path.name
-    if destination.exists():
-        # 同名が既にゴミ箱にある。日時を足して、先に捨てた方を上書きしない
-        destination = trash / f"{path.stem} {datetime.now():%Y-%m-%d-%H-%M-%S}{path.suffix}"
-    path.rename(destination)
 
 
 def build_encode_command(info: MediaInfo, tmp: Path, plan: AudioPlan, subs: SubtitlePlan,
@@ -1993,31 +1671,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 
 
-def prompt_choice(question: str, options: list[tuple[str, str]], default: str) -> str:
-    """番号でひとつ選ばせる。options は (値, 説明) の並び。
-
-    空入力とEOFは既定値。Ctrl-Cは中断として扱う。
-    """
-    print(f"\n{question}")
-    for number, (value, label) in enumerate(options, start=1):
-        print(f"  {number}) {label}{' ← 既定' if value == default else ''}")
-    while True:
-        try:
-            answer = input("番号 (Enterで既定): ").strip()
-        except EOFError:
-            print()
-            return default
-        except KeyboardInterrupt:
-            print("\n中断しました", file=sys.stderr)
-            raise SystemExit(130)
-        if not answer:
-            return default
-        chosen = to_int(answer)
-        if chosen is not None and 1 <= chosen <= len(options):
-            return options[chosen - 1][0]
-        print(f"  1〜{len(options)} の番号で答えてください")
-
-
 def prompt_audio_tracks(scan: list[MediaInfo]) -> tuple[str, tuple[str, ...]]:
     """複数音声があるファイルについて、どれを残すか聞く。
 
@@ -2071,7 +1724,7 @@ def resolve_options(args: argparse.Namespace, scan: list[MediaInfo]) -> Config:
     scan は解析済みの入力。音声トラックと字幕の質問は、実際に何が入っているかを
     見てからでないと出せない（入っていないものを聞いても仕方がない）ため受け取る。
     """
-    interactive = args.interactive and sys.stdin.isatty() and sys.stdout.isatty()
+    interactive = args.interactive and stdio_is_interactive()
     answered: list[str] = []
 
     content = args.content
