@@ -85,7 +85,6 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
 from __future__ import annotations
 
 import argparse
-import re
 import subprocess
 import sys
 import tempfile
@@ -305,6 +304,9 @@ def _build_paste_draft(
 
     # 追加宛先・件名・添付・保存（本文は入れない）。
     parts.append('tell application "Mail"')
+    # 誤爆照合は --subject で上書きする前の「Mail が付けた件名」で行う。上書き後を
+    # 見ると、別ウィンドウを掴んでいてもその件名が指定値に変わるだけで検知できない。
+    parts.append("\tset nativeSubject to (subject of msg) as string")
     parts.extend(_recipients_and_subject(args))
     if args.attach:
         parts.append(attachments_block(args.attach))
@@ -321,9 +323,10 @@ def _build_paste_draft(
         parts.extend(_focus_body_block())
     parts.extend(hint_block)
 
-    # 先頭に origSubject を区切り付きで載せ、Python 側で件名照合してから表示する。
+    # 先頭に origSubject と nativeSubject を区切り付きで載せ、Python 側で件名照合して
+    # から表示する。
     parts.append(
-        f'return origSubject & "{SUBJECT_SEP}" & '
+        f'return origSubject & "{SUBJECT_SEP}" & nativeSubject & "{SUBJECT_SEP}" & '
         f'"OK({mode}) 本文はクリップボードにコピー済み。" & hintText & '
         f'" subject=" & outSubject'
     )
@@ -405,7 +408,7 @@ def assert_no_open_drafts() -> None:
         )
 
 
-SUBJECT_SEP = "@@AMD-SUBJECT-SPLIT@@"  # origSubject と outSubject の区切り（件名に現れない文字列）
+SUBJECT_SEP = "@@AMD-SUBJECT-SPLIT@@"  # 件名と本文の区切り（件名に現れない文字列）
 
 # 返信・転送で件名の頭に付く接頭辞（小文字で比較する）。
 _RE_PREFIXES = ("re:", "re :", "返信:", "fwd:", "fw:", "fwd :", "fw :", "転送:")
@@ -423,13 +426,17 @@ def _strip_re(subject: str) -> str:
     return s
 
 
-def verify_draft_subject(orig_subject: str, out_subject: str) -> bool:
+def verify_draft_subject(orig_subject: str, draft_subject: str) -> bool:
     """作られた下書きが本当に元メールへの返信／転送かを件名で照合する。
 
     誤爆すると「元メールとは無関係な件名」の下書きに本文が入る。Re: / Fwd: の
     付き方はロケール・元件名の接頭辞の有無で揺れるので、接頭辞を剥がした芯で比べる。
+
+    draft_subject には --subject で上書きする**前**の件名を渡すこと。上書き後を
+    渡すと、別ウィンドウを掴んでいてもその件名が指定値へ変わるだけなので、照合が
+    素通りするか、正しい下書きを誤検知するかのどちらかになる。
     """
-    return _strip_re(orig_subject) == _strip_re(out_subject)
+    return _strip_re(orig_subject) == _strip_re(draft_subject)
 
 
 def run_applescript(script: str) -> str:
@@ -548,19 +555,18 @@ def main() -> int:
         return 1
 
     if SUBJECT_SEP in out:
-        orig_subject, out = out.split(SUBJECT_SEP, 1)
+        orig_subject, native_subject, out = out.split(SUBJECT_SEP, 2)
         print(out)
-        # 誤爆の検知は「作られた下書きの件名が元メールのものか」で行う。
-        # save 済みなので下書きは残る。貼り付けさせないことが最優先。
-        m = re.search(r"subject=(.*)$", out, re.S)
-        out_subject = m.group(1).strip() if m else ""
-        if not verify_draft_subject(orig_subject, out_subject):
+        # 誤爆の検知は「作られた下書きの件名が元メールのものか」で行う。比べるのは
+        # --subject で上書きする前の件名（nativeSubject）。save 済みなので下書きは
+        # 残る。貼り付けさせないことが最優先。
+        if not verify_draft_subject(orig_subject, native_subject):
             kind = "返信" if args.mode == "reply" else "転送"
             print(
                 "\n"
                 f"🚨 中止してください: 作られた下書きが元メールの{kind}になっていません。\n"
                 f"  元メールの件名 : {orig_subject}\n"
-                f"  下書きの件名   : {out_subject}\n"
+                f"  下書きの件名   : {native_subject}\n"
                 "  別の作成中メッセージを掴んだ可能性があります（2026-08-25 の誤爆と同じ症状）。\n"
                 "  ⚠️ 貼り付け（⌘V）も送信もせず、開いている下書きを確認して破棄してください。",
                 file=sys.stderr,
