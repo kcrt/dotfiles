@@ -6,6 +6,8 @@ import sys
 import os
 from subprocess import Popen, PIPE
 
+from lib.humanize import human
+
 if(len(sys.argv) != 2):
     sys.stderr.write("finddup.py path_to_find\n")
     sys.exit(1)
@@ -54,6 +56,6 @@ for filesize, filelist in sorted(filelistbysize.items()):
         if(len(xfilelist) != 1):
             sys.stderr.write(
                 f"filesize {filesize}: {len(filelist)} same files.\n")
-            print(u"{}MB".format(round(filesize / 1024 / 1024, 2)))
+            print(human(filesize))
             for f in xfilelist:
                 print(f"   {f}")

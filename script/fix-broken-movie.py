@@ -38,6 +38,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from lib.humanize import common_unit, human
+
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".m4v", ".mkv", ".avi", ".ts", ".webm", ".flv"})
 
 # libavcodecのAACデコーダが「読めていない」ことを示す警告。
@@ -203,14 +205,6 @@ def fix(src: Path, dst: Path, bitrate: int, keep_all: bool) -> str | None:
         tmp_out.unlink(missing_ok=True)
 
 
-def human(n: float) -> str:
-    for unit in ("B", "KB", "MB", "GB"):
-        if n < 1024:
-            return f"{n:.1f} {unit}"
-        n /= 1024
-    return f"{n:.1f} TB"
-
-
 def collect(inputs: list[Path], outdir: Path, recursive: bool) -> list[Path]:
     out = outdir.resolve()
     found: list[Path] = []
@@ -310,8 +304,11 @@ def main(argv: list[str]) -> int:
             print(f"  [{i}/{len(broken)}] 失敗 {rel}: {err}", flush=True)
             failed += 1
         else:
+            src_size, dst_size = r.path.stat().st_size, dst.stat().st_size
+            # 単位は左右で揃える。食い違うと「1.0 GB → 194.0 MB」が増えたように読める
+            unit = common_unit(src_size, dst_size)
             print(f"  [{i}/{len(broken)}] 完了 {rel} "
-                  f"({human(r.path.stat().st_size)} → {human(dst.stat().st_size)})", flush=True)
+                  f"({human(src_size, unit)} → {human(dst_size, unit)})", flush=True)
             ok += 1
 
     print(f"\n復旧 {ok} 本 / 失敗 {failed} 本")

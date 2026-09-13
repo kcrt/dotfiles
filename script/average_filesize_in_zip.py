@@ -5,6 +5,8 @@ import zipfile
 import argparse
 import os
 
+from lib.humanize import human
+
 def main():
     parser = argparse.ArgumentParser(description="Calculate the average file size in a ZIP archive.")
     parser.add_argument("zip_filepath", help="Path to the ZIP file.")
@@ -48,7 +50,7 @@ def main():
     average_size_mb = average_size_bytes / (1024 * 1024)
 
     if average_size_mb > args.min_size_mb:
-        print(f"{args.zip_filepath}: {average_size_mb:.2f} MB")
+        print(f"{args.zip_filepath}: {human(average_size_bytes)}")
 
 if __name__ == '__main__':
     main()

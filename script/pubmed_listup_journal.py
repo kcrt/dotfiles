@@ -48,6 +48,8 @@ import time
 from pathlib import Path
 import argparse
 
+from lib.termcolor import BRIGHT_CYAN, paint16
+
 PUBMED_ESEARCH_API = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'   # ESearch
 PUBMED_ESUMMARY_API = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'  # ESummary
 PUBMED_EFETCH_API = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'     # EFetch
@@ -58,7 +60,7 @@ CurrentProcedureStart = None
 
 def print_info(message: str, no_cr: bool = False):
     """ Print information to stderr in aqua color """
-    print(f'\033[96m{message}\033[0m',
+    print(paint16(message, BRIGHT_CYAN, sys.stderr),
           file=sys.stderr, end="" if no_cr else "\n")
 
 

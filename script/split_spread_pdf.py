@@ -17,6 +17,8 @@ import getpass
 from pathlib import Path
 from typing import Optional, Tuple
 
+from lib.prompt import confirm
+
 try:
     import fitz  # PyMuPDF
 except ImportError:
@@ -280,8 +282,7 @@ def main() -> None:
 
         # Check if output file already exists
         if output_path.exists():
-            response = input(f"Output file '{output_path}' already exists. Overwrite? (y/N): ")
-            if response.lower() not in ['y', 'yes']:
+            if not confirm(f"Output file '{output_path}' already exists. Overwrite?"):
                 print("Operation cancelled.")
                 sys.exit(0)
 

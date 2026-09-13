@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 import sys
 
+from lib.prompt import confirm
+
 
 def parsearg() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -157,8 +159,7 @@ def save_part(part: Message, filename: Optional[str], save_dir: str, index: int)
 
     # Check if file exists
     if save_path.exists():
-        response = input(f"File {save_path} already exists. Overwrite? (y/n): ").lower()
-        if response != 'y':
+        if not confirm(f"File {save_path} already exists. Overwrite?"):
             print("Save cancelled.")
             return
 
@@ -275,8 +276,7 @@ def main() -> None:
 
         # Ask if user wants to save
         if not content_type.startswith('text/plain'):
-            response = input("Do you want to save this content? (y/n): ").lower()
-            if response == 'y':
+            if confirm("Do you want to save this content?"):
                 save_part(part, filename, args.save_dir, idx)
 
 

@@ -28,6 +28,9 @@ from typing import Optional, Tuple
 from PIL import Image
 from tqdm import tqdm
 
+from lib.humanize import common_unit, human, size_change
+from lib.prompt import confirm
+
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
@@ -399,18 +402,6 @@ def repack_archive(temp_dir: Path, output_file: Path, verbose: bool = False) -> 
                 zip_ref.writestr(zip_info, f.read())
 
 
-def format_size(size_bytes: int) -> str:
-    """Format file size in MB.
-
-    Args:
-        size_bytes: Size in bytes
-
-    Returns:
-        Formatted size string
-    """
-    return f"{size_bytes / 1024 / 1024:.1f} MB"
-
-
 def main() -> None:
     """Main entry point."""
     args = parse_args()
@@ -479,9 +470,11 @@ def main() -> None:
 
             # Display results
             print("\n[DRY RUN] Results (no files were modified):")
-            print(f"Original size: {format_size(org_filesize)}")
-            print(f"Processed size: {format_size(new_filesize)}")
-            print(f"Size difference: {format_size(new_filesize - org_filesize)} ({((new_filesize - org_filesize) / org_filesize * 100):+.1f}%)")
+            unit = common_unit(org_filesize, new_filesize)
+            print(f"Original size: {human(org_filesize, unit)}")
+            print(f"Processed size: {human(new_filesize, unit)}")
+            print(f"Size difference: {human(new_filesize - org_filesize, unit)} "
+                  f"({((new_filesize - org_filesize) / org_filesize * 100):+.1f}%)")
             print(f"\nOriginal file '{input_file}' was not modified.")
 
         else:
@@ -500,26 +493,17 @@ def main() -> None:
 
             # Display results
             print("Done!")
-            print(f"File size: {format_size(org_filesize)} --> {format_size(new_filesize)}")
+            print(f"File size: {size_change(org_filesize, new_filesize)}")
 
             # Ask mode - prompt user to keep or restore
             if args.ask and output_file == input_file:
                 size_diff = new_filesize - org_filesize
                 size_diff_pct = (size_diff / org_filesize * 100)
-                print(f"Difference: {format_size(size_diff)} ({size_diff_pct:+.1f}%)")
+                print(f"Difference: {human(size_diff)} ({size_diff_pct:+.1f}%)")
 
-                while True:
-                    response = input("\nKeep the new file? [Y/n]: ").lower().strip()
-                    if response in ('y', 'yes', ''):
-                        # User confirmed - keep new file and backup
-                        break
-                    elif response in ('n', 'no'):
-                        # User declined - restore backup
-                        shutil.move(str(backup_file), str(input_file))
-                        print("Original file restored from backup.")
-                        break
-                    else:
-                        print("Please answer 'y' or 'n'")
+                if not confirm("\nKeep the new file?", default=True):
+                    shutil.move(str(backup_file), str(input_file))
+                    print("Original file restored from backup.")
 
 
 if __name__ == '__main__':

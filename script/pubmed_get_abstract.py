@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "requests",
+# ]
+# ///
 # -*- coding: utf-8 -*-
 
 # Get abstract from PubMed using PMID or DOI
@@ -11,11 +17,13 @@ import xml.etree.ElementTree as ET
 import argparse
 from typing import Optional
 
+from lib.termcolor import BRIGHT_RED, paint16
+
 PUBMED_EFETCH_API = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'     # EFetch
 
 def print_error(message: str):
     """ Print error message to stderr in red color """
-    print(f'\033[91mERROR: {message}\033[0m', file=sys.stderr)
+    print(paint16(f'ERROR: {message}', BRIGHT_RED, sys.stderr), file=sys.stderr)
 
 def get_abstract(identifier: str) -> Optional[str]:
     """

@@ -16,15 +16,8 @@ from typing import List, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
 
-
-class Colors:
-    """ANSI color codes"""
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    WHITE = '\033[97m'
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
+from lib.termcolor import (BRIGHT_GREEN, BRIGHT_RED, BRIGHT_WHITE, BRIGHT_YELLOW,
+                           paint16, set_color_mode)
 
 
 class CheckStatus(Enum):
@@ -35,15 +28,19 @@ class CheckStatus(Enum):
     SKIP = "○"
 
     def colored(self) -> str:
-        """Return colored status symbol"""
+        """Return the status symbol, colored if the destination takes color.
+
+        paint16 falls back to the plain symbol on its own (--no-color, NO_COLOR,
+        a pipe), so callers never have to branch on it.
+        """
         if self == CheckStatus.PASS:
-            return f"{Colors.GREEN}{self.value}{Colors.RESET}"
+            return paint16(self.value, BRIGHT_GREEN)
         elif self == CheckStatus.FAIL:
-            return f"{Colors.RED}{self.value}{Colors.RESET}"
+            return paint16(self.value, BRIGHT_RED)
         elif self == CheckStatus.WARN:
-            return f"{Colors.YELLOW}{self.value}{Colors.RESET}"
+            return paint16(self.value, BRIGHT_YELLOW)
         else:  # SKIP
-            return f"{Colors.WHITE}{self.value}{Colors.RESET}"
+            return paint16(self.value, BRIGHT_WHITE)
 
 
 @dataclass
@@ -58,9 +55,8 @@ class CheckResult:
 class NetworkChecker:
     """Main network diagnostic checker"""
 
-    def __init__(self, verbose: bool = False, no_color: bool = False):
+    def __init__(self, verbose: bool = False):
         self.verbose = verbose
-        self.no_color = no_color
         self.results: List[CheckResult] = []
         self.is_macos = platform.system() == "Darwin"
         self.is_linux = platform.system() == "Linux"
@@ -543,11 +539,7 @@ class NetworkChecker:
         skip_count = 0
 
         for result in self.results:
-            if self.no_color:
-                status_symbol = result.status.value
-            else:
-                status_symbol = result.status.colored()
-            print(f"{status_symbol} {result.name}: {result.message}")
+            print(f"{result.status.colored()} {result.name}: {result.message}")
 
             if result.details and self.verbose:
                 # Print first few lines of details
@@ -569,16 +561,10 @@ class NetworkChecker:
         print("-"*60)
         print(f"Total: {len(self.results)} checks")
 
-        if self.no_color:
-            print(f"  Passed: {pass_count}")
-            print(f"  Failed: {fail_count}")
-            print(f"  Warnings: {warn_count}")
-            print(f"  Skipped: {skip_count}")
-        else:
-            print(f"  {Colors.GREEN}Passed: {pass_count}{Colors.RESET}")
-            print(f"  {Colors.RED}Failed: {fail_count}{Colors.RESET}")
-            print(f"  {Colors.YELLOW}Warnings: {warn_count}{Colors.RESET}")
-            print(f"  {Colors.WHITE}Skipped: {skip_count}{Colors.RESET}")
+        print(f"  {paint16(f'Passed: {pass_count}', BRIGHT_GREEN)}")
+        print(f"  {paint16(f'Failed: {fail_count}', BRIGHT_RED)}")
+        print(f"  {paint16(f'Warnings: {warn_count}', BRIGHT_YELLOW)}")
+        print(f"  {paint16(f'Skipped: {skip_count}', BRIGHT_WHITE)}")
         print("="*60)
 
         # Return exit code based on failures
@@ -618,7 +604,8 @@ def parsearg() -> argparse.Namespace:
     parser.add_argument('-v', '--verbose', action='store_true',
                        help='Show detailed output for each check')
     parser.add_argument('--no-color', action='store_true',
-                       help='Disable colored output')
+                       help='Disable colored output (NO_COLOR and a non-terminal '
+                            'destination are honored on their own)')
     return parser.parse_args()
 
 
@@ -626,7 +613,8 @@ def main():
     """Main function"""
     args = parsearg()
 
-    checker = NetworkChecker(verbose=args.verbose, no_color=args.no_color)
+    set_color_mode("never" if args.no_color else "auto")
+    checker = NetworkChecker(verbose=args.verbose)
     exit_code = checker.run_all_checks()
 
     sys.exit(exit_code)

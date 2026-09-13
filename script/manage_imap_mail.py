@@ -14,6 +14,8 @@ import time
 from datetime import datetime
 from imapclient import IMAPClient
 
+from lib.prompt import confirm
+
 MAX_MESSAGES = 300
 
 
@@ -127,8 +129,7 @@ def ensure_folder_exists(server: IMAPClient, folder_name: str, skip_confirm: boo
     print(f"\nWarning: Destination folder '{folder_name}' does not exist.")
 
     if not skip_confirm:
-        response = input(f"Do you want to create it? [y/N]: ")
-        if response.lower() not in ('y', 'yes'):
+        if not confirm("Do you want to create it?"):
             print("Folder creation cancelled.")
             return False
 
@@ -289,11 +290,12 @@ def main() -> None:
         # Ask for confirmation before processing all batches
         if not args.dry_run and not args.yes:
             if args.delete_from:
-                response = input(f"\nAre you sure you want to delete {len(all_message_uids)} message(s)? [y/N]: ")
+                question = f"\nAre you sure you want to delete {len(all_message_uids)} message(s)?"
             else:
-                response = input(f"\nAre you sure you want to move {len(all_message_uids)} message(s) to {args.to}? [y/N]: ")
+                question = (f"\nAre you sure you want to move {len(all_message_uids)} "
+                            f"message(s) to {args.to}?")
 
-            if response.lower() not in ('y', 'yes'):
+            if not confirm(question):
                 print("Operation cancelled.")
                 return
 

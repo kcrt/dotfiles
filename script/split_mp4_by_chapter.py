@@ -2,71 +2,14 @@
 
 # Split mp4 audio file into multiple files by chapters
 
-import json
 import os
 import sys
 import subprocess
-import re
 import argparse
-from typing import Any
-from dataclasses import dataclass
 
-@dataclass
-class Format:
-    filename: str
-    duration: float
-    bit_rate: int
-    tags: dict[str, str]
-
-    @staticmethod
-    def from_dict(d: dict[str, Any]) -> 'Format':
-        return Format(
-            filename=d['filename'],
-            duration=float(d['duration']),
-            bit_rate=int(d['bit_rate']),
-            tags=d['tags']
-        )
-
-@dataclass
-class Chapter:
-    id: int
-    time_base: str
-    start: int
-    start_time: float
-    end: int
-    end_time: float
-    tags: dict[str, str]
-    
-    @staticmethod
-    def from_dict(d: dict[str, Any]) -> 'Chapter':
-        return Chapter(
-            id=d['id'],
-            time_base=d['time_base'],
-            start=d['start'],
-            start_time=float(d['start_time']),
-            end=d['end'],
-            end_time=float(d['end_time']),
-            tags=d['tags']
-        )
-
-@dataclass
-class FFProbeResult:
-    chapters: list[Chapter]
-    format: Format
-
-    @staticmethod
-    def from_dict(d: dict[str, Any]) -> 'FFProbeResult':
-        return FFProbeResult(
-            chapters=[Chapter.from_dict(chapter) for chapter in d['chapters']],
-            format=Format.from_dict(d['format'])
-        )
-
-
-def ffprobe(file: str) -> FFProbeResult | None:
-    cmd = 'ffprobe -v error -of json -show_chapters -show_format "{}"'.format(file)
-    ret_jsonstr = subprocess.check_output(cmd, shell=True).decode('utf-8')
-    ret_json = json.loads(ret_jsonstr)
-    return FFProbeResult.from_dict(ret_json) if ret_json else None
+from lib.ffprobe import Chapter, ProbeError, ProbeResult, probe_chapters
+from lib.humanize import clock
+from lib.prompt import confirm
 
 
 def generate_filename(file: str, chapter: Chapter, force_m4a: bool = False) -> str:
@@ -76,16 +19,9 @@ def generate_filename(file: str, chapter: Chapter, force_m4a: bool = False) -> s
     return f'{filename}_{chapter.id+1:02d}{ext}'
 
 
-def humanize_time(seconds: float) -> str:
-    # Convert seconds to hours, minutes and seconds
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    return f'{int(h):02}:{int(m):02}:{int(s):02}'
-
-
-def split_chapter(file: str, chapter: Chapter, probe_result: FFProbeResult, force_m4a: bool = False, clear_metadata: bool = False):
+def split_chapter(file: str, chapter: Chapter, probe_result: ProbeResult, force_m4a: bool = False, clear_metadata: bool = False):
     filename = generate_filename(file, chapter, force_m4a)
-    title = chapter.tags.get('title', '')
+    title = chapter.title
     chapter_id = chapter.id
     disc = probe_result.format.tags.get('disc', '')
     album_title = probe_result.format.tags.get('album', '')
@@ -114,22 +50,25 @@ def main():
     if not os.path.exists(file):
         print(f'File not found: {file}')
         sys.exit(1)
-    probe_result = ffprobe(file)
+    try:
+        probe_result = probe_chapters(file)
+    except ProbeError as error:
+        print(f'Cannot read {file}: {error}')
+        sys.exit(1)
 
-    if not probe_result or not probe_result.chapters:
+    if not probe_result.chapters:
         print('No chapters found.')
         sys.exit(1)
 
     # Show chapters
     print(f'Album title: {probe_result.format.tags.get("album", "")}')
     for i, chapter in enumerate(probe_result.chapters):
-        print(f'{i+1:02d}. {humanize_time(chapter.start_time)} - {humanize_time(chapter.end_time)}: {chapter.tags.get("title", "")}')
+        print(f'{i+1:02d}. {clock(chapter.start_time, always_hours=True)} - '
+              f'{clock(chapter.end_time, always_hours=True)}: {chapter.title}')
 
     # Ask for confirmation
-    if not args.yes:
-        confirm = input('Do you want to split the file? (y/n): ')    
-        if confirm.lower() != 'y':
-            sys.exit(0)
+    if not args.yes and not confirm('Do you want to split the file?'):
+        sys.exit(0)
 
     # Split chapters
     for chapter in probe_result.chapters:
