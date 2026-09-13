@@ -41,6 +41,22 @@ from lib.progressbar import BarSlot, LiveLine
 | `progressbar.py` | 進捗バーの描画と、1行を書き換え続ける `LiveLine` |
 | `prompt.py` | 番号で選ばせる対話、端末かどうかの判定 |
 | `trash.py` | macOSのゴミ箱へ移す（ボリュームを跨がない） |
+| `sample.py` | 上記すべての動作確認・デモ（直接実行する） |
+
+## 動作確認
+
+lib を触ったら `sample.py` を直接叩く。各モジュールの出力を目で見て確かめられる
+（桁揃え・色・進捗バーのアニメーション）ほか、答えが一つに決まる項目は自己検査
+する。失敗が一つでもあれば終了コードは1。
+
+```sh
+./sample.py                       # 全部
+./sample.py termtext humanize     # セクションを選ぶ
+./sample.py --color never         # 色なしの経路を通す
+./sample.py --seconds 8 --rainbow # 進捗バーを長めに見る
+./sample.py --interactive         # prompt_choice を実際に答える
+./sample.py --trash               # 一時ファイルを本当にゴミ箱へ入れて戻す
+```
 
 ## 利用しているスクリプト
 
