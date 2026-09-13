@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""macOSのゴミ箱へ移す。
+"""Move files to the macOS Trash.
 
-unlinkではなくゴミ箱にするのは、消すのが原本だから。Finder経由（osascript）なら
-「戻す」も効くが、ssh・launchdではFinderに繋がらず必ず失敗する。ゴミ箱から
-取り出せれば足りるので、mv相当で済ませる。
+The Trash rather than unlink, because what gets removed is the original. Going
+through Finder (osascript) would also enable "Put Back", but Finder is
+unreachable over ssh and from launchd, where it always fails. Being able to pull
+the file back out of the Trash is enough, so an mv-equivalent will do.
 
-標準ライブラリだけで書くこと（理由は termtext を参照）。
+Use the standard library only (see termtext for why).
 """
 
 from __future__ import annotations
@@ -16,10 +17,11 @@ from pathlib import Path
 
 
 def trash_directory(path: Path) -> Path:
-    """path と同じボリュームにあるゴミ箱。無ければ作る。
+    """The Trash on the same volume as `path`, created if missing.
 
-    ボリュームを跨ぐ移動は実体のコピーになり、大きなファイルでは一瞬で終わらない。
-    起動ボリュームなら ~/.Trash、外付けならそのボリュームの .Trashes/<uid>。
+    Moving across volumes copies the bytes, which is not instant for large files.
+    On the boot volume that is ~/.Trash; on an external one, that volume's
+    .Trashes/<uid>.
     """
     device = path.stat().st_dev
     home = Path.home()
@@ -35,10 +37,11 @@ def trash_directory(path: Path) -> Path:
 
 
 def move_to_trash(path: Path) -> None:
-    """ファイルをゴミ箱へ移す。移せなければ OSError。"""
+    """Move a file to the Trash. Raises OSError if it cannot be moved."""
     trash = trash_directory(path)
     destination = trash / path.name
     if destination.exists():
-        # 同名が既にゴミ箱にある。日時を足して、先に捨てた方を上書きしない
+        # Same name is already in the Trash. Append the timestamp so the earlier
+        # file is not overwritten.
         destination = trash / f"{path.stem} {datetime.now():%Y-%m-%d-%H-%M-%S}{path.suffix}"
     path.rename(destination)

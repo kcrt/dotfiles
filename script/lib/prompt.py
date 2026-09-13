@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
-"""端末での簡単な対話。
+"""Small interactive prompts for the terminal.
 
-聞くのは端末から人が実行したときだけにしたいので、判定用の interactive() も
-ここに置く。パイプ・cron・--no-interactive では呼ぶ側が既定値へ落とす。
+Asking only makes sense when a person ran the script from a terminal, so the
+interactive() check lives here too. Under a pipe, under cron, or with
+--no-interactive, the caller falls back to its defaults instead of asking.
 
-標準ライブラリだけで書くこと（理由は termtext を参照）。
+Use the standard library only (see termtext for why).
 """
 
 from __future__ import annotations
 
 import sys
 
-# Ctrl-C で中断したときの終了コード（128 + SIGINT）。
+# Exit code for an interrupt with Ctrl-C (128 + SIGINT).
 INTERRUPTED_EXIT_CODE = 130
 
 
 def interactive() -> bool:
-    """人が端末の前にいるか。パイプ・cron では False。
+    """Whether a person is sitting at a terminal. False under a pipe or cron.
 
-    入力と出力の両方を見る。出力だけ端末でも、入力がパイプなら質問に答えられない。
+    Both input and output are checked: with output on a terminal but input from a
+    pipe, there is no way to answer the question.
     """
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
 def prompt_choice(question: str, options: list[tuple[str, str]], default: str) -> str:
-    """番号でひとつ選ばせる。options は (値, 説明) の並び。
+    """Pick one option by number. `options` is a sequence of (value, label).
 
-    空入力とEOFは既定値。Ctrl-Cは中断として扱う。
+    Empty input and EOF take the default. Ctrl-C is treated as an interrupt.
     """
     print(f"\n{question}")
     for number, (value, label) in enumerate(options, start=1):

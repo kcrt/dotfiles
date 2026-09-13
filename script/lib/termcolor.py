@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-"""端末での着色。24bit色（truecolor）と256色の両方。
+"""Terminal coloring, in both 24-bit (truecolor) and 256-color forms.
 
-出力先が端末かどうかを見て、色を出してよいときだけ着色する。パイプやファイルへ
-流すときは色を落とすので、呼ぶ側が分岐を書かなくてよい。
+Colors are emitted only when the destination is a terminal that may receive them,
+so callers never have to branch: piping to a file drops the escapes on its own.
 
-24bitと256色を分けてあるのは、出せる条件が違うため。256色はほぼどの端末でも
-出せるが、24bitは COLORTERM を見ないと分からない。`--color` を持つスクリプトは
-set_color_mode() で判定ごと上書きできる。
+24-bit and 256-color are separate because the conditions differ. Almost every
+terminal can do 256 colors, but 24-bit cannot be assumed without looking at
+COLORTERM. A script with a `--color` flag can override the whole decision through
+set_color_mode().
 
-標準ライブラリだけで書くこと（理由は termtext を参照）。
+Use the standard library only (see termtext for why).
 """
 
 from __future__ import annotations
@@ -22,17 +23,18 @@ from .termtext import SGR_RESET, pad_display
 
 RGB = tuple[int, int, int]
 
-# 行頭の状態マーカー（NG / skip / 注意）に割り当てる既定の表示幅。
+# Default display width for the status marker at the start of a line (NG / skip / warning).
 MARKER_WIDTH = 7
 
-# --color always/never による上書き。None は自動判定。
+# Override from `--color always|never`. None means auto-detect.
 _FORCED: bool | None = None
 
 
 def set_color_mode(mode: str) -> None:
-    """`--color auto|always|never` を解釈して、以降の判定を固定する。
+    """Interpret `--color auto|always|never` and pin every later decision to it.
 
-    always は端末以外へ出すときも色を付ける（less -R やファイルへ残す用）。
+    `always` colors even when the destination is not a terminal (for `less -R`, or
+    for keeping the colors in a file).
     """
     global _FORCED
     try:
@@ -42,10 +44,10 @@ def set_color_mode(mode: str) -> None:
 
 
 def color_enabled(stream: TextIO | None = None) -> bool:
-    """その出力先に色（256色まで）を出してよいか。
+    """Whether this destination may receive color (up to 256 colors).
 
-    NO_COLOR（https://no-color.org/）と TERM=dumb は尊重する。
-    パイプやファイルへ流すときは、色が中身に混ざらないよう落とす。
+    NO_COLOR (https://no-color.org/) and TERM=dumb are honored.
+    Pipes and files drop the color so it does not end up mixed into the content.
     """
     if _FORCED is not None:
         return _FORCED
@@ -56,57 +58,57 @@ def color_enabled(stream: TextIO | None = None) -> bool:
 
 
 def use_color_for(stream: TextIO) -> bool:
-    """その出力先に24bit色を出してよいか。
+    """Whether this destination may receive 24-bit color.
 
-    サブパラメータのコロン区切り（38:2::r:g:b）はTerminal.appが解釈しないので、
-    綴りは必ずセミコロン区切りにすること。判定は COLORTERM のみを見る保守的な
-    もので、分からなければ色を使わず素の見た目に落とす。
+    Terminal.app does not understand the colon-separated subparameter form
+    (38:2::r:g:b), so always spell these with semicolons. The check looks only at
+    COLORTERM, which is conservative: when in doubt, fall back to plain output.
 
-    stdoutとstderrは別々に判定する。エラー行はstderrへ出るので、stdoutだけを
-    見ると `cmd 2> err.log` でログにエスケープが混ざる。
+    stdout and stderr are decided separately. Error lines go to stderr, so judging
+    by stdout alone would leak escapes into `cmd 2> err.log`.
     """
     if not color_enabled(stream):
         return False
     if _FORCED:
-        return True        # --color always は24bitも出す指示とみなす
+        return True        # `--color always` is taken as "24-bit too"
     return os.environ.get("COLORTERM", "").lower() in ("truecolor", "24bit")
 
 
 def use_color() -> bool:
-    """stdout に24bit色を出してよいか。"""
+    """Whether stdout may receive 24-bit color."""
     return use_color_for(sys.stdout)
 
 
 def sgr(rgb: RGB) -> str:
-    """前景色を指定するエスケープ列（24bit）。"""
+    """Escape sequence setting the foreground color (24-bit)."""
     return f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
 
 
 def sgr256(code: int) -> str:
-    """前景色を指定するエスケープ列（256色パレットの番号）。"""
+    """Escape sequence setting the foreground color (256-color palette index)."""
     return f"\033[38;5;{code}m"
 
 
 def paint(text: str, rgb: RGB, stream: TextIO | None = None) -> str:
-    """24bit色が使える端末なら着色する。使えないならそのまま返す。"""
+    """Color the text if the terminal takes 24-bit color, otherwise return it unchanged."""
     return (f"{sgr(rgb)}{text}{SGR_RESET}"
             if use_color_for(stream or sys.stdout) else text)
 
 
 def paint256(text: str, code: int, stream: TextIO | None = None) -> str:
-    """256色パレットで着色する。色が使えないならそのまま返す。"""
+    """Color the text from the 256-color palette, or return it unchanged if color is off."""
     return (f"{sgr256(code)}{text}{SGR_RESET}"
             if color_enabled(stream) else text)
 
 
 def hue_rgb(hue: float, saturation: float = 0.85, value: float = 1.0) -> RGB:
-    """色相環の位置（0〜1、範囲外は巻き戻す）から RGB を作る。"""
+    """RGB from a position on the color wheel (0-1; values outside wrap around)."""
     r, g, b = colorsys.hsv_to_rgb(hue % 1.0, saturation, value)
     return (round(r * 255), round(g * 255), round(b * 255))
 
 
 def scale_rgb(rgb: RGB, level: float) -> RGB:
-    """明度を level 倍にする（1.0で元の色）。255は超えない。"""
+    """Scale the brightness by `level` (1.0 keeps the original color). Clamped at 255."""
     return (min(255, round(rgb[0] * level)),
             min(255, round(rgb[1] * level)),
             min(255, round(rgb[2] * level)))
@@ -114,10 +116,10 @@ def scale_rgb(rgb: RGB, level: float) -> RGB:
 
 def status_line(marker: str, rgb: RGB | None, text: str,
                 stream: TextIO | None = None, width: int = MARKER_WIDTH) -> str:
-    """「  NG     名前: 理由」の形。マーカーだけ色を付ける。
+    """Build "  NG     name: reason", coloring the marker only.
 
-    桁揃えは display_width（色指定を除いて数える）に任せるので、
-    色の有無で欄がずれることはない。
+    Alignment is left to display_width (which does not count color escapes), so the
+    column never shifts depending on whether color is on.
     """
     painted = paint(marker, rgb, stream) if rgb else marker
     return f"  {pad_display(painted, width)}{text}"

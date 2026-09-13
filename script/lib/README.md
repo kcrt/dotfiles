@@ -27,6 +27,10 @@ from lib.progressbar import BarSlot, LiveLine
    例: `progressbar.py` は「1行を書き換え続ける機構」だけを持ち、どの欄をどんな
    文言で出すかは呼ぶ側が `LiveLine.parts()` で決める。
 
+4. **コメントとdocstringは英語で書く。**
+   利用者に見える文字列（`prompt.py` の質問文や `humanize.py` の「削減」など）は
+   呼ぶ側の出力に合わせて日本語のまま。
+
 ## 中身
 
 | モジュール | 中身 |

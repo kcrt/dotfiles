@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-"""1行を書き換え続ける進捗表示。
+"""A single terminal line, rewritten in place, for showing progress.
 
-受け持つのは「機構」だけ —— バーの描画、再描画スレッド、行の消去、通常の出力を
-潰さずに結果行を挟む段取り、端末幅に応じた欄の配分。
-「どの欄を、どんな文言で出すか」は仕事ごとに違うので、LiveLine を継承して
-parts() で返す（必要なら cell_color() でバーの色も決める）。
+It owns the mechanism only: drawing the bar, the redraw thread, erasing the line,
+the dance that lets ordinary output through without clobbering the progress line,
+and dividing the terminal width between the fields.
+"Which fields, and in what wording" differs per job, so a subclass of LiveLine
+returns them from parts() (and may decide the bar's color in cell_color()).
 
-標準ライブラリだけで書くこと（理由は termtext を参照）。
+Use the standard library only (see termtext for why).
 
-使い方:
+Usage:
 
     class MyProgress(LiveLine):
         def parts(self):
@@ -38,42 +39,44 @@ from .termtext import SGR_RESET, display_width, truncate_display
 BAR_FILLED, BAR_EMPTY = "█", "░"
 BAR_EMPTY_RGB = (80, 80, 80)
 
-# 端数のマスを埋める部分ブロック（1/8〜7/8）。桁を増やさずに解像度が8倍になるので、
-# 遅い仕事でもバーが常に動いて見える。全角ではないので1マス1桁のまま。
+# Partial blocks (1/8 to 7/8) filling the fractional cell. Eight times the
+# resolution at no extra width, so even a slow job keeps the bar visibly moving.
+# These are not full-width, so a cell still costs one column.
 BAR_PARTIALS = "▏▎▍▌▋▊▉"
 
-# バーの幅は端末の空きに合わせて伸縮させる。固定幅だと、狭い端末では枠だけで行の半分以上を
-# 食って数字が消え（40桁なら56%）、広い端末では右に余白が残ったまま解像度も上がらない。
+# The bar stretches to whatever width is left over. A fixed width eats more than half
+# the line on a narrow terminal (56% at 80 columns) and pushes the numbers out, while on
+# a wide one it leaves empty space on the right without gaining any resolution.
 BAR_MIN_WIDTH, BAR_MAX_WIDTH = 8, 40
 
-# アニメーションの再描画頻度。進捗の報告は間隔が空くことがある（ffmpegの -progress は
-# 0.5秒に1回）ので、滑らかに動かすには独立したティックが要る。
-# 15fpsあれば波の流れは十分見える。
+# Redraw rate for the animation. Progress reports can arrive with gaps (ffmpeg's
+# -progress fires twice a second), so a smooth animation needs an independent tick.
+# 15fps is plenty to see the wave travel.
 PROGRESS_FPS = 15.0
 
-# 単色のバーに流す光沢の既定値。
-BAR_WAVE_SECONDS = 1.6    # 波が左から右へ1周する秒数
-BAR_WAVES = 1.5           # バー内に見える波の数
-BAR_WAVE_FLOOR = 0.55     # 波の谷での明度（1.0が元の色）
+# Defaults for the sheen travelling along a single-color bar.
+BAR_WAVE_SECONDS = 1.6    # seconds for one wave to cross from left to right
+BAR_WAVES = 1.5           # waves visible within the bar at once
+BAR_WAVE_FLOOR = 0.55     # brightness at the trough of the wave (1.0 is the base color)
 
-# レインボーの既定値。
-RAINBOW_SECONDS = 2.0     # 色相が1周する秒数
-RAINBOW_TURNS = 1.0       # バーの端から端で色相が何周するか
+# Defaults for the rainbow.
+RAINBOW_SECONDS = 2.0     # seconds for the hue to go once around
+RAINBOW_TURNS = 1.0       # times the hue goes around between the ends of the bar
 
-# バーの枠「[]」が食う桁数。
+# Columns taken by the bar's "[]" frame.
 BAR_FRAME_WIDTH = 2
 
-# 進捗行の既定色（cell_color を上書きしなかったとき）。
+# Default color of the progress line (when cell_color is not overridden).
 DEFAULT_BAR_RGB = (70, 145, 240)
 
 
 @dataclass(frozen=True)
 class BarSlot:
-    """parts() の並びの中で、バーが入る場所を表す印。
+    """Marker for where the bar goes within the sequence returned by parts().
 
-    ratio は 0〜1 の進み具合。intensity は「どれくらい勢いがあるか」で、
-    cell_color() が色を決めるのに使う（速度、スループット、負荷など）。
-    色を使わない実装では無視してよい。
+    `ratio` is the progress, 0-1. `intensity` is "how much is going on" - speed,
+    throughput, load - for cell_color() to pick a color from. Implementations that
+    do not use color can ignore it.
     """
 
     ratio: float
@@ -82,9 +85,12 @@ class BarSlot:
 
 def wave_level(position: float, phase: float, waves: float = BAR_WAVES,
                seconds: float = BAR_WAVE_SECONDS, floor: float = BAR_WAVE_FLOOR) -> float:
-    """光沢の明度（floor〜1.0）。position はバー内の位置(0〜1)、phase は経過秒。
+    """Brightness of the sheen (floor to 1.0).
 
-    単色のバーでも、明度を波で揺らすと左から右へ流れて見える。
+    `position` is 0-1 within the bar, `phase` is the elapsed seconds.
+
+    Even a single-color bar appears to flow left to right once its brightness is
+    modulated by a wave.
     """
     wave = math.sin(2 * math.pi * (position * waves - phase / seconds))
     return floor + (1 - floor) * (wave + 1) / 2
@@ -92,15 +98,15 @@ def wave_level(position: float, phase: float, waves: float = BAR_WAVES,
 
 def rainbow_rgb(position: float, phase: float, turns: float = RAINBOW_TURNS,
                 seconds: float = RAINBOW_SECONDS) -> RGB:
-    """バー内を流れるレインボーの、その位置での色。"""
+    """Color at this position of the rainbow flowing along the bar."""
     return hue_rgb(position * turns - phase / seconds)
 
 
 def bar_chars(ratio: float, width: int) -> list[str]:
-    """バーのマスを並べる。満たない端数は部分ブロック（▏〜▉）で埋める。
+    """Lay out the bar's cells, filling the fractional remainder with a partial block (▏-▉).
 
-    1マスを8段に割れるので、幅20でも0.625%刻みになり、5%刻みだった頃のような
-    「しばらく動かない」が消える。
+    A cell splits into eight steps, so even at width 20 the step is 0.625%, and the
+    "nothing moves for a while" of the old 5% steps is gone.
     """
     exact = max(ratio, 0.0) * width
     full = min(int(exact), width)
@@ -116,15 +122,15 @@ def bar_chars(ratio: float, width: int) -> list[str]:
     return chars
 
 
-# render_bar に渡す色関数。バー内の位置(0〜1)を受け取って色を返す。
+# Color function passed to render_bar: the position within the bar (0-1) -> a color.
 CellColor = Callable[[float], RGB]
 
 
 def render_bar(ratio: float, width: int, cell_color: CellColor | None = None) -> str:
-    """「[███▌░░░]」を組み立てる。cell_color を渡すとマスごとに着色する。
+    """Assemble "[███▌░░░]". Passing cell_color colors each cell.
 
-    cell_color は (位置0〜1) -> RGB。同じ色が続くところではSGRを繰り返さないので、
-    幅40でも行が無駄に長くならない。
+    cell_color is (position 0-1) -> RGB. An SGR is not repeated while the color
+    stays the same, so the line does not grow needlessly long even at width 40.
     """
     chars = bar_chars(ratio, width)
     if cell_color is None:
@@ -133,7 +139,7 @@ def render_bar(ratio: float, width: int, cell_color: CellColor | None = None) ->
     last: RGB | None = None
     for index, char in enumerate(chars):
         rgb = BAR_EMPTY_RGB if char == BAR_EMPTY else cell_color(index / max(width - 1, 1))
-        if rgb != last:   # 同じ色が続くならSGRを繰り返さない
+        if rgb != last:   # do not repeat the SGR while the color is unchanged
             cells.append(sgr(rgb))
             last = rgb
         cells.append(char)
@@ -141,15 +147,15 @@ def render_bar(ratio: float, width: int, cell_color: CellColor | None = None) ->
 
 
 class LiveLine:
-    """端末の最終行を書き換え続ける表示。
+    """A display that keeps rewriting the last line of the terminal.
 
-    -j で並列にしても行が混ざらないよう、仕事ごとではなく全体を1行だけ書き換える。
-    端末以外（パイプ・cron）では enabled=False にすれば何もしないので、
-    ログの見た目は素のままになる。
+    One line is rewritten for the whole run rather than one per job, so lines do
+    not interleave under -j. Where there is no terminal (a pipe, cron), pass
+    enabled=False and nothing is drawn, leaving the log in its plain form.
 
-    継承して parts() を実装する。状態を触るときは self.lock を取ること
-    （再描画スレッドが同じ状態を読むため）。RLockなので、ロックを持ったまま
-    refresh() や report() を呼んでも固まらない。
+    Subclass it and implement parts(). Hold self.lock while touching state (the
+    redraw thread reads the same state). It is an RLock, so calling refresh() or
+    report() while already holding it will not deadlock.
     """
 
     def __init__(self, enabled: bool, stream: TextIO | None = None,
@@ -157,37 +163,41 @@ class LiveLine:
         self.stream = stream or sys.stdout
         self.enabled = enabled
         self.color = enabled and use_color_for(self.stream)
-        # 色を使わないなら波は見えないので、既定ではティックを回さない
+        # Without color the wave is invisible, so by default do not run the tick
         self.animate = self.color if animate is None else animate
         self.fps = fps
         self.lock = threading.RLock()
         self.started = time.monotonic()
-        # バー以外の欄に割り当てた桁数（この実行で見た最大）と、そのときの端末幅
+        # Columns given to the fields other than the bar (the largest seen this run),
+        # and the terminal width they were measured at
         self.fixed_columns = 0
         self.last_columns = 0
         self._stop = threading.Event()
         self._ticker: threading.Thread | None = None
 
-    # -- 呼ぶ側が実装する ---------------------------------------------------
+    # -- implemented by the caller ------------------------------------------
 
     def parts(self) -> list[str | BarSlot]:
-        """1行に並べる欄。バーを入れたい場所に BarSlot を置く。
+        """The fields to lay out on the line. Put a BarSlot where the bar belongs.
 
-        self.lock を持った状態で呼ばれる。表示のために状態を進めてもよい。
+        Called with self.lock held. Advancing state for display purposes is fine.
         """
         raise NotImplementedError
 
     def cell_color(self, slot: BarSlot, position: float, phase: float) -> RGB:
-        """バー1マスの色。position はバー内の位置(0〜1)、phase は経過秒。
+        """Color of one cell of the bar.
 
-        既定は単色に光沢を流すだけ。速度で色を変えたいなら上書きする。
+        `position` is 0-1 within the bar, `phase` is the elapsed seconds.
+
+        The default only runs a sheen over a single color. Override it to vary the
+        color by speed.
         """
         return scale_rgb(DEFAULT_BAR_RGB, wave_level(position, phase))
 
-    # -- 機構 ---------------------------------------------------------------
+    # -- mechanism ----------------------------------------------------------
 
     def __enter__(self) -> "LiveLine":
-        """アニメーション用の再描画スレッドを回し始める。"""
+        """Start the redraw thread that drives the animation."""
         if self.animate:
             self._ticker = threading.Thread(target=self._tick, daemon=True)
             self._ticker.start()
@@ -201,21 +211,21 @@ class LiveLine:
             self.refresh()
 
     def refresh(self) -> None:
-        """今の状態で描き直す。"""
+        """Redraw with the current state."""
         with self.lock:
             self._render()
 
     def report(self, line: str, error: bool = False) -> None:
-        """結果行を1本出す。進捗行を潰さないように、消す→出す→描き直す。"""
+        """Emit one result line: erase, print, redraw, so the progress line survives."""
         with self.lock:
             self._erase()
             print(line, file=sys.stderr if error else self.stream, flush=True)
             self._render()
 
     def close(self) -> None:
-        """進捗行を消して、以降は普通の出力に戻す。"""
-        # 先にティックを止める。ロックを持ったまま join すると、_render 待ちの
-        # スレッドと相討ちになって固まる。
+        """Erase the progress line and go back to ordinary output."""
+        # Stop the tick first. Joining while holding the lock deadlocks against the
+        # thread waiting to enter _render.
         self._stop.set()
         if self._ticker is not None:
             self._ticker.join(timeout=1.0)
@@ -238,11 +248,12 @@ class LiveLine:
               end="", file=self.stream, flush=True)
 
     def _compose(self, parts: list[str | BarSlot], phase: float, columns: int) -> str:
-        """バー以外の欄を先に測り、余った桁をバーに与えて1行にする。
+        """Measure every field but the bar, then give the bar what is left.
 
-        欄はその時々で出たり消えたりする（仕事の合間は速度も残り時間も名前も無い）。
-        そのつど測って割り当てると、欄が戻るたびにバーが縮んで幅が踊るので、この実行で
-        見た最大の桁数で確保する。端末幅が変わったら測り直す。
+        Fields come and go as the run proceeds (between jobs there is no speed, no ETA
+        and no name). Measuring and dividing each time would shrink the bar whenever a
+        field returned, making the width jitter, so reserve the largest count of columns
+        seen this run. Re-measure when the terminal width changes.
         """
         fixed = sum(display_width(p) for p in parts if isinstance(p, str)) + len(parts) - 1
         if columns != self.last_columns:
