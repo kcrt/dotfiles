@@ -30,22 +30,23 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
       --to bob@example.com --body "本文" --attach ~/doc.pdf
 
 本文について:
-  - reply/reply-all は Mail のネイティブ引用（元メールの引用＋署名）を活かす。
-    返信ウィンドウ・宛先・添付までを用意し、**本文はクリップボードに載せるだけ
-    （pbcopy 相当）** で、ユーザーが本文欄の先頭で ⌘V で手貼りする。自動 ⌘V は
-    環境（アクセシビリティ権限・タイミング）で不発になることがあるため行わない。
+  - reply / reply-all / forward はいずれも Mail のネイティブな本文（元メールの引用
+    ＋署名、転送なら元メール＋添付）を活かす。作成ウィンドウ・宛先・添付までを
+    用意し、**本文はクリップボードに載せるだけ（pbcopy 相当）** で、ユーザーが
+    本文欄の先頭で ⌘V で手貼りする。自動 ⌘V は環境（アクセシビリティ権限・
+    タイミング）で不発になることがあるため行わない。
     `set content` を使わないのは、本文が cite ブロック（<blockquote type="cite">）に
     巻き込まれ送信時に本文全体が "> " 付き引用として送られてしまう Mail の挙動を
     回避するため（下記「既知の落とし穴」）。
-    引用を残したくない場合は --no-quote を付ける（この場合はユーザーが本文欄で
-    ⌘A→⌘V し、ネイティブ引用ごと本文に置き換える）。
+  - reply/reply-all で引用を残したくない場合は --no-quote を付ける（この場合は
+    ユーザーが本文欄で ⌘A→⌘V し、ネイティブ引用ごと本文に置き換える）。
+    **forward では --no-quote は使えない**（転送は元メールの引用が本体のため）。
     （--keep-quote は後方互換のため受理するが、既定動作なので何もしない。）
-  - forward は Mail が生成する本文（元メール＋添付）を活かし、その上に本文を
-    差し込む（従来どおり set content。転送はウィンドウの初期フォーカスが宛先欄の
-    ため貼り付け方式は使わない）。
+  - new だけは従来どおり content プロパティで本文を入れる（ウィンドウを開かない
+    運用のため。下記 cite 巻き込みは未対応）。
   - 署名は Apple Mail の設定に従い保存時に自動付与される。
 
-既知の落とし穴（なぜ reply は貼り付け方式なのか）:
+既知の落とし穴（なぜ貼り付け方式なのか）:
   - AppleScript で outgoing message の `content` をセットすると、Mail(16 系)は
     本文を `Apple-Mail-URLShareWrapperClass` 内の `<blockquote type="cite">` で
     包む。プレーンテキストとして送信される段でこの cite ブロックが各行 "> " に
@@ -59,21 +60,25 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
 
 書式について:
   - new は Mail の既定フォーマット（Settings > Composing）に従う。
-  - reply は上記のとおり本文を貼り付けるため、元メールが HTML でも本文部分は
-    プレーンテキスト（引用なし）になる。
+  - reply/forward は上記のとおり本文を貼り付けるため、元メールが HTML でも
+    貼り付けた本文部分はプレーンテキスト（引用なし）になる。
 
 補足:
-  - reply/reply-all は **作成ウィンドウを開く**（一瞬前面に出る）。作成後の
+  - reply / reply-all / forward は **作成ウィンドウを開く**（一瞬前面に出る）。作成後の
     ウィンドウは本文欄にフォーカスした状態で開いたまま残す（ユーザーが ⌘V で
-    本文を貼り、内容確認 → 送信できる）。返信ウィンドウが開くまでポーリングし、
+    本文を貼り、内容確認 → 送信できる）。ウィンドウが開くまでポーリングし、
     開かなければ中止する。
+  - 返信ウィンドウは初期フォーカスが本文欄だが、**転送ウィンドウは宛先欄**なので、
+    転送のときだけ System Events で本文欄へフォーカスを移し ⌘↑ で先頭へ寄せる。
+    失敗しても下書きは壊さず、戻り値の案内が「本文欄をクリックしてから ⌘V」に
+    切り替わる。
   - **本文はクリップボードに載せたまま**にする（ユーザーが手貼りするので復元しない）。
-    クリップボードの内容を上書きするため、reply/reply-all を実行する側（Claude 等）は
-    「今から実行します。準備 OK か」をユーザーに確認してから起動すること
-    （ユーザーが別作業でクリップボードを使っている最中を避ける）。
+    クリップボードの内容を上書きするため、reply/reply-all/forward を実行する側
+    （Claude 等）は「今から実行します。準備 OK か」をユーザーに確認してから起動する
+    こと（ユーザーが別作業でクリップボードを使っている最中を避ける）。
   - 元メールは既定で INBOX を検索する。見つからない場合は --search-all で
     全メールボックスを走査する。
-  - --open は互換のため受理する（reply は元々ウィンドウを開く）。
+  - --open は互換のため受理する（reply/forward は元々ウィンドウを開く）。
   - --dry-run で実行せず生成した AppleScript を表示する。
 """
 
@@ -211,49 +216,90 @@ def _recipients_and_subject(args) -> list[str]:
     return parts
 
 
-def build_reply(args, reply_all: bool) -> str:
-    """reply / reply-all の下書きを作る。
+def _focus_body_block() -> list[str]:
+    """作成ウィンドウの本文欄へフォーカスを移す AppleScript 断片を返す。
 
-    本文は**クリップボードに載せるだけ（pbcopy 相当）**。返信ウィンドウを開いて
-    ネイティブ引用・スレッド連結・宛先・添付までを用意し、本文はユーザーが
-    ⌘V で手貼りする。System Events による自動 ⌘V は環境（アクセシビリティ権限・
-    タイミング）で不発になることがあるため行わない。
+    転送ウィンドウは初期フォーカスが**宛先欄**なので、そのままだとユーザーの ⌘V が
+    宛先欄へ入ってしまう。本文欄（スクロールエリア）の AXFocused を立てて移し、
+    ⌘↑ で本文の先頭へ寄せる。アクセシビリティ権限が無い等で失敗しても下書きを
+    壊さないよう try で囲み、成否を focusOK に残して案内文（hintText）を切り替える。
+
+    ⚠️ **成否は「宛先欄からフォーカスが外れたか」で判定する。** 本文欄の実体は
+    AXWebArea で、フォーカスが当たっていても AXFocused の読み戻しは常に false を
+    返す（2026-09-13 実測）ので、そちらでは判定できない。宛先欄が最初のテキスト
+    フィールドでなくなるような UI 変更が起きた場合は before が false になり、
+    focusOK も false 側（＝ユーザーに本文欄をクリックしてもらう案内）へ倒れる。
+    """
+    return [
+        "delay 0.5",  # 件名を変えた場合にウィンドウのタイトルが追いつくのを待つ
+        "try",
+        '\ttell application "System Events" to tell process "Mail"',
+        "\t\tset composeWin to first window whose name is outSubject",
+        '\t\tset toFocusedBefore to (value of attribute "AXFocused" of (text field 1 of composeWin))',
+        "\t\tset bodyArea to scroll area 1 of group 1 of group 1 of composeWin",
+        '\t\tset value of attribute "AXFocused" of bodyArea to true',
+        "\t\tdelay 0.4",
+        '\t\tset toFocusedAfter to (value of attribute "AXFocused" of (text field 1 of composeWin))',
+        "\t\tset focusOK to (toFocusedBefore and not toFocusedAfter)",
+        "\t\tif focusOK then key code 126 using command down",  # ⌘↑ = 本文の先頭へ
+        "\tend tell",
+        "end try",
+    ]
+
+
+def _build_paste_draft(
+    args,
+    *,
+    verb: str,
+    mode: str,
+    window_label: str,
+    focus_body: bool,
+    hint_block: list[str],
+) -> str:
+    """作成ウィンドウを開き、本文はクリップボードに載せるだけの下書きを作る。
+
+    reply / reply-all / forward に共通の方式。Mail のネイティブな引用・スレッド連結・
+    宛先・添付までを AppleScript で用意し、**本文はクリップボードに載せるだけ
+    （pbcopy 相当）** で、ユーザーが ⌘V で手貼りする。System Events による自動 ⌘V は
+    環境（アクセシビリティ権限・タイミング）で不発になることがあるため行わない。
     `set content` を使わないのは、本文が cite ブロックに巻き込まれ送信時に本文全体が
     "> " 付き引用になってしまう Mail の挙動を回避するため（docstring「既知の落とし穴」）。
-    ネイティブ引用と In-Reply-To/References は維持される。
+
+    verb        … ウィンドウを開く AppleScript 断片（"reply orig" / "forward orig"）
+    window_label… ウィンドウが開かなかったときのエラー文言（"返信" / "転送"）
+    focus_body  … 開いた直後のフォーカスが本文欄でない（＝転送）ときに移す
+    hint_block  … 戻り値へ載せる案内文を hintText に束縛する AppleScript 断片
     """
     body = as_lit(args.body)
-    verb = "reply orig with reply to all" if reply_all else "reply orig"
-    mode = "reply-all" if reply_all else "reply"
 
     parts = ['tell application "Mail"']
     parts.append(find_original_block(args.message_id, args.match_subject, args.search_all))
     # 誤爆検知に使うため元メールの件名を控える（後段で outSubject と突き合わせる）。
     parts.append("\tset origSubject to (subject of orig) as string")
-    # 返信ウィンドウの出現を検知するため、開く前のウィンドウ数を控える。
+    # 作成ウィンドウの出現を検知するため、開く前のウィンドウ数を控える。
     parts.append("\tset winBefore to (count windows)")
     parts.append("end tell")
 
     # 本文をクリップボードへ（ユーザーが手貼りするので復元はしない）。
     parts.append(f'set the clipboard to "{body}"')
 
-    # 返信ウィンドウを開く（ネイティブ引用＋署名＋スレッド連結を生成させる）。
+    # 作成ウィンドウを開く（ネイティブ引用＋署名＋スレッド連結を生成させる）。
     parts.append('tell application "Mail"')
     parts.append("\tactivate")
     parts.append(f"\tset msg to {verb}")
     parts.append("end tell")
 
-    # 実際に返信ウィンドウが開くまでポーリングする（最大 ~10 秒）。
+    # 実際にウィンドウが開くまでポーリングする（最大 ~10 秒）。
     parts.append("set opened to false")
     parts.append("repeat 40 times")
-    parts.append("\ttell application \"Mail\" to set winNow to (count windows)")
+    parts.append('\ttell application "Mail" to set winNow to (count windows)')
     parts.append("\tif winNow > winBefore then")
     parts.append("\t\tset opened to true")
     parts.append("\t\texit repeat")
     parts.append("\tend if")
     parts.append("\tdelay 0.25")
     parts.append("end repeat")
-    parts.append('if not opened then error "返信ウィンドウが開きませんでした"')
+    parts.append(f'if not opened then error "{window_label}ウィンドウが開きませんでした"')
     # 引用/署名の生成が落ち着くのを待つ。
     parts.append("delay 0.8")
 
@@ -266,45 +312,59 @@ def build_reply(args, reply_all: bool) -> str:
     parts.append("\tsave msg")
     parts.append("end tell")
 
-    # Mail を前面化し、本文欄にフォーカスした状態でユーザーへ渡す（すぐ ⌘V できる）。
-    parts.append('try')
+    # Mail を前面化してユーザーへ渡す（そのまま ⌘V できる状態にする）。
+    parts.append("set focusOK to false")
+    parts.append("try")
     parts.append('\ttell application "System Events" to set frontmost of process "Mail" to true')
-    parts.append('end try')
+    parts.append("end try")
+    if focus_body:
+        parts.extend(_focus_body_block())
+    parts.extend(hint_block)
 
-    hint = "本文欄で ⌘A → ⌘V" if args.no_quote else "本文欄の先頭で ⌘V"
     # 先頭に origSubject を区切り付きで載せ、Python 側で件名照合してから表示する。
     parts.append(
         f'return origSubject & "{SUBJECT_SEP}" & '
-        f'"OK({mode}) 本文はクリップボードにコピー済み。開いた返信ウィンドウの'
-        f'{hint} で貼り付けてください。 subject=" & outSubject'
+        f'"OK({mode}) 本文はクリップボードにコピー済み。" & hintText & '
+        f'" subject=" & outSubject'
     )
     return "\n".join(parts)
 
 
+def build_reply(args, reply_all: bool) -> str:
+    """reply / reply-all の下書きを作る。
+
+    返信ウィンドウは初期フォーカスが本文欄なので、フォーカス移動はしない。
+    """
+    hint = "本文欄で ⌘A → ⌘V" if args.no_quote else "本文欄の先頭で ⌘V"
+    return _build_paste_draft(
+        args,
+        verb="reply orig with reply to all" if reply_all else "reply orig",
+        mode="reply-all" if reply_all else "reply",
+        window_label="返信",
+        focus_body=False,
+        hint_block=[f'set hintText to "開いた返信ウィンドウの{as_lit(hint)} で貼り付けてください。"'],
+    )
+
+
 def build_forward(args) -> str:
-    """転送の下書きを作る（Mail 生成の転送本文の上に本文を差し込む）。"""
-    body = as_lit(args.body)
-    parts = ['tell application "Mail"']
-    parts.append(find_original_block(args.message_id, args.match_subject, args.search_all))
-    parts.append("\tset msg to forward orig without opening window")
-    # forward が非同期に生成する本文（元メール＋添付）が set content を上書き
-    # するため待つ。
-    parts.append("\tdelay 2")
-    if args.no_quote:
-        parts.append(f'\tset content of msg to "{body}"')
-    else:
-        parts.append(f'\tset content of msg to "{body}" & return & (content of msg)')
-    parts.append("\tdelay 1")
+    """転送の下書きを作る。
 
-    parts.extend(_recipients_and_subject(args))
-
-    if args.attach:
-        parts.append(attachments_block(args.attach))
-
-    parts.append("\tsave msg")
-    parts.append('\treturn "OK(forward) subject=" & (subject of msg)')
-    parts.append("end tell")
-    return "\n".join(parts)
+    Mail のネイティブな転送本文（元メール＋添付）をそのまま活かし、その先頭へ
+    ユーザーが本文を貼り付ける。転送ウィンドウは初期フォーカスが**宛先欄**なので、
+    本文欄へフォーカスを移してから渡す（移せなかった場合は案内文で補う）。
+    """
+    return _build_paste_draft(
+        args,
+        verb="forward orig",
+        mode="forward",
+        window_label="転送",
+        focus_body=True,
+        hint_block=[
+            'set hintText to "開いた転送ウィンドウの本文欄をクリックしてから ⌘V で貼り付けてください。"',
+            'if focusOK then set hintText to '
+            '"開いた転送ウィンドウの本文欄の先頭にフォーカス済みです。そのまま ⌘V で貼り付けてください。"',
+        ],
+    )
 
 
 def count_outgoing_messages() -> int:
@@ -323,11 +383,12 @@ def count_outgoing_messages() -> int:
 
 
 def assert_no_open_drafts() -> None:
-    """reply/reply-all の誤爆ガード（2026-08-25 の実害を受けて 2026-09-08 に追加）。
+    """reply / reply-all / forward の誤爆ガード（2026-08-25 の実害を受けて追加）。
 
-    `reply orig` は、新規に開いた返信ウィンドウではなく **既に開いていた別の作成中
-    メッセージ**を掴むことがある。実際に別スレッドへ返信が作られ、そのまま送信された。
-    元メールの特定（Message-ID 照合）は正しく動いていたので、ここでしか止められない。
+    `reply orig` / `forward orig` は、新規に開いた作成ウィンドウではなく **既に開いて
+    いた別の作成中メッセージ**を掴むことがある。実際に別スレッドへ返信が作られ、
+    そのまま送信された。元メールの特定（Message-ID 照合）は正しく動いていたので、
+    ここでしか止められない。
     """
     n = count_outgoing_messages()
     if n == -1:
@@ -337,7 +398,7 @@ def assert_no_open_drafts() -> None:
     if n > 0:
         raise SystemExit(
             f"中止: Mail に作成中のメッセージが {n} 件開いています。\n"
-            "  reply は開いている別の作成中メッセージを掴むことがあり、\n"
+            "  reply/forward は開いている別の作成中メッセージを掴むことがあり、\n"
             "  まったく別のスレッドへ返信が作られます（2026-08-25 に実害あり）。\n"
             "  → すべて閉じてから再実行してください。\n"
             "  （意図して残したまま実行するなら --allow-open-drafts）"
@@ -346,7 +407,8 @@ def assert_no_open_drafts() -> None:
 
 SUBJECT_SEP = "@@AMD-SUBJECT-SPLIT@@"  # origSubject と outSubject の区切り（件名に現れない文字列）
 
-_RE_PREFIXES = ("re:", "re :", "返信:", "fwd:", "fw:")
+# 返信・転送で件名の頭に付く接頭辞（小文字で比較する）。
+_RE_PREFIXES = ("re:", "re :", "返信:", "fwd:", "fw:", "fwd :", "fw :", "転送:")
 
 
 def _strip_re(subject: str) -> str:
@@ -361,11 +423,11 @@ def _strip_re(subject: str) -> str:
     return s
 
 
-def verify_reply_subject(orig_subject: str, out_subject: str) -> bool:
-    """作られた下書きが本当に元メールへの返信かを件名で照合する。
+def verify_draft_subject(orig_subject: str, out_subject: str) -> bool:
+    """作られた下書きが本当に元メールへの返信／転送かを件名で照合する。
 
-    誤爆すると「元メールとは無関係な件名」の下書きに本文が入る。Re: の付き方は
-    ロケール・元件名の Re: 有無で揺れるので、Re: 類を剥がした芯で比べる。
+    誤爆すると「元メールとは無関係な件名」の下書きに本文が入る。Re: / Fwd: の
+    付き方はロケール・元件名の接頭辞の有無で揺れるので、接頭辞を剥がした芯で比べる。
     """
     return _strip_re(orig_subject) == _strip_re(out_subject)
 
@@ -413,8 +475,10 @@ def add_target(sp) -> None:
     g.add_argument("--match-subject", help="元メールを件名の部分一致で特定")
     sp.add_argument("--search-all", action="store_true",
                     help="INBOX で見つからない場合に全メールボックスを検索")
+    # --no-quote は reply/reply-all 専用。転送で引用を消すと転送の意味が無くなるので、
+    # forward では受け取っても main() で明示的にエラーにする。
     sp.add_argument("--no-quote", action="store_true",
-                    help="元メールの引用文を残さず本文だけに置き換える")
+                    help="元メールの引用文を残さず本文だけに置き換える(reply のみ)")
     # 後方互換: 以前は既定で引用を消していたため --keep-quote が必要だった。
     # 現在は引用を残すのが既定なので、--keep-quote は受理するだけの no-op。
     sp.add_argument("--keep-quote", action="store_true", help=argparse.SUPPRESS)
@@ -446,6 +510,10 @@ def main() -> int:
     add_target(sp_fwd)
     add_common(sp_fwd, need_subject=False)
     sp_fwd.add_argument("--from", dest="sender", help=argparse.SUPPRESS)
+    sp_fwd.add_argument(
+        "--allow-open-drafts", action="store_true",
+        help="作成中ウィンドウが開いていても実行する（⚠️ 誤爆の危険。既定は中止）",
+    )
 
     args = p.parse_args()
     if not hasattr(args, "allow_open_drafts"):
@@ -456,14 +524,16 @@ def main() -> int:
         if not args.to:
             p.error("new には --to が必要です")
         script = build_new(args)
-    elif args.mode == "reply":
+    elif args.mode in ("reply", "forward"):
+        if args.mode == "forward":
+            if not args.to:
+                p.error("forward には --to(転送先)が必要です")
+            if args.no_quote:
+                p.error("forward では --no-quote は使えません"
+                        "（転送は元メールの引用が本体のため）")
         if not args.dry_run and not args.allow_open_drafts:
             assert_no_open_drafts()
-        script = build_reply(args, args.all)
-    elif args.mode == "forward":
-        if not args.to:
-            p.error("forward には --to(転送先)が必要です")
-        script = build_forward(args)
+        script = build_reply(args, args.all) if args.mode == "reply" else build_forward(args)
     else:  # pragma: no cover
         p.error(f"unknown mode: {args.mode}")
 
@@ -477,17 +547,18 @@ def main() -> int:
         print(f"エラー: {e}", file=sys.stderr)
         return 1
 
-    if args.mode == "reply" and SUBJECT_SEP in out:
+    if SUBJECT_SEP in out:
         orig_subject, out = out.split(SUBJECT_SEP, 1)
         print(out)
         # 誤爆の検知は「作られた下書きの件名が元メールのものか」で行う。
         # save 済みなので下書きは残る。貼り付けさせないことが最優先。
         m = re.search(r"subject=(.*)$", out, re.S)
         out_subject = m.group(1).strip() if m else ""
-        if not verify_reply_subject(orig_subject, out_subject):
+        if not verify_draft_subject(orig_subject, out_subject):
+            kind = "返信" if args.mode == "reply" else "転送"
             print(
                 "\n"
-                "🚨 中止してください: 作られた下書きが元メールへの返信になっていません。\n"
+                f"🚨 中止してください: 作られた下書きが元メールの{kind}になっていません。\n"
                 f"  元メールの件名 : {orig_subject}\n"
                 f"  下書きの件名   : {out_subject}\n"
                 "  別の作成中メッセージを掴んだ可能性があります（2026-08-25 の誤爆と同じ症状）。\n"
