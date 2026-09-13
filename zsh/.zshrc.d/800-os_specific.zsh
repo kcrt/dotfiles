@@ -66,10 +66,10 @@ if [[ $OSTYPE = *darwin* ]] ; then
 	# `xattr -d` は全タグを消してしまうので、スクリプト経由で扱う。
 	# 色はファイルではなく Finder のタグ一覧（Finder → 設定 → タグ）で決まる。
 	# ⚠️ 関数内で `local path` を宣言しないこと（zsh では $PATH に連動する特殊変数）。
-	alias GetInProgress="mdfind 'kMDItemUserTags==InProgress'"
+	alias GetMyTurn="mdfind 'kMDItemUserTags==MyTurn'"
 	alias GetDeletable="mdfind 'kMDItemUserTags==Deletable'"
-	SetInProgress()    { ~/dotfiles/script/findertag.py "$@" add InProgress }
-	RemoveInProgress() { ~/dotfiles/script/findertag.py "$@" remove InProgress }
+	SetMyTurn()    { ~/dotfiles/script/findertag.py "$@" add MyTurn }
+	RemoveMyTurn() { ~/dotfiles/script/findertag.py "$@" remove MyTurn }
 	SetDeletable()     { ~/dotfiles/script/findertag.py "$@" add Deletable }
 	RemoveDeletable()  { ~/dotfiles/script/findertag.py "$@" remove Deletable }
 	abbrev-alias sayen="say -v 'Ava (Premium)'"

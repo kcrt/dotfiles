@@ -15,9 +15,9 @@ Usage:
     findertag.py FILE [FILE ...] remove TAG [TAG ...]
     findertag.py FILE [FILE ...] list
 
-    findertag.py ~/Documents/foo add InProgress
-    findertag.py ~/Documents/foo remove InProgress
-    findertag.py 案件*/ add InProgress            # 複数パスまとめて
+    findertag.py ~/Documents/foo add MyTurn
+    findertag.py ~/Documents/foo remove MyTurn
+    findertag.py 案件*/ add MyTurn            # 複数パスまとめて
 
 Notes:
     - The attribute holds a *plist array* of tag names. Writing a bare string
@@ -71,7 +71,7 @@ def read_tags(path: Path) -> list[str] | None:
     """Return raw tag entries (one may carry a legacy "\\n<color>" suffix).
 
     None means the attribute holds something that must not be overwritten
-    blindly (e.g. a bare string written by `xattr -w 'InProgress'`).
+    blindly (e.g. a bare string written by `xattr -w 'MyTurn'`).
     """
     # macOS の Python には os.getxattr が無い（Linux 専用）ため xattr コマンドを使う。
     result = subprocess.run(
@@ -133,7 +133,7 @@ def parse_args(argv: list[str]) -> tuple[list[Path], str, list[str]]:
     parser = argparse.ArgumentParser(
         prog="findertag.py",
         description="Add, remove, and list macOS Finder tags.",
-        epilog="example: findertag.py ~/Documents/foo add InProgress",
+        epilog="example: findertag.py ~/Documents/foo add MyTurn",
     )
     parser.add_argument("args", nargs="*", metavar="FILE... ACTION [TAG...]")
     parsed = parser.parse_args(argv)
