@@ -500,7 +500,7 @@
   "remoteControlAtStartup": true,
   "sandbox": {
     "excludedCommands": [
-      "git commit",
+      "git commit *",
       "uv run"
     ]
   },
