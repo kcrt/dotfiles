@@ -6,10 +6,15 @@
 # ///
 """動画をH.264/HEVC/AV1へ再圧縮する。単発でもディレクトリ丸ごとでも使える。
 
-入力は都度ffprobeで解析し、解像度・フレームレート・音声コーデック・チャンネル構成に
-応じて設定を組み立てる。音声はコピーで済むなら再エンコードせず、デュアルモノ
+入力は先にまとめてffprobeで解析し、解像度・フレームレート・音声コーデック・チャンネル
+構成に応じて設定を組み立てる。音声はコピーで済むなら再エンコードせず、デュアルモノ
 （ステレオだが左右が同一）なら1chにまとめる。出力コンテナは映像・音声の
 組み合わせから決めるので、再生できない組み合わせが出来上がることはない。
+
+音声が複数あるファイルでは、既定で先頭のトラックだけを残す。--audio-tracks all で
+全部、--audio-lang jpn で言語を指定して残せる（指定した言語が無いファイルは先頭）。
+字幕は既定で持ち越す。MKVはそのまま、MP4/WebMはテキスト字幕を変換して入れ、
+ビットマップ字幕（PGS・VobSub）は入れる手段が無いので落とす。
 
 単発ファイルの例:
   ffmpeg-convert.py in.mp4                       元と同じ場所に「in [hevc].mp4」
@@ -37,8 +42,10 @@
 こうした素材に合わせて、長いGOP・強めのAQ・保守的なCRFへ既定値を差し替える。
 
 端末から実行して素材・解像度・Apple互換・映像コーデック・画質・音声コーデックを省いた
-場合は、どれにするかを対話で聞く。パイプ・cron・--no-interactive では何も聞かず既定
-（汎用素材 + 元の解像度 + HEVC + normal + MP4）で走るので、バッチ実行は変わらない。
+場合は、どれにするかを対話で聞く。加えて、解析の結果そう聞く理由があるときだけ、
+複数音声のどれを残すかと、入れ物に入らない字幕を落としてよいかを聞く。
+パイプ・cron・--no-interactive では何も聞かず既定（汎用素材 + 元の解像度 + HEVC +
+normal + MP4 + 先頭の音声 + 入る字幕）で走るので、バッチ実行は変わらない。
 """
 
 from __future__ import annotations
@@ -58,10 +65,12 @@ import tempfile
 import threading
 import time
 import unicodedata
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TextIO
 
 VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".m4v", ".mkv", ".avi", ".wmv", ".flv", ".ts", ".webm"})
 
@@ -72,14 +81,23 @@ LOSSY_COPY_MAX_BITRATE = 256_000
 # 音声解析に使うサンプル長（秒）
 AUDIO_PROBE_SECONDS = 180
 
+# 入力の解析（ffprobe）を並列で走らせる本数。-j とは別物で、あちらはエンコーダ用。
+# ffmpegは1本でコアを使い切るので -j の既定は1だが、ffprobeは待ち時間が主なので
+# 並べたほうが速い。解析は対話より前にあり、ここで待たせると質問に辿り着けない。
+PROBE_WORKERS = min(8, os.cpu_count() or 4)
+
+# 解析行を1本ずつ出すのはこの本数まで。超えたら集計だけにする。
+# でないと大量の行でウィザードの質問が画面外へ流れてしまう。
+SCAN_DETAIL_MAX = 20
+
 # MP4に入れても広く再生できる音声コーデック。Opus/Vorbisは規格上MP4に入るが
 # QuickTime/Safariが再生できないため、コピーせずAACに変換する。
-MP4_SAFE_AUDIO_CODECS = frozenset({"aac", "mp3", "ac3", "eac3", "alac"})
+MP4_PLAYABLE_AUDIO_CODECS = frozenset({"aac", "mp3", "ac3", "eac3", "alac"})
 
 # --apple 指定時に「そのままコピーしてよい」と認める音声コーデック。
 # MP3やAC3もMP4コンテナには入るが、AVFoundationでの扱いが環境によって怪しいので
 # QuickTime/写真/iOSで確実に鳴る2つだけに絞る。
-APPLE_SAFE_AUDIO_CODECS = frozenset({"aac", "alac"})
+APPLE_PLAYABLE_AUDIO_CODECS = frozenset({"aac", "alac"})
 
 # コーデックの通称 → ffmpegのエンコーダ名。出力ファイル名には通称を使う。
 ENCODER_LIBRARIES = {"h264": "libx264", "hevc": "libx265", "av1": "libsvtav1"}
@@ -199,6 +217,14 @@ SPEED_COLORS = [
 # 再圧縮して元より太った本を目立たせる色。速度帯のオレンジと同じ系統。
 GREW_RGB = (220, 130, 30)
 
+# 行頭の状態マーカー（NG / skip / 注意）に割り当てる表示幅。
+MARKER_WIDTH = 7
+# 失敗した本の印。大量の行が流れる中から拾えることが目的なので、赤はNGだけに使う。
+# skip は意図どおり飛ばした印なので色を付けない（付けると赤が埋もれる）。
+NG_RGB = (215, 60, 50)    # 速度帯の赤と同じ
+# 変換はするが黙って欠けるものがある、の印。太った本と同系統のオレンジ。
+NOTE_RGB = GREW_RGB
+
 # これ以上はレインボー。色相がバー内を流れる。
 RAINBOW_SPEED = 7.0
 RAINBOW_SECONDS = 2.0     # 色相が1周する秒数
@@ -231,6 +257,27 @@ WEBM_AUDIO_CODEC_NAMES = frozenset(ENCODER_CODEC_NAME[enc] for enc in WEBM_AUDIO
 
 # -o をファイル名として受け取れる拡張子。ここから出力コンテナも決まる。
 CONTAINER_SUFFIXES = {".mp4": "mp4", ".mkv": "mkv", ".webm": "webm"}
+
+# テキスト字幕。MP4のmov_text・WebMのwebvttへ変換できる。
+# ここに無いものは全て非テキスト扱いにする（変換先が無いので落とすしかない）。
+TEXT_SUBTITLE_CODECS = frozenset({
+    "subrip", "srt", "ass", "ssa", "mov_text", "webvtt", "text", "eia_608",
+    "subviewer", "subviewer1", "microdvd", "mpl2", "jacosub", "sami", "stl", "realtext",
+})
+
+# 入れ物ごとの字幕コーデック。MKVは何でも入るのでcopy、MP4/WebMは変換して入れる。
+# ビットマップ字幕（PGS・VobSub）はMP4/WebMに入れる手段が無いので落とすしかない。
+SUBTITLE_CONTAINER_CODEC = {".mkv": "copy", ".mp4": "mov_text", ".webm": "webvtt"}
+
+# 言語タグとして意味を持たない値。指定しても選びようがないので選択肢に出さない。
+UNKNOWN_LANGUAGES = frozenset({"und", "unk", "none", "mis", "zxx"})
+
+# 対話で言語を提示するときの表示名。ここに無いコードはそのまま出す。
+LANGUAGE_NAMES = {
+    "jpn": "日本語", "eng": "英語", "chi": "中国語", "zho": "中国語", "kor": "韓国語",
+    "fra": "フランス語", "fre": "フランス語", "deu": "ドイツ語", "ger": "ドイツ語",
+    "spa": "スペイン語", "ita": "イタリア語", "por": "ポルトガル語", "rus": "ロシア語",
+}
 
 
 class ProbeError(RuntimeError):
@@ -275,6 +322,9 @@ class Config:
     audio_codec: str
     audio_bitrate: int | None
     mono_bitrate: int | None
+    audio_tracks: str                # "first" / "lang" / "all"
+    audio_langs: tuple[str, ...]     # audio_tracks が "lang" のときだけ中身がある
+    subtitles: str                   # "keep" / "drop"
 
     # --- 実行のしかた ---
     jobs: int
@@ -285,7 +335,7 @@ class Config:
     @property
     def mp4_audio_codecs(self) -> frozenset[str]:
         """MP4に入れてそのまま鳴ると認める音声コーデック。--apple ならより厳しく絞る。"""
-        return APPLE_SAFE_AUDIO_CODECS if self.apple else MP4_SAFE_AUDIO_CODECS
+        return APPLE_PLAYABLE_AUDIO_CODECS if self.apple else MP4_PLAYABLE_AUDIO_CODECS
 
 @dataclass(frozen=True)
 class AudioInfo:
@@ -293,11 +343,40 @@ class AudioInfo:
     channels: int
     sample_rate: int
     bitrate: int | None
+    # 音声ストリーム内での通し番号。ffmpegの 0:a:{index} と揃える。
+    # 全ストリーム中の index ではないことに注意（そちらは映像や字幕を含む）
+    index: int = 0
+    language: str | None = None   # 小文字3文字。und・未設定は None
+    title: str | None = None
+    default: bool = False
 
     @property
     def lossy(self) -> bool:
         """非可逆コーデックか。可逆・非圧縮ならモノ化・再エンコードの効果が大きい。"""
         return (self.codec or "").lower() in LOSSY_AUDIO_CODECS
+
+    @property
+    def label(self) -> str:
+        """複数トラックを並べて見せるときの短い見出し。"""
+        return self.title or LANGUAGE_NAMES.get(self.language or "", self.language or "言語不明")
+
+
+@dataclass(frozen=True)
+class SubtitleInfo:
+    codec: str | None
+    index: int = 0
+    language: str | None = None
+    default: bool = False
+    forced: bool = False
+
+    @property
+    def text_based(self) -> bool:
+        """テキスト字幕か。ビットマップ字幕はMP4/WebMへ変換する手段が無い。
+
+        知らないコーデックは非テキスト扱いにする。mov_text/webvttへ変換できると
+        誤認すると、ffmpegがそのファイルごと失敗する。
+        """
+        return (self.codec or "").lower() in TEXT_SUBTITLE_CODECS
 
 
 @dataclass(frozen=True)
@@ -310,14 +389,33 @@ class MediaInfo:
     height: int
     fps: float
     video_bitrate: int | None
-    audio: AudioInfo | None
+    audios: tuple[AudioInfo, ...] = ()
+    subtitles: tuple[SubtitleInfo, ...] = ()
+
+
+@dataclass(frozen=True)
+class TrackPlan:
+    """音声1トラックの扱い方。入力のどれを、何にするか。"""
+
+    source: AudioInfo
+    codec: str = "copy"          # "copy" / "aac" / "libopus"
+    channels: int | None = None  # copyのときはNone（元のまま）
+    bitrate: int | None = None   # kbps。copyのときはNone
+    note: str = ""
+
+    @property
+    def out_codec_name(self) -> str | None:
+        """出力に入るストリームのcodec_name。コンテナ適合の判定に使う。"""
+        if self.codec == "copy":
+            return (self.source.codec or "").lower() or None
+        return ENCODER_CODEC_NAME.get(self.codec, self.codec)
 
 
 @dataclass(frozen=True)
 class AudioPlan:
-    args: list[str]
+    args: list[str]                     # -map と -c:a を含む音声まわり全体
     note: str
-    codec: str = "copy"   # "copy" / "aac" / "libopus"
+    tracks: tuple[TrackPlan, ...] = ()
 
     @property
     def needs_matroska(self) -> bool:
@@ -326,7 +424,14 @@ class AudioPlan:
         規格上はISOBMFFへのOpusカプセル化が定義されているが、AVFoundationに
         Opusデコーダが無いのでQuickTimeでは音が出ない。
         """
-        return self.codec == "libopus"
+        return any(t.codec == "libopus" for t in self.tracks)
+
+
+@dataclass(frozen=True)
+class SubtitlePlan:
+    args: list[str]
+    dropped: tuple[SubtitleInfo, ...] = ()   # 入れ物に入らず落とすもの。plan_jobsが報告する
+    note: str = ""
 
 
 @dataclass(frozen=True)
@@ -344,6 +449,7 @@ class Job:
     info: MediaInfo
     dst: Path
     plan: AudioPlan
+    subs: SubtitlePlan
 
 
 @dataclass
@@ -393,19 +499,22 @@ def to_int(value: object) -> int | None:
 
 
 @functools.lru_cache(maxsize=None)
-def measure_channel_difference(path: Path) -> float:
+def measure_channel_difference(path: Path, track: int = 0) -> float:
     """L-R の最大音量を dBFS で返す。無音（＝左右同一）なら大きな負の値。
 
     音声を実際にデコードするので安くはない。再エンコードすると決まった後に
     「ついでにモノへまとめられるか」を判断するためだけに呼ぶこと。
     コピーで済む入力に対しては呼ばれない。
 
-    -vn は必須。filter_complex が [0:a] しか使っていなくても、-map が無いと
+    track は音声ストリーム内の通し番号。省くとキャッシュが path だけで引かれ、
+    2本目の判定に1本目の測定値を返してしまう。
+
+    -vn は必須。filter_complex が 1本しか使っていなくても、-map が無いと
     ffmpegの自動ストリーム選択が映像も拾い、null muxerへ向けて律儀に全フレームを
     デコードしてしまう（1080p・180秒で実測5秒）。音量の測定値は -vn の有無で変わらない。
     """
     filt = (
-        "[0:a]channelsplit=channel_layout=stereo[l][r];"
+        f"[0:a:{track}]channelsplit=channel_layout=stereo[l][r];"
         "[l][r]amerge=inputs=2,aeval=val(0)-val(1):c=mono,volumedetect"
     )
     proc = subprocess.run(
@@ -421,15 +530,17 @@ def measure_channel_difference(path: Path) -> float:
 
 def is_dual_mono(path: Path, audio: AudioInfo) -> bool:
     """左右が同一で、1chにまとめても情報が失われないか。"""
-    return audio.channels == 2 and measure_channel_difference(path) < DUAL_MONO_MAX_DB
+    return (audio.channels == 2
+            and measure_channel_difference(path, audio.index) < DUAL_MONO_MAX_DB)
 
 
-def estimate_audio_bitrate(path: Path, seconds: int = 60) -> int | None:
+def estimate_audio_bitrate(path: Path, index: int = 0, seconds: int = 60) -> int | None:
     """ストリームのbit_rateが未記載のとき（mkv等でよくある）、実パケットから推定する。"""
     # csv出力は要求した順ではなくffprobe内部のフィールド順で並ぶため、jsonで受ける
     try:
         data = run_json([
-            "ffprobe", "-v", "error", "-print_format", "json", "-select_streams", "a:0",
+            "ffprobe", "-v", "error", "-print_format", "json",
+            "-select_streams", f"a:{index}",
             "-read_intervals", f"%+{seconds}",
             "-show_entries", "packet=size,duration_time", str(path),
         ])
@@ -453,6 +564,32 @@ def estimate_audio_bitrate(path: Path, seconds: int = 60) -> int | None:
     return int(total_bytes * 8 / total_time)
 
 
+def stream_tag(stream: dict, name: str) -> str | None:
+    """ストリームのタグを大文字小文字を無視して引く。
+
+    MP4/MOVが 'Language'、Matroskaが 'language' と書くなど揺れがあるので、
+    綴りをそのまま突き合わせると取りこぼす。
+    """
+    for key, value in (stream.get("tags") or {}).items():
+        if key.lower() == name and isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def normalize_language(value: str | None) -> str | None:
+    """言語タグを小文字に揃える。「未設定」を意味する値は None に潰す。
+
+    und を残すと対話の選択肢に「und」が並んでしまうが、それを選んでも
+    何も指定していないのと同じで意味がない。
+    """
+    code = (value or "").strip().lower()
+    return None if not code or code in UNKNOWN_LANGUAGES else code
+
+
+def has_disposition(stream: dict, name: str) -> bool:
+    return bool((stream.get("disposition") or {}).get(name))
+
+
 def probe(path: Path) -> MediaInfo:
     data = run_json([
         "ffprobe", "-v", "error", "-print_format", "json",
@@ -465,15 +602,31 @@ def probe(path: Path) -> MediaInfo:
     if video is None:
         raise ProbeError("映像ストリームが見つかりません")
 
-    audio_stream = next((s for s in streams if s.get("codec_type") == "audio"), None)
-    audio: AudioInfo | None = None
-    if audio_stream is not None:
-        audio = AudioInfo(
-            codec=audio_stream.get("codec_name"),
-            channels=to_int(audio_stream.get("channels")) or 1,
-            sample_rate=to_int(audio_stream.get("sample_rate")) or 48_000,
-            bitrate=to_int(audio_stream.get("bit_rate")) or estimate_audio_bitrate(path),
+    audios = tuple(
+        AudioInfo(
+            codec=stream.get("codec_name"),
+            channels=to_int(stream.get("channels")) or 1,
+            sample_rate=to_int(stream.get("sample_rate")) or 48_000,
+            # bit_rate が無いときだけ実測する。トラック数ぶん走るので空振りは避ける
+            bitrate=to_int(stream.get("bit_rate")) or estimate_audio_bitrate(path, index),
+            index=index,
+            language=normalize_language(stream_tag(stream, "language")),
+            title=stream_tag(stream, "title"),
+            default=has_disposition(stream, "default"),
         )
+        for index, stream in enumerate(s for s in streams if s.get("codec_type") == "audio")
+    )
+
+    subtitles = tuple(
+        SubtitleInfo(
+            codec=stream.get("codec_name"),
+            index=index,
+            language=normalize_language(stream_tag(stream, "language")),
+            default=has_disposition(stream, "default"),
+            forced=has_disposition(stream, "forced"),
+        )
+        for index, stream in enumerate(s for s in streams if s.get("codec_type") == "subtitle")
+    )
 
     return MediaInfo(
         path=path,
@@ -484,7 +637,8 @@ def probe(path: Path) -> MediaInfo:
         height=to_int(video.get("height")) or 0,
         fps=parse_fraction(video.get("avg_frame_rate") or video.get("r_frame_rate")),
         video_bitrate=to_int(video.get("bit_rate")),
-        audio=audio,
+        audios=audios,
+        subtitles=subtitles,
     )
 
 
@@ -580,85 +734,105 @@ def container_suffix(plan: AudioPlan, cfg: Config) -> str:
         return ".mp4"
     # Opusを使う場合。AV1と組めばWebMに収まり、こちらの方が対応環境が広い。
     # HEVC+OpusはWebMに入らないのでMKVにする。
-    if cfg.encoder in WEBM_VIDEO_CODECS and plan.codec in WEBM_AUDIO_CODECS:
+    if (cfg.encoder in WEBM_VIDEO_CODECS
+            and all(t.codec in WEBM_AUDIO_CODECS for t in plan.tracks)):
         return ".webm"
     return ".mkv"
 
 
-def output_audio_codec(plan: AudioPlan, info: MediaInfo) -> str | None:
-    """出力に入る音声のcodec_name。音声を落とす場合はNone。"""
-    if info.audio is None:
-        return None
-    if plan.codec == "copy":
-        return (info.audio.codec or "").lower() or None
-    return ENCODER_CODEC_NAME.get(plan.codec, plan.codec)
+def output_audio_codecs(plan: AudioPlan) -> list[str]:
+    """出力に入る音声のcodec_nameを並び順に。音声を落とす場合は空。"""
+    return [name for name in (t.out_codec_name for t in plan.tracks) if name]
 
 
-def container_audio_conflict(plan: AudioPlan, info: MediaInfo, suffix: str,
-                             cfg: Config) -> str | None:
+def container_audio_conflict(plan: AudioPlan, suffix: str, cfg: Config) -> str | None:
     """コンテナに入らない音声の組み合わせを、ffmpegを起動する前に見つける。
 
     --container を明示するとauto時の安全な組み合わせから外れることがある。
     そのままffmpegに渡すと "Nothing was written into output file" のような
     原因の分からないエラーで落ちるので、理由を添えて先に弾く。
     収容制限を持たないコンテナ（.mkv）は常に通す。
+
+    スキップはファイル単位なので、1本でも入らないトラックがあればその時点で弾く。
     """
-    codec = output_audio_codec(plan, info)
-    if codec is None:
-        return None
     allowed = {".mp4": cfg.mp4_audio_codecs, ".webm": WEBM_AUDIO_CODEC_NAMES}.get(suffix)
-    if allowed is None or codec in allowed:
+    if allowed is None:
         return None
-    return (f"{suffix.lstrip('.')} に {codec} 音声は入れられません"
-            f"（--container / --audio-codec / --audio-mode を見直してください）")
+    for codec in output_audio_codecs(plan):
+        if codec not in allowed:
+            return (f"{suffix.lstrip('.')} に {codec} 音声は入れられません"
+                    f"（--container / --audio-codec / --audio-mode を見直してください）")
+    return None
 
 
-def resolve_audio_codec(cfg: Config) -> str:
+def container_audio_warning(plan: AudioPlan, suffix: str) -> str | None:
+    """入るには入るが、そう再生されるとは限らない組み合わせ。弾かずに一言添える。"""
+    if suffix == ".webm" and len(plan.tracks) > 1:
+        return (f"{len(plan.tracks)}本の音声をwebmに入れますが、"
+                "1本目しか再生しない環境がほとんどです（mkvなら選べます）")
+    return None
+
+
+def resolve_audio_codec_for(audio_codec: str, encoder: str) -> str:
     """再エンコードする場合に使う音声コーデック。
 
     AV1を選んだ場合はアーカイブ用途とみなし、対になるOpusを既定にする。
     映像が半分になると音声が容量の約半分を占めるようになるため。
     """
-    if cfg.audio_codec == "opus":
+    if audio_codec == "opus":
         return "libopus"
-    if cfg.audio_codec == "aac":
+    if audio_codec == "aac":
         return "aac"
-    return "libopus" if cfg.encoder == "libsvtav1" else "aac"
+    return "libopus" if encoder == "libsvtav1" else "aac"
 
 
-def build_audio_args(info: MediaInfo, cfg: Config) -> AudioPlan:
-    audio = info.audio
-    if audio is None:
-        return AudioPlan(["-an"], "音声なし")
+def resolve_audio_codec(cfg: Config) -> str:
+    return resolve_audio_codec_for(cfg.audio_codec, cfg.encoder)
 
+
+def predicted_suffix(container: str, audio_codec: str, encoder: str) -> str:
+    """設定が固まった時点で分かる出力拡張子。対話で字幕の可否を見積もるのに使う。
+
+    実際の拡張子は container_suffix がトラックごとの計画から決めるが、そちらも
+    「Opusを使うか」だけで分岐するので、Configが固まれば全ファイルで同じになる。
+
+    唯一ずれるのが --audio-mode prefer-copy × Opus で、入力の音声をコピーできた
+    ファイルだけMP4に落ち着く。その場合ここはMKVと見積もって字幕の質問を省くが、
+    落ちる字幕は plan_jobs が「注意」として報告するので黙って消えることはない。
+    """
+    if container != "auto":
+        return f".{container}"
+    if resolve_audio_codec_for(audio_codec, encoder) != "libopus":
+        return ".mp4"
+    return ".webm" if encoder in WEBM_VIDEO_CODECS else ".mkv"
+
+
+def plan_one_track(audio: AudioInfo, info: MediaInfo, cfg: Config) -> TrackPlan:
+    """音声1トラックをコピーするか、何に再エンコードするかを決める。"""
     codec = (audio.codec or "").lower()
-    mp4_safe = codec in cfg.mp4_audio_codecs
-    unsafe_reason = "はApple環境で確実に鳴らない" if cfg.apple else "はMP4で再生できない"
+    plays_as_is = codec in cfg.mp4_audio_codecs
     kbps = audio.bitrate // 1000 if audio.bitrate else None
     out_codec = resolve_audio_codec(cfg)
 
-    def encode(channels: int, reason: str) -> AudioPlan:
+    def encode(channels: int, reason: str) -> TrackPlan:
         override = cfg.mono_bitrate if channels == 1 else cfg.audio_bitrate
         target = override if override else DEFAULT_AUDIO_BITRATE[out_codec][channels]
         layout = "mono" if channels == 1 else "stereo"
         name = ENCODER_CODEC_NAME.get(out_codec, out_codec)
-        return AudioPlan(
-            ["-c:a", out_codec, "-b:a", f"{target}k", "-ac", str(channels)],
-            f"{name} {target}k {layout} ({reason})",
-            codec=out_codec,
-        )
+        return TrackPlan(audio, out_codec, channels, target,
+                         f"{name} {target}k {layout} ({reason})")
 
-    def copy(reason: str) -> AudioPlan:
-        return AudioPlan(["-c:a", "copy"], f"copy ({reason})")
+    def copy(reason: str) -> TrackPlan:
+        return TrackPlan(audio, "copy", note=f"copy ({reason})")
 
     if cfg.audio_mode == "mono":
         return encode(1, "指定")
     if cfg.audio_mode == "stereo":
         return encode(min(audio.channels, 2), "指定")
     if cfg.audio_mode == "prefer-copy":
-        if mp4_safe:
+        if plays_as_is:
             return copy(f"{codec} {audio.channels}ch")
-        return encode(min(audio.channels, 2), f"{codec}{unsafe_reason}")
+        return encode(min(audio.channels, 2), f"{codec}から変換")
 
     # --- auto ---
     # Opusを選んだ場合はアーカイブ目的として容量を優先し、コピーせず必ず変換する。
@@ -672,7 +846,7 @@ def build_audio_args(info: MediaInfo, cfg: Config) -> AudioPlan:
 
     # コピーで済むかを先に判定する。左右チャンネル差の実測は音声のデコードを伴うので、
     # 再エンコードが確定してから（＝下の downmixed() の中でだけ）行う。
-    if audio.lossy and mp4_safe:
+    if audio.lossy and plays_as_is:
         if audio.bitrate is None:
             return copy(f"{codec}, bitrate不明")
         if audio.bitrate <= LOSSY_COPY_MAX_BITRATE:
@@ -688,9 +862,144 @@ def build_audio_args(info: MediaInfo, cfg: Config) -> AudioPlan:
         # PCM/FLAC等。joint stereoではないので左右同一でもデータ量は倍のまま。
         # モノ化と圧縮の効果がどちらも大きい。
         return encode(downmixed(), f"{codec}から圧縮")
-    if not mp4_safe:
-        return encode(downmixed(), f"{codec}{unsafe_reason}")
+    if not plays_as_is:
+        return encode(downmixed(), f"{codec}から変換")
     return encode(downmixed(), f"{kbps}kから圧縮")
+
+
+def select_audio_tracks(info: MediaInfo, cfg: Config) -> tuple[AudioInfo, ...]:
+    """どの音声トラックを残すか。"""
+    if not info.audios:
+        return ()
+    if cfg.audio_tracks == "all":
+        return info.audios
+    if cfg.audio_tracks == "lang":
+        picked = tuple(a for a in info.audios if a.language in cfg.audio_langs)
+        if picked:
+            return picked
+        # 指定した言語を持たないファイル。音のない動画を作るよりは先頭を残す。
+        # 全体への指定を守れない唯一のケースなので、plan_jobs が理由を表示する
+    return info.audios[:1]
+
+
+def audio_args(tracks: tuple[TrackPlan, ...]) -> list[str]:
+    """選んだトラックぶんの -map と -c:a を組み立てる。
+
+    添字は入力側のindexではなく「マップした並びの何番目か」。ffmpegの -c:a:N は
+    出力側の音声ストリームを指すので、入力のa:2を1本目にマップしたら -c:a:0 になる。
+    """
+    single = len(tracks) == 1
+    args = [arg for t in tracks for arg in ("-map", f"0:a:{t.source.index}")]
+    for out_index, track in enumerate(tracks):
+        # 1本だけなら添字を付けない。従来と同じコマンドラインになり、
+        # 複数トラックを扱う新しい経路の外に影響が出ない
+        at = "" if single else f":{out_index}"
+        if track.codec == "copy":
+            args += [f"-c:a{at}", "copy"]
+        else:
+            args += [f"-c:a{at}", track.codec,
+                     f"-b:a{at}", f"{track.bitrate}k",
+                     f"-ac{at}", str(track.channels)]
+    if single:
+        return args
+
+    # 言語やタイトルのタグは黙っていてもコピーされる（mkv→mp4でも実測で保たれる）が、
+    # 既定トラックの印だけはmuxerが勝手に立てる。MP4では実測で全トラックがdefault=1に
+    # なり、どれを鳴らすかがプレイヤー任せになる。元がどれを既定にしていたかを見て、
+    # 残したうちの1本にだけ付け直す。元の既定を落としたときは先頭を繰り上げる。
+    default_at = next((i for i, t in enumerate(tracks) if t.source.default), 0)
+    for out_index in range(len(tracks)):
+        args += [f"-disposition:a:{out_index}", "default" if out_index == default_at else "0"]
+    return args
+
+
+def audio_note(tracks: tuple[TrackPlan, ...]) -> str:
+    """結果行に出す音声の説明。1本なら従来どおりその1本の説明をそのまま返す。"""
+    if len(tracks) == 1:
+        return tracks[0].note
+    return f"音声{len(tracks)}本: " + " / ".join(
+        f"{t.source.label} {t.note}" for t in tracks)
+
+
+def build_audio_args(info: MediaInfo, cfg: Config) -> AudioPlan:
+    """音声まわり全体の計画。残すトラックを選び、1本ずつ扱いを決めてから組み立てる。"""
+    selected = select_audio_tracks(info, cfg)
+    if not selected:
+        return AudioPlan(["-an"], "音声なし")
+    tracks = tuple(plan_one_track(audio, info, cfg) for audio in selected)
+    return AudioPlan(audio_args(tracks), audio_note(tracks), tracks)
+
+
+def audio_selection_note(info: MediaInfo, plan: AudioPlan, cfg: Config) -> str | None:
+    """指定どおりに選べなかったときの説明。守れたときはNone。"""
+    if cfg.audio_tracks != "lang" or not info.audios:
+        return None
+    if any(t.source.language in cfg.audio_langs for t in plan.tracks):
+        return None
+    wanted = "/".join(LANGUAGE_NAMES.get(code, code) for code in cfg.audio_langs)
+    return f"{wanted}の音声が無いので先頭（{info.audios[0].label}）を残します"
+
+
+# ---------------------------------------------------------------------------
+# 字幕
+# ---------------------------------------------------------------------------
+
+
+def build_subtitle_args(info: MediaInfo, suffix: str, cfg: Config) -> SubtitlePlan:
+    """字幕は既定で持ち越す。入れ物に入らないものだけ落とす。
+
+    MKVは何でもそのまま入る。MP4/WebMはテキスト字幕だけを変換して入れ、
+    ビットマップ字幕（PGS・VobSub）は変換先が無いので落とすしかない。
+    """
+    def drop_all(reason: str) -> SubtitlePlan:
+        # 空listではなく -sn を明示する。MKV出力ではffmpegの自動選択が
+        # 字幕を拾い直してしまい、落としたつもりが残る
+        return SubtitlePlan(["-sn"], dropped=info.subtitles,
+                            note=reason if info.subtitles else "")
+
+    if not info.subtitles:
+        return SubtitlePlan([])
+    if cfg.subtitles == "drop":
+        return drop_all(f"字幕{len(info.subtitles)}本を落とします（--subtitles drop）")
+
+    codec = SUBTITLE_CONTAINER_CODEC.get(suffix)
+    if codec is None:
+        return drop_all(f"字幕{len(info.subtitles)}本を落とします（{suffix} に入りません）")
+
+    kept = tuple(s for s in info.subtitles if codec == "copy" or s.text_based)
+    dropped = tuple(s for s in info.subtitles if s not in kept)
+    if not kept:
+        names = "/".join(sorted({(s.codec or "?") for s in dropped}))
+        return drop_all(f"字幕{len(dropped)}本を落とします（{names} は {suffix} に入りません）")
+
+    args = [arg for s in kept for arg in ("-map", f"0:s:{s.index}")] + ["-c:s", codec]
+    if suffix == ".mkv":
+        # ASSのフォントは添付ファイルとして入っている。連れて行かないと描画が崩れる
+        args += ["-map", "0:t?"]
+    # 字幕は「既定では表示しない」も意図のうちなので、元のフラグをそのまま写す。
+    # MP4のdefaultはtkhdのenabledフラグなので、muxerが必ず先頭を立ててしまい
+    # ここでは消せない（MKVは指定どおりになる）。forcedはどちらでも効く
+    for out_index, sub in enumerate(kept):
+        flags = [name for name, on in (("default", sub.default), ("forced", sub.forced)) if on]
+        args += [f"-disposition:s:{out_index}", "+".join(flags) or "0"]
+
+    note = ""
+    if dropped:
+        names = "/".join(sorted({(s.codec or "?") for s in dropped}))
+        note = f"字幕{len(kept)}本を保持、{len(dropped)}本を破棄（{names} は {suffix} に入りません）"
+    elif codec != "copy":
+        note = f"字幕{len(kept)}本を{codec}へ変換"
+    return SubtitlePlan(args, dropped, note)
+
+
+def doomed_subtitles(info: MediaInfo, suffix: str) -> tuple[SubtitleInfo, ...]:
+    """その入れ物に持ち越せない字幕。対話で「落としてよいか」を聞くために数える。"""
+    codec = SUBTITLE_CONTAINER_CODEC.get(suffix)
+    if codec is None:
+        return info.subtitles
+    if codec == "copy":
+        return ()
+    return tuple(s for s in info.subtitles if not s.text_based)
 
 
 # ---------------------------------------------------------------------------
@@ -770,26 +1079,45 @@ SGR_RESET = "\033[0m"
 
 
 @functools.cache
-def use_color() -> bool:
-    """24bit色を出してよい端末か。
+def use_color_for(stream: TextIO) -> bool:
+    """その出力先に24bit色を出してよいか。
 
     サブパラメータのコロン区切り（38:2::r:g:b）はTerminal.appが解釈しないので、
     綴りは必ずセミコロン区切りにすること。判定は COLORTERM のみを見る保守的な
     もので、分からなければ色を使わず今までどおりの見た目に落とす。
     パイプやファイルへ流すときは、色が中身に混ざらないよう必ず落とす。
+
+    stdoutとstderrは別々に判定する。NG行はstderrへ出るので、stdoutだけを見ると
+    `cmd 2> err.log` でログにエスケープが混ざる。
     """
-    if os.environ.get("NO_COLOR") or not sys.stdout.isatty():
+    if os.environ.get("NO_COLOR") or not stream.isatty():
         return False
     return os.environ.get("COLORTERM", "").lower() in ("truecolor", "24bit")
+
+
+def use_color() -> bool:
+    return use_color_for(sys.stdout)
 
 
 def sgr(rgb: tuple[int, int, int]) -> str:
     return f"\033[38;2;{rgb[0]};{rgb[1]};{rgb[2]}m"
 
 
-def paint(text: str, rgb: tuple[int, int, int]) -> str:
+def paint(text: str, rgb: tuple[int, int, int], stream: TextIO | None = None) -> str:
     """色が使える端末なら着色する。使えないならそのまま返す。"""
-    return f"{sgr(rgb)}{text}{SGR_RESET}" if use_color() else text
+    return (f"{sgr(rgb)}{text}{SGR_RESET}"
+            if use_color_for(stream or sys.stdout) else text)
+
+
+def status_line(marker: str, rgb: tuple[int, int, int] | None, text: str,
+                stream: TextIO | None = None) -> str:
+    """「  NG     名前: 理由」の形。マーカーだけ色を付ける。
+
+    桁揃えは display_width（色指定を除いて数える）に任せるので、
+    色の有無で欄がずれることはない。
+    """
+    painted = paint(marker, rgb, stream) if rgb else marker
+    return f"  {pad_display(painted, MARKER_WIDTH)}{text}"
 
 
 def band_color(speed: float) -> tuple[int, int, int]:
@@ -1242,8 +1570,8 @@ def move_to_trash(path: Path) -> None:
     path.rename(destination)
 
 
-def build_encode_command(info: MediaInfo, tmp: Path, plan: AudioPlan, cfg: Config,
-                         with_progress: bool) -> list[str]:
+def build_encode_command(info: MediaInfo, tmp: Path, plan: AudioPlan, subs: SubtitlePlan,
+                         cfg: Config, with_progress: bool) -> list[str]:
     """1本分のffmpegコマンドライン。出力は書きかけの一時ファイル。"""
     cmd = [
         "ffmpeg", "-y", "-nostdin",
@@ -1251,12 +1579,14 @@ def build_encode_command(info: MediaInfo, tmp: Path, plan: AudioPlan, cfg: Confi
         *(["-progress", "pipe:1"] if with_progress else []),
         "-i", str(info.path),
         "-map", "0:v:0",
+        # 既定と同じ挙動だが、-map を明示している以上ここも明示しておく。
+        # 映像と音声だけを選んでいるように読めて、実はチャプターも来ている、を避ける
+        "-map_chapters", "0",
         *build_video_args(info, cfg),
     ]
-    if info.audio is not None:
-        cmd += ["-map", "0:a:0", *plan.args]
-    else:
-        cmd += ["-an"]
+    # 音声なしは build_audio_args が ["-an"] として返している
+    cmd += plan.args
+    cmd += subs.args
     if tmp.suffix.lower() == ".mp4":
         cmd += ["-movflags", "+faststart"]
     cmd += [str(tmp)]
@@ -1312,17 +1642,22 @@ def encode(job: Job, cfg: Config, progress: ProgressReporter) -> Result:
     info, dst = job.info, job.dst
     src = info.path
     tmp = dst.with_name(dst.name + ".part" + dst.suffix)
-    cmd = build_encode_command(info, tmp, job.plan, cfg, progress.enabled)
+    cmd = build_encode_command(info, tmp, job.plan, job.subs, cfg, progress.enabled)
+
+    def subtitle_line(indent: str) -> str:
+        return f"\n{indent}subtitle: {job.subs.note}" if job.subs.note else ""
 
     if cfg.dry_run:
         destination = f"\n          → {dst.name}（元はゴミ箱へ）" if cfg.replace else ""
-        print(f"[dry-run] {src.name}\n          audio: {job.plan.note}{destination}"
+        print(f"[dry-run] {src.name}\n          audio: {job.plan.note}"
+              f"{subtitle_line(' ' * 10)}{destination}"
               f"\n          {shlex.join(cmd)}")
         return Result(src, dst, True, "dry-run", info.size, 0)
 
     dst.parent.mkdir(parents=True, exist_ok=True)
     if cfg.verbose:
-        print(f"--- {src.name}\n    audio: {job.plan.note}\n    {shlex.join(cmd)}", flush=True)
+        print(f"--- {src.name}\n    audio: {job.plan.note}"
+              f"{subtitle_line(' ' * 4)}\n    {shlex.join(cmd)}", flush=True)
     returncode, stderr = run_encoder(cmd, src, cfg, progress)
     progress.finish(src)
 
@@ -1351,23 +1686,26 @@ def encode(job: Job, cfg: Config, progress: ProgressReporter) -> Result:
 # ---------------------------------------------------------------------------
 
 
-def collect_inputs(cfg: Config) -> list[Path]:
+def collect_inputs(roots: Sequence[Path], recursive: bool, outdir: Path | None) -> list[Path]:
     """入力を集める。書きかけの一時ファイルと、入力ツリーの内側の出力先は除く。
 
     `ffmpeg-convert.py . -o compressed` のように出力先を入力の内側に置くのは
     自然な使い方だが、素朴に走査すると2回目の実行で出力済みファイルを入力として
     拾い、再圧縮してしまう。中断時に残る *.part.mp4 は出力先の外（--replace なら
     元ファイルの隣）にも生まれるので、拡張子で別に弾く。
+
+    Config ではなく素の3つを受けるのは、対話より前――Configが組み上がる前に
+    呼ぶため。何に依存しているかを引数で明示しておく。
     """
     def under_outdir(p: Path) -> bool:
-        return cfg.outdir is not None and (p == cfg.outdir or cfg.outdir in p.parents)
+        return outdir is not None and (p == outdir or outdir in p.parents)
 
     found: list[Path] = []
-    for root in cfg.roots:
+    for root in roots:
         if root.is_file():
             found.append(root)
         elif root.is_dir():
-            it = root.rglob("*") if cfg.recursive else root.glob("*")
+            it = root.rglob("*") if recursive else root.glob("*")
             found += [p for p in it
                       if p.is_file() and p.suffix.lower() in VIDEO_SUFFIXES
                       and not under_outdir(p) and ".part" not in p.suffixes]
@@ -1507,6 +1845,19 @@ def validate_combinations(parser: argparse.ArgumentParser, args: argparse.Namesp
             parser.error("--container webm は -t/--tune と併用できません"
                          "（WebMに入るのはAV1/VP9で、-tune が効くのは x264/x265 だけです）")
 
+    if args.audio_lang is not None and args.audio_tracks not in (None, "lang"):
+        parser.error(f"--audio-lang は --audio-tracks {args.audio_tracks} と併用できません")
+    if args.audio_tracks == "lang" and args.audio_lang is None:
+        parser.error("--audio-tracks lang には --audio-lang で言語の指定が要ります")
+
+
+def parse_languages(value: str) -> tuple[str, ...]:
+    """--audio-lang をコードの並びに直す。'jpn,eng' でも 'jpn eng' でも受ける。"""
+    codes = tuple(code for code in re.split(r"[,\s]+", value.strip().lower()) if code)
+    if not codes:
+        raise argparse.ArgumentTypeError("言語コードを1つ以上指定してください（例: jpn,eng）")
+    return codes
+
 
 def parse_size(value: str) -> int:
     """-s/--size を短辺の目標画素数に直す。'source' と 0 は「縮小しない」。"""
@@ -1585,6 +1936,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="ステレオ再エンコード時のkbps（既定: aac 128 / opus 96）")
     p.add_argument("--mono-bitrate", type=int, default=None,
                    help="モノラル再エンコード時のkbps（既定: aac 128 / opus 64）")
+    p.add_argument("--audio-tracks", choices=["first", "all", "lang"],
+                   default=argparse.SUPPRESS,
+                   help="複数音声があるときにどれを残すか。first=先頭のみ（既定）、all=すべて。"
+                        "残す本数が増えると出力も大きくなるので --replace では"
+                        "「元より大きい」として置き換えない本が増える")
+    p.add_argument("--audio-lang", type=parse_languages, default=None, metavar="CODES",
+                   help="残す音声の言語（jpn,eng のように複数可）。--audio-tracks lang と同じ。"
+                        "指定した言語が無いファイルは先頭のトラックを残す")
+    p.add_argument("--subtitles", choices=["keep", "drop"], default="keep",
+                   help="字幕を持ち越すか（既定: keep）。入れ物に入らない字幕は落とす")
+    p.add_argument("--no-subtitles", dest="subtitles", action="store_const", const="drop",
+                   help="字幕を落とす（--subtitles drop と同じ）")
     p.add_argument("-j", "--jobs", type=int, default=1, help="並列実行数")
     p.add_argument("--overwrite", action="store_true",
                    help="出力が既にあっても上書きする（既定はスキップ）")
@@ -1605,6 +1968,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     # 未指定(None)と「明示的に縮小しない」(0)を区別する。前者だけ対話で聞く。
     args.size = getattr(args, "size", None)
     args.quality = getattr(args, "quality", None)
+    args.audio_tracks = getattr(args, "audio_tracks", None)
+    if args.audio_lang and args.audio_tracks is None:
+        args.audio_tracks = "lang"
     # 以降はすべて絶対パスで扱う（出力先が入力ツリーの内側かの判定が単純になる）
     args.inputs = [p.resolve() for p in args.inputs]
 
@@ -1652,11 +2018,58 @@ def prompt_choice(question: str, options: list[tuple[str, str]], default: str) -
         print(f"  1〜{len(options)} の番号で答えてください")
 
 
-def resolve_options(args: argparse.Namespace) -> Config:
+def prompt_audio_tracks(scan: list[MediaInfo]) -> tuple[str, tuple[str, ...]]:
+    """複数音声があるファイルについて、どれを残すか聞く。
+
+    選択肢は実データから作る。入っていない言語を並べても選びようがない。
+    """
+    multi = [info for info in scan if len(info.audios) > 1]
+    counts: dict[str, int] = {}
+    for info in multi:
+        for code in {a.language for a in info.audios if a.language}:
+            counts[code] = counts.get(code, 0) + 1
+
+    options = [("first", f"先頭の1本だけ — 今までどおり（{len(multi)}本が複数音声）")]
+    for code, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])):
+        name = LANGUAGE_NAMES.get(code, code)
+        options.append((f"lang:{code}", f"{name} — {count}本のファイルに入っています"))
+    options.append(("all", "すべて残す — 入れ物が対応していれば全トラックを持ち越す"))
+
+    chosen = prompt_choice(
+        f"音声が複数あるファイルが {len(multi)} 本あります。どれを残しますか",
+        options, "first")
+    if chosen.startswith("lang:"):
+        return "lang", (chosen.split(":", 1)[1],)
+    return chosen, ()
+
+
+def prompt_subtitle_drop(doomed: list[tuple[MediaInfo, tuple[SubtitleInfo, ...]]],
+                         suffix: str, may_switch: bool) -> str:
+    """入れ物に入らない字幕があるとき、どうするか聞く。戻り値は "drop" か "mkv"。"""
+    names = "/".join(sorted({(s.codec or "?") for _, subs in doomed for s in subs}))
+    options = [("drop", "字幕を落として変換する")]
+    if may_switch:
+        options.append(("mkv", "入れ物をMKVにして字幕を残す"))
+    options.append(("abort", "中止する"))
+
+    chosen = prompt_choice(
+        f"字幕が {len(doomed)} 本のファイルで落ちます"
+        f"（{names} は {suffix} に入りません）。どうしますか",
+        options, "drop")
+    if chosen == "abort":
+        print("中断しました", file=sys.stderr)
+        raise SystemExit(130)
+    return chosen
+
+
+def resolve_options(args: argparse.Namespace, scan: list[MediaInfo]) -> Config:
     """未指定のオプションを対話か既定値で埋め、実行設定を組み立てる。
 
     端末から人が実行したときだけ質問する。パイプ・cron・--no-interactive では
     黙って既定（HEVC + MP4）に落ちるので、バッチ実行の挙動は変わらない。
+
+    scan は解析済みの入力。音声トラックと字幕の質問は、実際に何が入っているかを
+    見てからでないと出せない（入っていないものを聞いても仕方がない）ため受け取る。
     """
     interactive = args.interactive and sys.stdin.isatty() and sys.stdout.isatty()
     answered: list[str] = []
@@ -1735,11 +2148,33 @@ def resolve_options(args: argparse.Namespace) -> Config:
     # 入れ物を明示されていると、そこに入る音声も決まるので選ぶ余地がない
     # （MP4のOpusはQuickTimeで鳴らず、WebMにAACは入らない）。--apple も上の行で
     # aac を入れているので、ここは素通りする。
-    if interactive and audio_codec == "auto" and container in ("auto", "mkv"):
-        audio_codec = prompt_choice("音声コーデックを選んでください",
-                                    AUDIO_CODEC_CHOICES, DEFAULT_AUDIO_CODEC)
-        if audio_codec != DEFAULT_AUDIO_CODEC:
-            answered.append(f"--audio-codec {audio_codec}")
+    # 音声トラックの選択。複数持つファイルが1本も無ければ聞く意味がない
+    audio_tracks, audio_langs = args.audio_tracks, tuple(args.audio_lang or ())
+    if (interactive and audio_tracks is None
+            and max((len(info.audios) for info in scan), default=0) >= 2):
+        audio_tracks, audio_langs = prompt_audio_tracks(scan)
+        if audio_tracks == "all":
+            answered.append("--audio-tracks all")
+        elif audio_tracks == "lang":
+            answered.append(f"--audio-lang {','.join(audio_langs)}")
+    if audio_tracks is None:
+        audio_tracks = "first"
+
+    # 字幕。ここまでで入れ物が決まるので、落ちるものがあるかを先に見積もれる。
+    # 出力の拡張子は設定が固まれば全ファイル共通になる（Opusを使うかどうかだけで
+    # 決まり、それは cfg の関数）ので、ファイルごとに聞く必要はない
+    subtitles = args.subtitles
+    if interactive and subtitles == "keep":
+        suffix = predicted_suffix(container, audio_codec, encoder)
+        doomed = [(info, subs) for info in scan
+                  if (subs := doomed_subtitles(info, suffix))]
+        if doomed:
+            # 入れ物を明示されているときに黙って差し替えるのはやりすぎなので、
+            # MKVへの切り替えは自分で決めた（auto の）ときだけ選ばせる
+            may_switch = args.container == "auto" and args.output_file is None and not apple
+            if prompt_subtitle_drop(doomed, suffix, may_switch) == "mkv":
+                container = "mkv"
+                answered.append("--container mkv")
 
     if answered:
         print(f"（次回から {' '.join(answered)} を付けるか、--no-interactive で質問を省けます）")
@@ -1767,6 +2202,9 @@ def resolve_options(args: argparse.Namespace) -> Config:
         audio_codec=audio_codec,
         audio_bitrate=args.audio_bitrate,
         mono_bitrate=args.mono_bitrate,
+        audio_tracks=audio_tracks,
+        audio_langs=audio_langs,
+        subtitles=subtitles,
         jobs=args.jobs,
         dry_run=args.dry_run,
         verbose=args.verbose,
@@ -1779,42 +2217,103 @@ def resolve_options(args: argparse.Namespace) -> Config:
 # ---------------------------------------------------------------------------
 
 
-def announce(cfg: Config, total: int) -> None:
-    """これから何をどこへ書くのかを最初に伝える。"""
-    if cfg.apple and cfg.encoder == "libsvtav1":
-        # 通すが、再生できる機種が限られることは黙っていられない。
-        print("注意: AV1はA17 Pro / M3世代以降のApple機でのみ再生できます"
-              "（M1・M2世代では再生できません）")
-    if cfg.replace:
+def announce_inputs(args: argparse.Namespace, total: int) -> None:
+    """解析に入る前に、どこへ書くつもりなのかを伝える。
+
+    対話より前に呼ぶので Config はまだ無い。ここで参照する3つは
+    argparse の時点で確定している。
+    """
+    if args.replace:
         print("出力先: 元ファイルと同じ場所（元ファイルはゴミ箱へ移します）")
     else:
-        print(f"出力先: {cfg.output_file or cfg.outdir or cfg.roots[0].parent}"
+        print(f"出力先: {args.output_file or args.outdir or args.inputs[0].parent}"
               "（元ファイルは変更しません）")
     print(f"{total} 本を解析中…")
 
 
-def plan_jobs(sources: list[Path], cfg: Config) -> tuple[list[Job], int]:
-    """1本ずつ解析して変換内容を決める。
+def announce_settings(cfg: Config) -> None:
+    """設定が固まった時点で、黙っていられない組み合わせだけ警告する。"""
+    if cfg.apple and cfg.encoder == "libsvtav1":
+        print("注意: AV1はA17 Pro / M3世代以降のApple機でのみ再生できます"
+              "（M1・M2世代では再生できません）")
 
-    (変換する仕事の一覧, 解析・組み合わせの都合で処理できなかった本数) を返す。
+
+def describe_source(info: MediaInfo) -> str:
+    """解析結果の1行。映像 / 音声 / 字幕 / サイズ の順に並べる。"""
+    audio_desc = "音声なし"
+    if info.audios:
+        first = info.audios[0]
+        kbps = f"{first.bitrate // 1000}k" if first.bitrate else "?"
+        audio_desc = f"{first.codec} {first.channels}ch {kbps}"
+        if len(info.audios) > 1:
+            audio_desc += f" 他{len(info.audios) - 1}本"
+    parts = [f"{info.width}x{info.height} {info.fps:.3g}fps {info.video_codec}", audio_desc]
+    if info.subtitles:
+        parts.append(f"字幕{len(info.subtitles)}本")
+    parts.append(human(info.size))
+    return f"  {info.path.name}: {' / '.join(parts)}"
+
+
+def summarize_scan(scan: list[MediaInfo]) -> str:
+    """本数が多いときの集計行。1本ずつ出すと質問が画面外へ流れるため。"""
+    multi_audio = sum(1 for i in scan if len(i.audios) > 1)
+    with_subs = sum(1 for i in scan if i.subtitles)
+    parts = [f"{len(scan)} 本"]
+    if multi_audio:
+        parts.append(f"音声2本以上: {multi_audio} 本")
+    if with_subs:
+        parts.append(f"字幕あり: {with_subs} 本")
+    parts.append(human(sum(i.size for i in scan)))
+    return f"  {' / '.join(parts)}"
+
+
+def scan_inputs(sources: list[Path]) -> tuple[list[MediaInfo], int]:
+    """入力をまとめて解析する。(解析できたもの, 解析できなかった本数) を返す。
+
+    対話より前に走るので、ここでの待ち時間はそのまま最初の質問までの待ち時間になる。
+    ffprobeはプロセスを待つだけでGILを握らないため、スレッドで並べる。
+    結果は投入順に回収して、表示順と終了コードを実行ごとに揺らさない。
+    """
+    scan: list[MediaInfo] = []
+    failed = 0
+    try:
+        with ThreadPoolExecutor(max_workers=PROBE_WORKERS) as pool:
+            futures = [(src, pool.submit(probe, src)) for src in sources]
+            for src, future in futures:
+                try:
+                    scan.append(future.result())
+                except (ProbeError, json.JSONDecodeError) as exc:
+                    print(status_line("NG", NG_RGB, f"{src.name}: {exc}", sys.stderr), file=sys.stderr)
+                    failed += 1
+    except KeyboardInterrupt:
+        # 拾わないと ThreadPoolExecutor の後始末で全本の完了を待たされる
+        print("\n中断しました", file=sys.stderr)
+        raise SystemExit(130)
+
+    if len(scan) > SCAN_DETAIL_MAX:
+        print(summarize_scan(scan))
+    else:
+        for info in scan:
+            print(describe_source(info))
+    return scan, failed
+
+
+def plan_jobs(scan: list[MediaInfo], cfg: Config) -> tuple[list[Job], int]:
+    """解析済みの1本ずつについて変換内容を決める。
+
+    (変換する仕事の一覧, 組み合わせの都合で処理できなかった本数) を返す。
     後者は終了コードに出す。既に出力がある等で意図どおり飛ばした分は数えない。
     """
     jobs: list[Job] = []
     skipped = 0
-    for src in sources:
-        try:
-            info = probe(src)
-        except (ProbeError, json.JSONDecodeError) as exc:
-            print(f"  NG     {src.name}: {exc}", file=sys.stderr)
-            skipped += 1
-            continue
-
+    for info in scan:
+        src = info.path
         # コンテナは音声の計画で決まる（Opusを使うならMKV）ので、先に立てる
         plan = build_audio_args(info, cfg)
         suffix = container_suffix(plan, cfg)
-        conflict = container_audio_conflict(plan, info, suffix, cfg)
+        conflict = container_audio_conflict(plan, suffix, cfg)
         if conflict:
-            print(f"  NG     {src.name}: {conflict}", file=sys.stderr)
+            print(status_line("NG", NG_RGB, f"{src.name}: {conflict}", sys.stderr), file=sys.stderr)
             skipped += 1
             continue
         dst = destination_for(info, suffix, cfg)
@@ -1823,19 +2322,22 @@ def plan_jobs(sources: list[Path], cfg: Config) -> tuple[list[Job], int]:
         # 文字列で比べると別物に見えるので、inode で確かめる
         same_path = dst.exists() and dst.samefile(src)
         if same_path and not cfg.replace:
-            print(f"  skip   {src.name}（出力先が入力と同一）")
+            print(status_line("skip", None, f"{src.name}（出力先が入力と同一）"))
             continue
         if dst.exists() and not same_path and not cfg.overwrite:
-            print(f"  skip   {src.name}（出力が既にあります。作り直すなら --overwrite）")
+            print(status_line("skip", None, f"{src.name}（出力が既にあります。作り直すなら --overwrite）"))
             continue
 
-        audio_desc = "音声なし"
-        if info.audio:
-            kbps = f"{info.audio.bitrate // 1000}k" if info.audio.bitrate else "?"
-            audio_desc = f"{info.audio.codec} {info.audio.channels}ch {kbps}"
-        print(f"  {src.name}: {info.width}x{info.height} {info.fps:.3g}fps "
-              f"{info.video_codec} / {audio_desc} / {human(info.size)}")
-        jobs.append(Job(info, dst, plan))
+        # ここから先は「変換はするが、そのまま通すと黙って欠けるもの」の報告。
+        # 対話はしない（ファイルごとに聞くと本数ぶん出るし、-j や非TTYで詰まる）
+        subs = build_subtitle_args(info, suffix, cfg)
+        for note in (audio_selection_note(info, plan, cfg),
+                     container_audio_warning(plan, suffix),
+                     subs.note if subs.dropped else None):
+            if note:
+                print(status_line("注意", NOTE_RGB, f"{src.name}: {note}"))
+
+        jobs.append(Job(info, dst, plan, subs))
     return jobs, skipped
 
 
@@ -1863,7 +2365,7 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
             results.append(result)
             prefix = layout.prefix(done, result.src.name)
             if not result.ok:
-                progress.report(f"{prefix} NG {result.message}", error=True)
+                progress.report(f"{prefix} {paint('NG', NG_RGB, sys.stderr)} {result.message}", error=True)
             elif result.kept:
                 progress.report(f"{prefix} {result.message}")
             elif not cfg.dry_run:
@@ -1872,7 +2374,8 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
     return results
 
 
-def report(results: list[Result], skipped: int, layout: ResultLayout) -> int:
+def report(results: list[Result], skipped: int, multi_audio: bool,
+           layout: ResultLayout) -> int:
     """結果をまとめて、終了コードを返す。"""
     ok = [r for r in results if r.ok]
     kept = [r for r in ok if r.kept]
@@ -1881,6 +2384,10 @@ def report(results: list[Result], skipped: int, layout: ResultLayout) -> int:
     print(f"\n完了 {len(ok)}/{len(results)} 本")
     if kept:
         print(f"うち {len(kept)} 本は元より大きくなったため置き換えていません")
+        if multi_audio:
+            # 音声を2本以上残せばその分は太る。設定どおりの結果であって失敗ではない
+            print("（音声を複数残すぶん出力は大きくなります。"
+                  "--audio-tracks first なら1本だけ残します）")
     if src_total:
         # 結果行と同じ欄に合計を置く
         print(f"{layout.label('合計')} {size_change(src_total, dst_total, show_saved=True)}")
@@ -1888,14 +2395,24 @@ def report(results: list[Result], skipped: int, layout: ResultLayout) -> int:
 
 
 def main(argv: list[str]) -> int:
-    cfg = resolve_options(parse_args(argv))
-    sources = collect_inputs(cfg)
+    args = parse_args(argv)
+    sources = collect_inputs(args.inputs, args.recursive, args.outdir)
     if not sources:
         print("対象の動画が見つかりませんでした", file=sys.stderr)
         return 1
 
-    announce(cfg, len(sources))
-    jobs, skipped = plan_jobs(sources, cfg)
+    # 対話より先に解析する。何本が複数音声で、どれに字幕があるのかを知ってからでないと
+    # 「どの音声を残すか」「字幕が落ちるがよいか」を聞けない。
+    announce_inputs(args, len(sources))
+    scan, probe_failures = scan_inputs(sources)
+    if not scan:
+        print("解析できる動画がありませんでした", file=sys.stderr)
+        return 1
+
+    cfg = resolve_options(args, scan)
+    announce_settings(cfg)
+    jobs, skipped = plan_jobs(scan, cfg)
+    skipped += probe_failures
     if not jobs:
         print("処理対象がありません")
         return 1 if skipped else 0
@@ -1904,7 +2421,7 @@ def main(argv: list[str]) -> int:
     results = run_jobs(jobs, cfg, layout)
     if cfg.dry_run:
         return 1 if skipped else 0
-    return report(results, skipped, layout)
+    return report(results, skipped, any(len(job.plan.tracks) > 1 for job in jobs), layout)
 
 
 if __name__ == "__main__":
