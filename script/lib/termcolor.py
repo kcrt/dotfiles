@@ -89,6 +89,22 @@ def sgr256(code: int) -> str:
     return f"\033[38;5;{code}m"
 
 
+# The basic 16 foreground colors. Unlike the 256-color palette and 24-bit color,
+# these follow the user's terminal theme, so a green tick looks native in both a
+# light and a dark profile. The bright half is the same eight plus 60.
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(30, 38)
+(BRIGHT_BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW,
+ BRIGHT_BLUE, BRIGHT_MAGENTA, BRIGHT_CYAN, BRIGHT_WHITE) = range(90, 98)
+
+# Bold (or bright, depending on the terminal). Not a color, so it composes with one.
+SGR_BOLD = "\033[1m"
+
+
+def sgr16(code: int) -> str:
+    """Escape sequence setting the foreground color (one of the basic 16)."""
+    return f"\033[{code}m"
+
+
 def paint(text: str, rgb: RGB, stream: TextIO | None = None) -> str:
     """Color the text if the terminal takes 24-bit color, otherwise return it unchanged."""
     return (f"{sgr(rgb)}{text}{SGR_RESET}"
@@ -99,6 +115,17 @@ def paint256(text: str, code: int, stream: TextIO | None = None) -> str:
     """Color the text from the 256-color palette, or return it unchanged if color is off."""
     return (f"{sgr256(code)}{text}{SGR_RESET}"
             if color_enabled(stream) else text)
+
+
+def paint16(text: str, code: int, stream: TextIO | None = None) -> str:
+    """Color the text with one of the basic 16, or return it unchanged if color is off."""
+    return (f"{sgr16(code)}{text}{SGR_RESET}"
+            if color_enabled(stream) else text)
+
+
+def bold(text: str, stream: TextIO | None = None) -> str:
+    """Embolden the text, or return it unchanged if the destination takes no escapes."""
+    return f"{SGR_BOLD}{text}{SGR_RESET}" if color_enabled(stream) else text
 
 
 def hue_rgb(hue: float, saturation: float = 0.85, value: float = 1.0) -> RGB:

@@ -23,11 +23,16 @@ Exit code is 1 if any check failed, so it can be used in a pre-commit hook.
 from __future__ import annotations
 
 import argparse
+import io
 import os
+import shutil
+import subprocess
 import sys
+import tempfile
 import time
 import unicodedata
 from collections.abc import Callable
+from contextlib import redirect_stdout
 from pathlib import Path
 
 # lib/* import each other relatively (`from .termtext import ...`), which needs the
@@ -38,9 +43,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lib.humanize import clock, common_unit, human, size_change, size_unit
 from lib.progressbar import (BarSlot, LiveLine, bar_chars, rainbow_rgb,
                              render_bar, wave_level)
-from lib.prompt import interactive, prompt_choice
-from lib.termcolor import (color_enabled, hue_rgb, paint, paint256, scale_rgb,
-                           set_color_mode, status_line, use_color)
+from lib.ffprobe import ProbeError, probe_chapters, probe_json
+from lib.prompt import confirm, interactive, prompt_choice
+from lib.termcolor import (BRIGHT_RED, GREEN, RED, bold, color_enabled, hue_rgb,
+                           paint, paint16, paint256, scale_rgb, set_color_mode,
+                           status_line, use_color)
 from lib.termtext import (clip_display, display_width, fit_display, pad_display,
                           strip_sgr, truncate_display)
 from lib.trash import move_to_trash, trash_directory
@@ -119,6 +126,12 @@ def demo_termcolor(opts: argparse.Namespace) -> None:
     print("\n  scale_rgb, dark to bright:")
     print("  " + "".join(paint("██", scale_rgb((70, 145, 240), level / 10))
                          for level in range(2, 12)))
+    print("\n  the basic 16 (these follow the terminal theme, unlike the two above):")
+    print("  normal " + " ".join(paint16("██", code) for code in range(30, 38)))
+    print("  bright " + " ".join(paint16("██", code) for code in range(90, 98)))
+    print("  " + bold("bold") + " is not a color, so it composes with one: "
+          + bold(paint16("bold red", RED)))
+
     print("\n  paint256 over the 6x6x6 cube:")
     print("  " + "".join(paint256("█", 16 + i * 5) for i in range(43)))
 
@@ -131,6 +144,9 @@ def demo_termcolor(opts: argparse.Namespace) -> None:
     plain_width = display_width(status_line("NG", None, "x"))
     check("status_line width is color-independent",
           display_width(status_line("NG", NG_RGB, "x")), plain_width)
+    check("paint16 spells the expected SGR", paint16("x", GREEN),
+          "\033[32mx\033[0m" if color_enabled() else "x")
+    check("bright is the base color plus 60", BRIGHT_RED - RED, 60)
     check("hue_rgb wraps around 1.0", hue_rgb(1.25), hue_rgb(0.25))
     check("scale_rgb clamps at 255", scale_rgb((200, 200, 200), 4.0), (255, 255, 255))
     try:
@@ -159,6 +175,8 @@ def demo_humanize(opts: argparse.Namespace) -> None:
         print(f"    {size_change(int(src), int(dst), show_saved=True)}")
 
     print("\n  clock():", ", ".join(clock(s) for s in (0, 9, 62, 3723, 86399)))
+    print("  clock(always_hours=True):",
+          ", ".join(clock(s, always_hours=True) for s in (0, 9, 62, 3723, 86399)))
 
     check("size_unit picks KB", size_unit(2048), "KB")
     check("common_unit follows the larger side", common_unit(1024 ** 2, 1024), "MB")
@@ -169,6 +187,9 @@ def demo_humanize(opts: argparse.Namespace) -> None:
     check("clock under an hour", clock(62), "1:02")
     check("clock over an hour", clock(3723), "1:02:03")
     check("clock clamps negatives", clock(-5), "0:00")
+    check("always_hours pads the hour field", clock(62, always_hours=True), "00:01:02")
+    check("always_hours keeps the column width",
+          len(clock(9, always_hours=True)), len(clock(3723, always_hours=True)))
     check("size_change handles a zero source", "0%" in size_change(0, 0), True)
 
 
@@ -250,10 +271,36 @@ def run_live_line(seconds: float, rainbow: bool = False) -> None:
     print("  done (the progress line erased itself)")
 
 
+def answer(feed: str, default: bool) -> bool:
+    """Run confirm() against a canned answer, with its prompt swallowed.
+
+    Lets the yes/no parsing be checked without a terminal: `feed` is what the
+    person would have typed, and "" stands for EOF (a pipe that ran dry).
+    """
+    saved = sys.stdin
+    sys.stdin = io.StringIO(feed)
+    try:
+        with redirect_stdout(io.StringIO()):
+            return confirm("Q", default)
+    finally:
+        sys.stdin = saved
+
+
 def demo_prompt(opts: argparse.Namespace) -> None:
-    heading("prompt — interactivity check and the choice prompt")
+    heading("prompt — interactivity check, yes/no, and the choice prompt")
     print(f"  interactive(): {interactive()}  "
           f"(stdin tty: {sys.stdin.isatty()}, stdout tty: {sys.stdout.isatty()})")
+
+    print("\n  confirm() writes the hint itself, so every script asks the same shape:")
+    print("    Overwrite the file? [y/N]:      <- confirm(question)")
+    print("    Keep the new file? [Y/n]:       <- confirm(question, default=True)")
+    check("empty input takes the default (yes)", answer("\n", True), True)
+    check("empty input takes the default (no)", answer("\n", False), False)
+    check("EOF takes the default", answer("", True), True)
+    check("yes is accepted spelled out", answer("YES\n", False), True)
+    check("no wins over a yes default", answer("n\n", True), False)
+    check("a typo asks again instead of counting as no", answer("maybe\ny\n", False), True)
+
     options = [("hevc", "HEVC (H.265)"), ("h264", "H.264"), ("av1", "AV1")]
     if not opts.interactive:
         print("  skipping the real prompt; pass --interactive to answer it. It looks like:")
@@ -267,6 +314,64 @@ def demo_prompt(opts: argparse.Namespace) -> None:
         return
     chosen = prompt_choice("どのコーデックにしますか？", options, "hevc")
     print(f"  chose: {chosen!r}")
+    print(f"  confirm: {confirm('Was that the one you wanted?', default=True)}")
+
+
+def demo_ffprobe(opts: argparse.Namespace) -> None:
+    heading("ffprobe — chapters and container metadata")
+    if shutil.which("ffprobe") is None or shutil.which("ffmpeg") is None:
+        print("  ffmpeg/ffprobe not installed; skipping (brew install ffmpeg).")
+        return
+
+    with tempfile.TemporaryDirectory() as workdir:
+        # The name carries a space, a quote and a $ on purpose: interpolated into a
+        # shell string this file would be unreachable, which is what the argument
+        # list inside probe_json() avoids.
+        path = Path(workdir) / 'chapter test "$x".m4a'
+        make_sample_media(path)
+        result = probe_chapters(path)
+        print(f"  file:   {path.name}")
+        print(f"  format: {clock(result.format.duration)}, "
+              f"{human(result.format.bit_rate / 8)}/s, "
+              f"album={result.format.tags.get('album')!r}")
+        for chapter in result.chapters:
+            print(f"    chapter {chapter.id}: "
+                  f"{clock(chapter.start_time)}-{clock(chapter.end_time)} {chapter.title!r}")
+        streams = probe_json(path, "-show_streams")["streams"]
+        print(f"  probe_json: {len(streams)} stream(s), first is {streams[0]['codec_name']}")
+
+        check("the awkward filename was probed anyway", len(result.chapters), 2)
+        check("chapter bounds are seconds", result.chapters[0].end_time, 3.0)
+        check("the title comes through the tags", result.chapters[1].title, "第2章")
+        check("duration is a float", round(result.format.duration), 6)
+
+    try:
+        probe_chapters("/etc/hosts")
+    except ProbeError as error:
+        check("a non-media file raises ProbeError", "Invalid data" in str(error), True)
+    else:
+        check("a non-media file raises ProbeError", False, True)
+    try:
+        probe_chapters(Path(tempfile.gettempdir()) / "no such file.m4a")
+    except ProbeError:
+        check("a missing file raises ProbeError", True, True)
+    else:
+        check("a missing file raises ProbeError", False, True)
+
+
+def make_sample_media(path: Path) -> None:
+    """Write a 6-second tone with two named chapters, for the ffprobe section."""
+    metadata = path.with_suffix(".txt")
+    metadata.write_text(
+        ";FFMETADATA1\nalbum=テストアルバム\nartist=kcrt\n\n"
+        "[CHAPTER]\nTIMEBASE=1/1000\nSTART=0\nEND=3000\ntitle=第1章\n\n"
+        "[CHAPTER]\nTIMEBASE=1/1000\nSTART=3000\nEND=6000\ntitle=第2章\n",
+        encoding="utf-8")
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
+         "-i", "sine=frequency=440:duration=6",
+         "-i", str(metadata), "-map_metadata", "1", str(path)],
+        check=True, capture_output=True)
 
 
 def demo_trash(opts: argparse.Namespace) -> None:
@@ -298,6 +403,7 @@ SECTIONS: dict[str, Callable[[argparse.Namespace], None]] = {
     "humanize": demo_humanize,
     "progressbar": demo_progressbar,
     "prompt": demo_prompt,
+    "ffprobe": demo_ffprobe,
     "trash": demo_trash,
 }
 

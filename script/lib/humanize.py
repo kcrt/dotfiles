@@ -88,9 +88,16 @@ def size_change(src_size: int, dst_size: int, show_saved: bool = False,
             f"{change}")
 
 
-def clock(seconds: float) -> str:
-    """Render seconds as 1:02:03 / 2:03."""
+def clock(seconds: float, always_hours: bool = False) -> str:
+    """Render seconds as 1:02:03 / 2:03.
+
+    always_hours=True keeps a zero-padded hour field (00:02:03). Use it for a
+    column of values, where dropping the hours on the short ones would leave the
+    colons unaligned once a later one crosses an hour.
+    """
     total = int(max(seconds, 0))
     hours, rest = divmod(total, 3600)
     minutes, secs = divmod(rest, 60)
+    if always_hours:
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
     return f"{hours}:{minutes:02d}:{secs:02d}" if hours else f"{minutes}:{secs:02d}"

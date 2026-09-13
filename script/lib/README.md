@@ -19,6 +19,8 @@ from lib.progressbar import BarSlot, LiveLine
 1. **標準ライブラリだけを使う。**
    PEP 723 の `dependencies` は実行されるスクリプトにしか書けない。ここで外部
    パッケージに依存すると、import する全スクリプトが同じ依存を書き並べる羽目になる。
+   外部**コマンド**（`ffprobe.py` が叩く ffprobe など）は別だが、入っていないときは
+   何が無いのか分かる例外にすること。
 
 2. **`requires-python` は呼ぶ側の最低値に合わせる。**
    現在の下限は `ffmpeg-convert.py` の 3.12。
@@ -36,10 +38,11 @@ from lib.progressbar import BarSlot, LiveLine
 | モジュール | 中身 |
 | --- | --- |
 | `termtext.py` | 表示幅の勘定（全角2桁・結合文字0桁・SGRは0桁）、パディング、切り詰め |
-| `termcolor.py` | 24bit色と256色、`NO_COLOR`/`TERM=dumb`/`--color` の判定 |
+| `termcolor.py` | 24bit色・256色・基本16色と太字、`NO_COLOR`/`TERM=dumb`/`--color` の判定 |
 | `humanize.py` | バイト数（`1.2 MB`・`1.2MB`）、変換前後の増減、秒数（`1:02:03`） |
 | `progressbar.py` | 進捗バーの描画と、1行を書き換え続ける `LiveLine` |
-| `prompt.py` | 番号で選ばせる対話、端末かどうかの判定 |
+| `prompt.py` | y/n の確認、番号で選ばせる対話、端末かどうかの判定 |
+| `ffprobe.py` | ffprobeで章と容器のメタデータを読む（`-show_streams` 等の生JSONも） |
 | `trash.py` | macOSのゴミ箱へ移す（ボリュームを跨がない） |
 | `sample.py` | 上記すべての動作確認・デモ（直接実行する） |
 
@@ -51,13 +54,23 @@ lib を触ったら `sample.py` を直接叩く。各モジュールの出力を
 
 ```sh
 ./sample.py                       # 全部
-./sample.py termtext humanize     # セクションを選ぶ
+./sample.py termtext ffprobe      # セクションを選ぶ
 ./sample.py --color never         # 色なしの経路を通す
 ./sample.py --seconds 8 --rainbow # 進捗バーを長めに見る
-./sample.py --interactive         # prompt_choice を実際に答える
+./sample.py --interactive         # confirm / prompt_choice を実際に答える
 ./sample.py --trash               # 一時ファイルを本当にゴミ箱へ入れて戻す
 ```
 
 ## 利用しているスクリプト
 
-`ffmpeg-convert.py` / `ble_monitor.py` / `snapshot_restore.py` / `compare_dir.py`
+`grep -l '^from lib\.' script/*.py` で一覧が出る。現在16本:
+
+| モジュール | 使っているスクリプト |
+| --- | --- |
+| `termtext.py` | `ffmpeg-convert.py` `ble_monitor.py` |
+| `termcolor.py` | `ffmpeg-convert.py` `snapshot_restore.py` `check_network.py` `pubmed_get_abstract.py` `pubmed_listup_journal.py` |
+| `humanize.py` | `ffmpeg-convert.py` `compare_dir.py` `snapshot_restore.py` `fix-broken-movie.py` `repack_images.py` `split_mp4_by_chapter.py` `python_finddup.py` `average_filesize_in_zip.py` |
+| `progressbar.py` | `ffmpeg-convert.py` |
+| `prompt.py` | `ffmpeg-convert.py` `analyse-mail.py` `manage_imap_mail.py` `repack_images.py` `split_spread_pdf.py` `split_mp4_by_chapter.py` |
+| `ffprobe.py` | `split_mp4_by_chapter.py` `keep_only_audio_and_tag.py` |
+| `trash.py` | `ffmpeg-convert.py` |
