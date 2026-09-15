@@ -19,20 +19,31 @@ fi
 
 if command -v ioreg > /dev/null 2>&1; then
 	# macOS
-	BATSTR=$(ioreg -c AppleSmartBattery -r | \
-		awk '/"MaxCapacity"/{ MAX=$3 }
-			 /"CurrentCapacity"/{ CURRENT=$3 }
-			 /"InstantTimeToEmpty"/{ REMAIN=$3 }
-			 /"BatteryInstalled"/{ BATTERY=$3 }
-			 /"FullyCharged"/{ FULL=$3 }
-			 /"ExternalConnected"/ {AC=$3}
-			 END { printf("%.0f %s %s %s\n", CURRENT/MAX*100, BATTERY, FULL, AC) }')
-	BATPER=$(echo "$BATSTR" | cut -f1 -d" ")
-	BATTERY=$(echo "$BATSTR" | cut -f2 -d" ")
-	FULL=$(echo "$BATSTR" | cut -f3 -d" ")
-	AC=$(echo "$BATSTR" | cut -f4 -d" ")
-	if [ "$BATTERY" = "No" ]; then
-		# Desktop PC, no battery
+	BATRAW=$(ioreg -c AppleSmartBattery -r)
+	# Read the value after `"Key" = ` instead of a fixed field number: ioreg indents
+	# the properties with the registry tree (`|   "MaxCapacity" = 100`), and how many
+	# of those prefix columns there are depends on how deep the node sits, which moved
+	# by one on macOS 27 and shifted every $3 onto the `=` sign (division by zero).
+	# The space around `=` also keeps this from matching the packed copies inside the
+	# "BatteryData" dictionary (`"MaxCapacity"=100`).
+	battery_prop() {
+		printf '%s\n' "$BATRAW" | awk -v key="\"$1\" = " '
+			(pos = index($0, key)) {
+				value = substr($0, pos + length(key))
+				sub(/[[:space:]]+$/, "", value)
+				print value
+				exit
+			}'
+	}
+	MAXCAP=$(battery_prop MaxCapacity)
+	CURCAP=$(battery_prop CurrentCapacity)
+	BATTERY=$(battery_prop BatteryInstalled)
+	FULL=$(battery_prop FullyCharged)
+	AC=$(battery_prop ExternalConnected)
+	BATPER=$(awk -v cur="$CURCAP" -v max="$MAXCAP" \
+		'BEGIN { if (max + 0 > 0) printf("%.0f", cur / max * 100) }')
+	if [ "$BATTERY" = "No" ] || [ -z "$BATPER" ]; then
+		# Desktop PC, no battery (or the charge could not be read at all)
 		echo "[🔌]"
 	elif [ "$FULL" = "Yes" ] && [ "$AC" = "Yes" ]; then
 		# Fully charged and using AC
