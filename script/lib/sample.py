@@ -23,6 +23,7 @@ Exit code is 1 if any check failed, so it can be used in a pre-commit hook.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import os
 import shutil
@@ -41,10 +42,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from lib.humanize import clock, common_unit, human, size_change, size_unit
+from lib.par2 import (CRITICAL_TYPES, PACKET_MAGIC, RECOVERY_OVERHEAD, TYPE_CREATOR,
+                      TYPE_FILE_DESC, TYPE_IFSC, TYPE_MAIN, TYPE_RECOVERY,
+                      Par2Error, aligned_slice_size, file_length, file_name,
+                      fitting_slice_size,
+                      iter_packets, slice_size, split_set)
 from lib.progressbar import (BarSlot, LiveLine, bar_chars, rainbow_rgb,
                              render_bar, wave_level)
 from lib.ffprobe import ProbeError, probe_chapters, probe_json
-from lib.prompt import confirm, interactive, prompt_choice
+from lib.prompt import (ENGLISH_CHOICE, JAPANESE_CHOICE, confirm, interactive,
+                        prompt_choice, prompt_text)
 from lib.termcolor import (BRIGHT_RED, GREEN, RED, bold, color_enabled, hue_rgb,
                            paint, paint16, paint256, scale_rgb, set_color_mode,
                            status_line, use_color)
@@ -286,6 +293,17 @@ def answer(feed: str, default: bool) -> bool:
         sys.stdin = saved
 
 
+def typed(feed: str, default: str = "") -> str:
+    """Run prompt_text() against a canned answer, with its prompt swallowed."""
+    saved = sys.stdin
+    sys.stdin = io.StringIO(feed)
+    try:
+        with redirect_stdout(io.StringIO()):
+            return prompt_text("Q", default)
+    finally:
+        sys.stdin = saved
+
+
 def demo_prompt(opts: argparse.Namespace) -> None:
     heading("prompt — interactivity check, yes/no, and the choice prompt")
     print(f"  interactive(): {interactive()}  "
@@ -301,13 +319,24 @@ def demo_prompt(opts: argparse.Namespace) -> None:
     check("no wins over a yes default", answer("n\n", True), False)
     check("a typo asks again instead of counting as no", answer("maybe\ny\n", False), True)
 
+    print("\n  prompt_text() is the same shape for a line of typing:")
+    print("    Title [secret.bin]:             <- prompt_text(question, default)")
+    check("what was typed comes back", typed("~/Keys/A.asc\n"), "~/Keys/A.asc")
+    check("case is left alone", typed("MixedCase\n"), "MixedCase")
+    check("empty input takes the default", typed("\n", "fallback"), "fallback")
+    check("EOF takes the default", typed("", "fallback"), "fallback")
+    check("no default means an empty answer", typed(""), "")
+
     options = [("hevc", "HEVC (H.265)"), ("h264", "H.264"), ("av1", "AV1")]
     if not opts.interactive:
         print("  skipping the real prompt; pass --interactive to answer it. It looks like:")
-        print("\n    どのコーデックにしますか？")
-        for number, (value, label) in enumerate(options, start=1):
-            print(f"      {number}) {label}{' ← 既定' if value == 'hevc' else ''}")
-        print("    番号 (Enterで既定): ")
+        for question, words in (("どのコーデックにしますか？", JAPANESE_CHOICE),
+                                ("Which codec?", ENGLISH_CHOICE)):
+            print(f"\n    {question}")
+            for number, (value, label) in enumerate(options, start=1):
+                print(f"      {number}) {label}"
+                      f"{words.default_mark if value == 'hevc' else ''}")
+            print(f"    {words.ask}")
         return
     if not interactive():
         print("  --interactive was passed but there is no terminal on both ends; skipping.")
@@ -397,12 +426,106 @@ def demo_trash(opts: argparse.Namespace) -> None:
         print("  removed the test file from the trash again")
 
 
+def par2_packet(packet_type: bytes, body: bytes, set_id: bytes = b"R" * 16) -> bytes:
+    """Build one valid PAR2 packet, so the parser can be tested without par2."""
+    length = 64 + len(body)
+    tail = set_id + packet_type + body
+    return (PACKET_MAGIC + length.to_bytes(8, "little")
+            + hashlib.md5(tail).digest() + tail)
+
+
+def par2_recovery_set(slices: int = 3, size: int = 612, length: int = 1700) -> bytes:
+    """A plausible recovery set, laid out the way par2 lays out a volume file.
+
+    Critical packets appear more than once and the recovery packets are mixed in
+    among them, which is exactly what split_set() has to see through.
+    """
+    file_id = b"F" * 16
+    main = par2_packet(TYPE_MAIN, size.to_bytes(8, "little")
+                       + (1).to_bytes(4, "little") + file_id)
+    desc = par2_packet(TYPE_FILE_DESC, file_id + b"M" * 16 + b"K" * 16
+                       + length.to_bytes(8, "little") + b"payload.tar.zst\x00")
+    ifsc = par2_packet(TYPE_IFSC, file_id + b"C" * 20 * slices)
+    creator = par2_packet(TYPE_CREATOR, b"sample.py\x00\x00\x00")
+    recovery = [par2_packet(TYPE_RECOVERY,
+                            number.to_bytes(4, "little") + bytes([number]) * size)
+                for number in range(slices)]
+    return b"".join([recovery[0], main, desc, recovery[1], ifsc,
+                     main, *recovery[2:], desc, ifsc, creator])
+
+
+def demo_par2(opts: argparse.Namespace) -> None:
+    heading("par2 — taking a PAR2 set apart and putting it back")
+    blob = par2_recovery_set()
+    kinds = [packet.type for packet in iter_packets(blob)]
+    print(f"  a volume file of {len(blob)} bytes holds {len(kinds)} packets, "
+          f"{len(set(kinds))} distinct types")
+
+    index, recovery = split_set([blob])
+    print(f"  index: {len(index)} bytes, recovery: {[len(p) for p in recovery]}")
+    check("split_set keeps one of each critical packet",
+          [packet.type for packet in iter_packets(index)], list(CRITICAL_TYPES))
+    check("the creator packet is dropped",
+          any(packet.type == TYPE_CREATOR for packet in iter_packets(index)), False)
+    check("every recovery slice survives, in order",
+          [packet.exponent for packet in iter_packets(b"".join(recovery))], [0, 1, 2])
+    check("slice size comes back", slice_size(index), 612)
+    check("file length comes back", file_length(index), 1700)
+    check("file name comes back", file_name(index), "payload.tar.zst")
+
+    # What the printed restore recipe does: concatenate whatever survived, in
+    # whatever order, and hand the result to par2.
+    shuffled = b"".join([recovery[2], recovery[0]])
+    check("packets are found in any order",
+          sorted(packet.exponent for packet in iter_packets(shuffled)), [0, 2])
+
+    # par2cmdline steps over rubbish between packets, but the specification says
+    # "there are no places to throw junk bytes", so the chunk sizes are chosen to
+    # need none. The parser still has to cope with a damaged sheet.
+    torn = bytearray(blob)
+    torn[100] ^= 0xFF
+    found = len(list(iter_packets(bytes(torn))))
+    check("a corrupt packet hides only itself", found, len(kinds) - 1)
+
+    print("\n  slice sizes that make a recovery packet a whole number of groups:")
+    for unit, name in ((5, "base32"), (3, "base64")):
+        size = aligned_slice_size(700, unit)
+        print(f"    {name}: slice {size} -> packet {RECOVERY_OVERHEAD + size}")
+        check(f"{name} slice is a par2 multiple of 4", size % 4, 0)
+        check(f"{name} packet is a whole number of groups",
+              (RECOVERY_OVERHEAD + size) % unit, 0)
+        check(f"{name} slice stays under the limit", size <= 700, True)
+
+    # Slicing at the limit leaves the last slice a runt and every other one as
+    # dense as the QR code will take. The same bytes cut evenly need the same
+    # number of slices and print with fatter modules.
+    print("\n  the same payload sliced at the limit, and sliced evenly:")
+    for length in (1700, 2000, 6000):
+        biggest = aligned_slice_size(700, 5)
+        even = fitting_slice_size(length, 700, 5)
+        pieces = -(-length // biggest)
+        print(f"    {length} bytes: {pieces} x {biggest} (last {length - (pieces - 1) * biggest})"
+              f"  ->  {pieces} x {even} (last {length - (pieces - 1) * even})")
+        check(f"{length} sliced evenly needs no extra slice", -(-length // even), pieces)
+        check(f"{length} sliced evenly is no bigger", even <= biggest, True)
+        check(f"{length} sliced evenly still aligns", (RECOVERY_OVERHEAD + even) % 5, 0)
+        check(f"{length} sliced evenly is a par2 multiple of 4", even % 4, 0)
+
+    try:
+        split_set([par2_packet(TYPE_RECOVERY, b"\x00" * 8)])
+    except Par2Error as error:
+        print(f"  a set with no critical packets: {error}")
+        check("an incomplete set is refused", True, True)
+    else:
+        check("an incomplete set is refused", False, True)
+
 SECTIONS: dict[str, Callable[[argparse.Namespace], None]] = {
     "termtext": demo_termtext,
     "termcolor": demo_termcolor,
     "humanize": demo_humanize,
     "progressbar": demo_progressbar,
     "prompt": demo_prompt,
+    "par2": demo_par2,
     "ffprobe": demo_ffprobe,
     "trash": demo_trash,
 }

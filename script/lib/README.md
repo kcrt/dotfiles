@@ -27,7 +27,8 @@ from lib.progressbar import BarSlot, LiveLine
 
 3. **アプリ固有の判断を持ち込まない。**
    例: `progressbar.py` は「1行を書き換え続ける機構」だけを持ち、どの欄をどんな
-   文言で出すかは呼ぶ側が `LiveLine.parts()` で決める。
+   文言で出すかは呼ぶ側が `LiveLine.parts()` で決める。`prompt_choice` の言語も
+   同じ理由で呼ぶ側が `words=` で選ぶ（既定は日本語）。
 
 4. **コメントとdocstringは英語で書く。**
    利用者に見える文字列（`prompt.py` の質問文や `humanize.py` の「削減」など）は
@@ -41,8 +42,9 @@ from lib.progressbar import BarSlot, LiveLine
 | `termcolor.py` | 24bit色・256色・基本16色と太字、`NO_COLOR`/`TERM=dumb`/`--color` の判定 |
 | `humanize.py` | バイト数（`1.2 MB`・`1.2MB`）、変換前後の増減、秒数（`1:02:03`） |
 | `progressbar.py` | 進捗バーの描画と、1行を書き換え続ける `LiveLine` |
-| `prompt.py` | y/n の確認、番号で選ばせる対話、端末かどうかの判定 |
+| `prompt.py` | y/n の確認、1行入力、番号で選ばせる対話（文言は `ChoiceWords` で日英切替）、端末かどうかの判定 |
 | `ffprobe.py` | ffprobeで章と容器のメタデータを読む（`-show_streams` 等の生JSONも） |
+| `par2.py` | PAR2ファイルをパケット単位で分解・再構成する（索引の抽出、リカバリスライスの取り出し、境界が揃いかつ端数の出ないスライスサイズの算出） |
 | `trash.py` | macOSのゴミ箱へ移す（ボリュームを跨がない） |
 | `sample.py` | 上記すべての動作確認・デモ（直接実行する） |
 
@@ -63,14 +65,15 @@ lib を触ったら `sample.py` を直接叩く。各モジュールの出力を
 
 ## 利用しているスクリプト
 
-`grep -l '^from lib\.' script/*.py` で一覧が出る。現在16本:
+`grep -l '^from lib\.' script/*.py` で一覧が出る。現在17本:
 
 | モジュール | 使っているスクリプト |
 | --- | --- |
 | `termtext.py` | `ffmpeg-convert.py` `ble_monitor.py` |
-| `termcolor.py` | `ffmpeg-convert.py` `snapshot_restore.py` `check_network.py` `pubmed_get_abstract.py` `pubmed_listup_journal.py` |
-| `humanize.py` | `ffmpeg-convert.py` `compare_dir.py` `snapshot_restore.py` `fix-broken-movie.py` `repack_images.py` `split_mp4_by_chapter.py` `python_finddup.py` `average_filesize_in_zip.py` |
+| `termcolor.py` | `ffmpeg-convert.py` `snapshot_restore.py` `check_network.py` `pubmed_get_abstract.py` `pubmed_listup_journal.py` `paper_backup.py` |
+| `humanize.py` | `ffmpeg-convert.py` `compare_dir.py` `snapshot_restore.py` `fix-broken-movie.py` `repack_images.py` `split_mp4_by_chapter.py` `python_finddup.py` `average_filesize_in_zip.py` `paper_backup.py` |
 | `progressbar.py` | `ffmpeg-convert.py` |
-| `prompt.py` | `ffmpeg-convert.py` `analyse-mail.py` `manage_imap_mail.py` `repack_images.py` `split_spread_pdf.py` `split_mp4_by_chapter.py` |
+| `prompt.py` | `ffmpeg-convert.py` `analyse-mail.py` `manage_imap_mail.py` `repack_images.py` `split_spread_pdf.py` `split_mp4_by_chapter.py` `paper_backup.py` |
 | `ffprobe.py` | `split_mp4_by_chapter.py` `keep_only_audio_and_tag.py` |
+| `par2.py` | `paper_backup.py` |
 | `trash.py` | `ffmpeg-convert.py` |
