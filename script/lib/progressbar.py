@@ -15,11 +15,17 @@ Usage:
         def parts(self):
             return [f"{self.done}/{self.total}", BarSlot(self.ratio), f"{self.ratio:4.0%}"]
 
-    with MyProgress(enabled=sys.stdout.isatty()) as progress:
+    with MyProgress(enabled=sys.stderr.isatty()) as progress:
         for item in items:
             ...
             progress.refresh()
             progress.report(f"done: {item}")
+
+ProgressBar is that subclass already written, for when the usual count / bar /
+percent / rate / time-left is what the job wants:
+
+    for item in ProgressBar(items, desc="変換"):
+        ...
 """
 
 from __future__ import annotations
@@ -29,10 +35,11 @@ import shutil
 import sys
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator, Sized
 from dataclasses import dataclass
-from typing import TextIO
+from typing import Self, TextIO
 
+from .humanize import clock, common_unit, human
 from .termcolor import RGB, hue_rgb, scale_rgb, sgr, use_color_for
 from .termtext import SGR_RESET, display_width, truncate_display
 
@@ -156,11 +163,17 @@ class LiveLine:
     Subclass it and implement parts(). Hold self.lock while touching state (the
     redraw thread reads the same state). It is an RLock, so calling refresh() or
     report() while already holding it will not deadlock.
+
+    The line goes to stderr, and so does everything a script says about its own
+    progress. stdout is left for whatever the script is there to produce, so that
+    `cmd > out` keeps showing the bar and `cmd | other` is not fed the commentary.
+    The bar and the log have to share one stream in any case: a plain print() does
+    not go through report(), so from the other stream it would walk over the line.
     """
 
     def __init__(self, enabled: bool, stream: TextIO | None = None,
                  fps: float = PROGRESS_FPS, animate: bool | None = None) -> None:
-        self.stream = stream or sys.stdout
+        self.stream = stream or sys.stderr
         self.enabled = enabled
         self.color = enabled and use_color_for(self.stream)
         # Without color the wave is invisible, so by default do not run the tick
@@ -196,7 +209,7 @@ class LiveLine:
 
     # -- mechanism ----------------------------------------------------------
 
-    def __enter__(self) -> "LiveLine":
+    def __enter__(self) -> Self:
         """Start the redraw thread that drives the animation."""
         if self.animate:
             self._ticker = threading.Thread(target=self._tick, daemon=True)
@@ -270,3 +283,146 @@ class LiveLine:
             return render_bar(slot.ratio, width)
         return render_bar(slot.ratio, width,
                           lambda position: self.cell_color(slot, position, phase))
+
+
+# -- a ready-made line, for when the fields do not need deciding -------------
+
+# Unit for "one item", the thing being counted when the caller does not say.
+DEFAULT_UNIT = "it"
+
+# Label in front of the time left. Japanese, like the rest of the user-visible
+# wording in lib; a caller whose output is English passes eta_label="ETA".
+ETA_LABEL = "残り"
+
+
+class ProgressBar[T](LiveLine):
+    """The usual fields, wrapped up: description, count, bar, percent, rate, time left.
+
+    LiveLine asks for a subclass because the fields differ per job, but a lot of
+    jobs want the same ones. This is that subclass, with a surface shaped like
+    tqdm's - wrap the iterable and the counting happens on its own:
+
+        for path in ProgressBar(paths, desc="変換"):
+            convert(path)
+
+    Counting by hand, for when the unit is not "one item":
+
+        with ProgressBar(total=size, unit="B", desc="取得") as bar:
+            for chunk in chunks:
+                out.write(chunk)
+                bar.update(len(chunk))
+
+    report() is what tqdm calls write(): a line goes out and the bar survives it.
+    Nothing here is required - where the wording matters, subclass LiveLine and
+    write parts(), which is the whole point of it.
+
+    `total` is taken from len(iterable) when it has one. Without a total there is
+    no bar (nothing would fill it), so the line falls back to the count and rate.
+    """
+
+    def __init__(self, iterable: Iterable[T] | None = None, total: int | None = None,
+                 desc: str = "", unit: str = DEFAULT_UNIT, enabled: bool | None = None,
+                 stream: TextIO | None = None, eta_label: str = ETA_LABEL,
+                 fps: float = PROGRESS_FPS, animate: bool | None = None) -> None:
+        stream = stream or sys.stderr
+        if total is None and isinstance(iterable, Sized):
+            total = len(iterable)
+        # Every caller of LiveLine ends up writing the same test, so make it the
+        # default: draw nothing where the line cannot be rewritten (a pipe, cron).
+        super().__init__(enabled=stream.isatty() if enabled is None else enabled,
+                         stream=stream, fps=fps, animate=animate)
+        self.iterable = iterable
+        self.total = total
+        self.desc = desc
+        self.unit = unit
+        self.eta_label = eta_label
+        self.done = 0
+        self.digits = len(str(total)) if total else 0
+        self._entered = False
+
+    # -- driving it ---------------------------------------------------------
+
+    def update(self, n: int = 1) -> None:
+        """Count n more units and redraw."""
+        with self.lock:
+            self.done += n
+            self.refresh()
+
+    def set_description(self, desc: str) -> None:
+        """Change the leading field mid-run (the stage, the file being worked on)."""
+        with self.lock:
+            self.desc = desc
+            self.refresh()
+
+    def __enter__(self) -> Self:
+        self._entered = True
+        return super().__enter__()
+
+    def __iter__(self) -> Iterator[T]:
+        """Yield the wrapped iterable, counting one unit per item.
+
+        Outside a `with`, the loop owns the line and erases it on the way out -
+        including when the loop is left early, since closing the generator runs
+        the `with` on the way. Inside one, the `with` already owns it.
+        """
+        if self.iterable is None:
+            raise TypeError("ProgressBar has no iterable to walk; count with update()")
+        if self._entered:
+            yield from self._counted(self.iterable)
+        else:
+            with self:
+                yield from self._counted(self.iterable)
+
+    def _counted(self, iterable: Iterable[T]) -> Iterator[T]:
+        for item in iterable:
+            yield item
+            self.update()
+
+    # -- what it shows ------------------------------------------------------
+
+    @property
+    def ratio(self) -> float:
+        """Progress 0-1. Past the total (a wrong estimate) the bar stays full."""
+        return min(self.done / self.total, 1.0) if self.total else 0.0
+
+    @property
+    def rate(self) -> float:
+        """Units per second since the start (0 before the clock has moved)."""
+        elapsed = time.monotonic() - self.started
+        return self.done / elapsed if elapsed > 0 else 0.0
+
+    def amount(self, n: float, decimals: int = 0, size_unit: str | None = None) -> str:
+        """Render a count of the unit. Bytes read better as KB/MB than as digits.
+
+        `size_unit` forces the unit, so that the two sides of "96.0MB/300.0MB" are
+        not picked apart from each other (the reason humanize has common_unit).
+        """
+        if self.unit == "B":
+            return human(n, size_unit, sep="")
+        # A decimal place is noise once the number is big enough to not need it,
+        # and a rate can run to four digits ("1688.6it/s" says nothing "1689it/s"
+        # does not), so drop it there rather than let the field jitter wider.
+        return f"{n:.{decimals if abs(n) < 100 else 0}f}{self.unit}"
+
+    def counter(self) -> str:
+        """The "done of total" field, in whichever form the unit reads best."""
+        if self.unit != "B":
+            return f"{self.done:{self.digits}d}/{self.total}"
+        shared = common_unit(self.done, self.total or 0)
+        return (f"{self.amount(self.done, size_unit=shared)}"
+                f"/{self.amount(self.total or 0, size_unit=shared)}")
+
+    def parts(self) -> list[str | BarSlot]:
+        fields: list[str | BarSlot] = [self.desc] if self.desc else []
+        rate = self.rate
+        if self.total:
+            fields += [self.counter(),
+                       BarSlot(self.ratio, intensity=rate),
+                       f"{self.ratio:4.0%}"]
+        else:
+            fields.append(self.amount(self.done))
+        if rate > 0:
+            fields.append(f"{self.amount(rate, decimals=1)}/s")
+            if self.total:
+                fields.append(f"{self.eta_label} {clock((self.total - self.done) / rate)}")
+        return fields

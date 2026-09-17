@@ -932,7 +932,7 @@ class Progress(LiveLine):
     """
 
     def __init__(self, enabled: bool) -> None:
-        super().__init__(enabled=enabled, stream=sys.stderr)
+        super().__init__(enabled=enabled)   # LiveLine goes to stderr by default
         self.stage = ""
         self.done = 0
         self.total = 0
@@ -1878,16 +1878,19 @@ def report(out_path: Path, result: Rendered, backup: Backup | None,
             print(f"  whole sheets that can go missing: {losable}", file=sys.stderr)
         elif sheets == 1:
             print(paint16("  one sheet, so there is nothing to spare: print it twice, "
-                          "or use --whole-sheet", BRIGHT_YELLOW), file=sys.stderr)
+                          "or use --whole-sheet", BRIGHT_YELLOW, sys.stderr),
+                  file=sys.stderr)
         else:
             print(paint16("  no sheet is spare: losing any one of them loses the "
-                          "backup (see --whole-sheet)", BRIGHT_YELLOW), file=sys.stderr)
+                          "backup (see --whole-sheet)", BRIGHT_YELLOW, sys.stderr),
+                  file=sys.stderr)
     low, high = result.versions
     span = f"version {low}" if low == high else f"versions {low}-{high}"
     print(f"  smallest module: {pitch:.2f} mm (QR {span})", file=sys.stderr)
     if pitch < min_module:
         print(paint16(f"  warning: below {min_module} mm a printed code gets hard to "
-                      "scan - try a smaller --per-page", BRIGHT_YELLOW), file=sys.stderr)
+                      "scan - try a smaller --per-page", BRIGHT_YELLOW, sys.stderr),
+              file=sys.stderr)
 
 
 def run_decode(opts: argparse.Namespace) -> int:

@@ -4,7 +4,6 @@
 # dependencies = [
 #     "pillow",
 #     "pillow-avif-plugin",
-#     "tqdm",
 # ]
 # ///
 # -*- coding: utf-8 -*-
@@ -26,9 +25,9 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from PIL import Image
-from tqdm import tqdm
 
 from lib.humanize import common_unit, human, size_change
+from lib.progressbar import ProgressBar
 from lib.prompt import confirm
 
 
@@ -143,7 +142,7 @@ def extract_archive(input_file: Path, temp_dir: Path, verbose: bool = False) -> 
         temp_dir: Path to temporary extraction directory
         verbose: Whether to print detailed information
     """
-    print("Extracting archive...")
+    print("Extracting archive...", file=sys.stderr)
 
     # Try different encodings for Japanese filenames (Python 3.11+ metadata_encoding)
     encodings_to_try = ['cp932', 'shift_jis', 'utf-8', None]
@@ -159,12 +158,12 @@ def extract_archive(input_file: Path, temp_dir: Path, verbose: bool = False) -> 
 
             with zip_ref:
                 if verbose and encoding:
-                    print(f"  Using encoding: {encoding}")
+                    print(f"  Using encoding: {encoding}", file=sys.stderr)
 
                 for zip_info in zip_ref.infolist():
                     if verbose:
                         encoding_type = "UTF-8" if (zip_info.flag_bits & 0x800) else (encoding or "default")
-                        print(f"  [{encoding_type}] {zip_info.filename}")
+                        print(f"  [{encoding_type}] {zip_info.filename}", file=sys.stderr)
 
                     zip_ref.extract(zip_info, temp_dir)
 
@@ -314,13 +313,13 @@ def process_images_parallel(temp_dir: Path, resize_mode: Optional[str], max_size
     if avif_to_jpeg:
         avif_files = list(temp_dir.rglob('*.avif')) + list(temp_dir.rglob('*.AVIF'))
         if avif_files:
-            print(f"Found {len(avif_files)} AVIF files to convert and process...")
+            print(f"Found {len(avif_files)} AVIF files to convert and process...", file=sys.stderr)
             image_files.extend([(f, resize_mode, max_size, quality, True, verbose) for f in avif_files])
 
     # PNG files (always convert)
     png_files = list(temp_dir.rglob('*.png')) + list(temp_dir.rglob('*.PNG'))
     if png_files:
-        print(f"Found {len(png_files)} PNG files to convert and process...")
+        print(f"Found {len(png_files)} PNG files to convert and process...", file=sys.stderr)
         image_files.extend([(f, resize_mode, max_size, quality, True, verbose) for f in png_files])
 
     # JPEG files (process if resize or quality adjustment needed)
@@ -328,43 +327,40 @@ def process_images_parallel(temp_dir: Path, resize_mode: Optional[str], max_size
         jpg_files = (list(temp_dir.rglob('*.jpg')) + list(temp_dir.rglob('*.JPG')) +
                      list(temp_dir.rglob('*.jpeg')) + list(temp_dir.rglob('*.JPEG')))
         if jpg_files:
-            print(f"Found {len(jpg_files)} JPEG files to process...")
+            print(f"Found {len(jpg_files)} JPEG files to process...", file=sys.stderr)
             image_files.extend([(f, resize_mode, max_size, quality, False, verbose) for f in jpg_files])
 
     if not image_files:
-        print("No images to process.")
+        print("No images to process.", file=sys.stderr)
         return
 
     # Process images in parallel
-    print(f"Processing {len(image_files)} images in parallel...")
+    print(f"Processing {len(image_files)} images in parallel...", file=sys.stderr)
 
     # Use ProcessPoolExecutor for CPU-bound image processing
     errors = 0
     with ProcessPoolExecutor() as executor:
         futures = {executor.submit(process_single_image, args): args for args in image_files}
 
-        # Use tqdm for progress bar
-        with tqdm(total=len(image_files), unit="image", desc="Processing", disable=verbose) as pbar:
-            for future in as_completed(futures):
+        # The bar cannot rewrite its line where output is not a terminal, and in verbose
+        # mode the per-file lines are the point, so fall back to plain output for both.
+        with ProgressBar(as_completed(futures), total=len(image_files),
+                         desc="Processing", eta_label="ETA",
+                         enabled=not verbose and sys.stderr.isatty()) as progress:
+            for future in progress:
                 message, success = future.result()
-                if verbose:
+                if not success:
+                    errors += 1
+                    # report() erases the bar, prints, and draws it again
+                    progress.report(f"  ✗ Error: {message}" if verbose else f"  Error: {message}")
+                elif verbose:
                     # In verbose mode, print each file
-                    if success:
-                        print(f"  ✓ {message}")
-                    else:
-                        print(f"  ✗ Error: {message}")
-                        errors += 1
-                else:
-                    # In normal mode, only show errors
-                    if not success:
-                        tqdm.write(f"  Error: {message}")
-                        errors += 1
-                    pbar.update(1)
+                    progress.report(f"  ✓ {message}")
 
     if errors > 0:
-        print(f"\nProcessing completed with {errors} errors.")
+        print(f"\nProcessing completed with {errors} errors.", file=sys.stderr)
     else:
-        print("\nProcessing completed successfully.")
+        print("\nProcessing completed successfully.", file=sys.stderr)
 
 
 def repack_archive(temp_dir: Path, output_file: Path, verbose: bool = False) -> None:
@@ -375,31 +371,30 @@ def repack_archive(temp_dir: Path, output_file: Path, verbose: bool = False) -> 
         output_file: Path to output ZIP file
         verbose: Whether to print detailed information
     """
-    print(f"Repacking archive to {output_file}...")
+    print(f"Repacking archive to {output_file}...", file=sys.stderr)
 
     # Collect all files and sort them by their path (to maintain consistent order)
     files_to_pack = sorted([f for f in temp_dir.rglob('*') if f.is_file()])
 
     # Create ZIP with UTF-8 encoding support for Japanese filenames
     with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
-        # Use tqdm for progress bar (disable in verbose mode)
-        iterator = tqdm(files_to_pack, unit="file", desc="Packing", disable=verbose) if not verbose else files_to_pack
+        with ProgressBar(files_to_pack, desc="Packing", eta_label="ETA",
+                         enabled=not verbose and sys.stderr.isatty()) as progress:
+            for file_path in progress:
+                # Get relative path from temp_dir
+                arcname = file_path.relative_to(temp_dir)
 
-        for file_path in iterator:
-            # Get relative path from temp_dir
-            arcname = file_path.relative_to(temp_dir)
+                if verbose:
+                    progress.report(f"  Packing: {arcname}")
 
-            if verbose:
-                print(f"  Packing: {arcname}")
+                # Create ZipInfo to ensure UTF-8 encoding
+                zip_info = zipfile.ZipInfo(str(arcname))
+                zip_info.flag_bits |= 0x800  # Set UTF-8 flag
+                zip_info.compress_type = zipfile.ZIP_DEFLATED
 
-            # Create ZipInfo to ensure UTF-8 encoding
-            zip_info = zipfile.ZipInfo(str(arcname))
-            zip_info.flag_bits |= 0x800  # Set UTF-8 flag
-            zip_info.compress_type = zipfile.ZIP_DEFLATED
-
-            # Write file with proper encoding
-            with open(file_path, 'rb') as f:
-                zip_ref.writestr(zip_info, f.read())
+                # Write file with proper encoding
+                with open(file_path, 'rb') as f:
+                    zip_ref.writestr(zip_info, f.read())
 
 
 def main() -> None:
@@ -419,7 +414,7 @@ def main() -> None:
     # Get original file size
     org_filesize = input_file.stat().st_size
 
-    print(f"Processing: {input_file.stem}")
+    print(f"Processing: {input_file.stem}", file=sys.stderr)
 
     # Determine resize mode
     resize_mode = None
@@ -461,7 +456,7 @@ def main() -> None:
 
         if args.dry_run:
             # Dry run mode - calculate size but don't save
-            print("\n[DRY RUN] Processing complete. Calculating potential file size...")
+            print("\n[DRY RUN] Processing complete. Calculating potential file size...", file=sys.stderr)
 
             # Create a temporary output file to measure size
             temp_output = temp_dir / "dry_run_output.zip"
@@ -469,20 +464,20 @@ def main() -> None:
             new_filesize = temp_output.stat().st_size
 
             # Display results
-            print("\n[DRY RUN] Results (no files were modified):")
+            print("\n[DRY RUN] Results (no files were modified):", file=sys.stderr)
             unit = common_unit(org_filesize, new_filesize)
-            print(f"Original size: {human(org_filesize, unit)}")
-            print(f"Processed size: {human(new_filesize, unit)}")
+            print(f"Original size: {human(org_filesize, unit)}", file=sys.stderr)
+            print(f"Processed size: {human(new_filesize, unit)}", file=sys.stderr)
             print(f"Size difference: {human(new_filesize - org_filesize, unit)} "
-                  f"({((new_filesize - org_filesize) / org_filesize * 100):+.1f}%)")
-            print(f"\nOriginal file '{input_file}' was not modified.")
+                  f"({((new_filesize - org_filesize) / org_filesize * 100):+.1f}%)", file=sys.stderr)
+            print(f"\nOriginal file '{input_file}' was not modified.", file=sys.stderr)
 
         else:
             # Normal mode (and ask mode) - save output
             # Backup original file if needed
             backup_file = input_file.with_suffix(input_file.suffix + '.org')
             if output_file == input_file and not args.no_backup:
-                print(f"Creating backup of original file...")
+                print(f"Creating backup of original file...", file=sys.stderr)
                 shutil.move(str(input_file), str(backup_file))
 
             # Repack archive
@@ -492,18 +487,19 @@ def main() -> None:
             new_filesize = output_file.stat().st_size
 
             # Display results
-            print("Done!")
-            print(f"File size: {size_change(org_filesize, new_filesize)}")
+            print("Done!", file=sys.stderr)
+            print(f"File size: {size_change(org_filesize, new_filesize, stream=sys.stderr)}",
+                  file=sys.stderr)
 
             # Ask mode - prompt user to keep or restore
             if args.ask and output_file == input_file:
                 size_diff = new_filesize - org_filesize
                 size_diff_pct = (size_diff / org_filesize * 100)
-                print(f"Difference: {human(size_diff)} ({size_diff_pct:+.1f}%)")
+                print(f"Difference: {human(size_diff)} ({size_diff_pct:+.1f}%)", file=sys.stderr)
 
                 if not confirm("\nKeep the new file?", default=True):
                     shutil.move(str(backup_file), str(input_file))
-                    print("Original file restored from backup.")
+                    print("Original file restored from backup.", file=sys.stderr)
 
 
 if __name__ == '__main__':

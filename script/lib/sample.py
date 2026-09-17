@@ -47,8 +47,8 @@ from lib.par2 import (CRITICAL_TYPES, PACKET_MAGIC, RECOVERY_OVERHEAD, TYPE_CREA
                       Par2Error, aligned_slice_size, file_length, file_name,
                       fitting_slice_size,
                       iter_packets, slice_size, split_set)
-from lib.progressbar import (BarSlot, LiveLine, bar_chars, rainbow_rgb,
-                             render_bar, wave_level)
+from lib.progressbar import (BarSlot, LiveLine, ProgressBar, bar_chars,
+                             rainbow_rgb, render_bar, wave_level)
 from lib.ffprobe import ProbeError, probe_chapters, probe_json
 from lib.prompt import (ENGLISH_CHOICE, JAPANESE_CHOICE, confirm, interactive,
                         prompt_choice, prompt_text)
@@ -222,10 +222,36 @@ def demo_progressbar(opts: argparse.Namespace) -> None:
     check("render_bar has the frame", render_bar(0.0, 4), "[░░░░]")
     check("a partial block appears mid-cell", bar_chars(0.25, 2)[0], "▌")
 
+    # ProgressBar: the LiveLine subclass that needs nothing implemented
+    counted = ProgressBar(["映像.mp4", "音声.wav", "字幕.srt"], desc="変換", enabled=False)
+    check("a sized iterable gives the total for free", counted.total, 3)
+    check("iterating yields every item", list(counted),
+          ["映像.mp4", "音声.wav", "字幕.srt"])
+    check("iterating counts every item", counted.done, 3)
+    check("the fields are desc, count, bar, percent",
+          ["bar" if isinstance(part, BarSlot) else part for part in counted.parts()][:4],
+          ["変換", "3/3", "bar", "100%"])
+
+    sized = ProgressBar(total=2048, unit="B", enabled=False)
+    sized.update(512)
+    check("update() moves the ratio", f"{sized.ratio:.0%}", "25%")
+    unsized = ProgressBar(unit="B", enabled=False)
+    unsized.update(2048)
+    check("bytes read as a size, not a digit count", unsized.parts()[0], "2.0KB")
+    check("nothing to fill means no bar",
+          any(isinstance(part, BarSlot) for part in unsized.parts()), False)
+    counting = ProgressBar(total=10, enabled=False)
+    check("a small rate keeps its decimal", counting.amount(7.94, decimals=1), "7.9it")
+    check("a large rate drops it", counting.amount(1688.6, decimals=1), "1689it")
+
     enabled = sys.stdout.isatty()
     print(f"\n  LiveLine demo ({opts.seconds:g}s, enabled={enabled}). "
           f"{'Watch the last line.' if enabled else 'Not a terminal: nothing is drawn.'}")
     run_live_line(opts.seconds, rainbow=opts.rainbow)
+
+    print(f"\n  ProgressBar demo ({opts.seconds:g}s): the same mechanism, fields already "
+          f"written.")
+    run_progress_bar(opts.seconds)
 
 
 class DemoProgress(LiveLine):
@@ -263,7 +289,10 @@ class DemoProgress(LiveLine):
 def run_live_line(seconds: float, rainbow: bool = False) -> None:
     """Drive a DemoProgress for `seconds`, printing a couple of result lines on the way."""
     total = 24
-    with DemoProgress(total, rainbow=rainbow, enabled=sys.stdout.isatty()) as progress:
+    # LiveLine draws on stderr, where a script's progress belongs. Here the demo text
+    # is the output, so the bar joins it on stdout rather than talking past it.
+    with DemoProgress(total, rainbow=rainbow, enabled=sys.stdout.isatty(),
+                      stream=sys.stdout) as progress:
         for step in range(total):
             time.sleep(seconds / total)
             with progress.lock:
@@ -276,6 +305,16 @@ def run_live_line(seconds: float, rainbow: bool = False) -> None:
                                             f"映像 {step + 1:02d}.mp4: "
                                             f"{size_change(1024 ** 2 * 13, 1024 ** 2 * 4)}"))
     print("  done (the progress line erased itself)")
+
+
+def run_progress_bar(seconds: float) -> None:
+    """Walk a ProgressBar over an iterable, which is all it asks of the caller."""
+    total = 24
+    # The demo's own text is the output here, so the bar joins it on stdout.
+    for _ in ProgressBar(range(total), desc="画像", enabled=sys.stdout.isatty(),
+                         stream=sys.stdout):
+        time.sleep(seconds / total)
+    print("  done (the loop erased the line on its way out)")
 
 
 def answer(feed: str, default: bool) -> bool:

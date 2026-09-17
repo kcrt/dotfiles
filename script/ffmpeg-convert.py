@@ -1085,7 +1085,7 @@ class ProgressReporter(LiveLine):
             layout=layout,
             sequential=cfg.jobs <= 1,
             # ffmpegの進捗をそのまま流す--verboseや、行を書き換えられない端末以外では出さない
-            enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stdout.isatty(),
+            enabled=cfg.progress and not cfg.verbose and not cfg.dry_run and sys.stderr.isatty(),
         )
 
     def update(self, src: Path, out_time: float, speed: float) -> None:
@@ -1124,7 +1124,7 @@ class ProgressReporter(LiveLine):
         return bar_cell_color(slot.intensity, position, phase)
 
     def _paint(self, text: str, rgb: RGB) -> str:
-        return paint(text, rgb) if self.color else text
+        return paint(text, rgb, self.stream) if self.color else text
 
     def parts(self) -> list[str | BarSlot]:
         """1行に並べる欄。逐次と並行で見せ方を変える。"""
@@ -1329,13 +1329,13 @@ def encode(job: Job, cfg: Config, progress: ProgressReporter) -> Result:
         destination = f"\n          → {dst.name}（元はゴミ箱へ）" if cfg.replace else ""
         print(f"[dry-run] {src.name}\n          audio: {job.plan.note}"
               f"{subtitle_line(' ' * 10)}{destination}"
-              f"\n          {shlex.join(cmd)}")
+              f"\n          {shlex.join(cmd)}", file=sys.stderr)
         return Result(src, dst, True, "dry-run", info.size, 0)
 
     dst.parent.mkdir(parents=True, exist_ok=True)
     if cfg.verbose:
         print(f"--- {src.name}\n    audio: {job.plan.note}"
-              f"{subtitle_line(' ' * 4)}\n    {shlex.join(cmd)}", flush=True)
+              f"{subtitle_line(' ' * 4)}\n    {shlex.join(cmd)}", flush=True, file=sys.stderr)
     returncode, stderr = run_encoder(cmd, src, cfg, progress)
     progress.finish(src)
 
@@ -1830,7 +1830,7 @@ def resolve_options(args: argparse.Namespace, scan: list[MediaInfo]) -> Config:
                 answered.append("--container mkv")
 
     if answered:
-        print(f"（次回から {' '.join(answered)} を付けるか、--no-interactive で質問を省けます）")
+        print(f"（次回から {' '.join(answered)} を付けるか、--no-interactive で質問を省けます）", file=sys.stderr)
 
     return Config(
         roots=tuple(args.inputs),
@@ -1877,18 +1877,18 @@ def announce_inputs(args: argparse.Namespace, total: int) -> None:
     argparse の時点で確定している。
     """
     if args.replace:
-        print("出力先: 元ファイルと同じ場所（元ファイルはゴミ箱へ移します）")
+        print("出力先: 元ファイルと同じ場所（元ファイルはゴミ箱へ移します）", file=sys.stderr)
     else:
         print(f"出力先: {args.output_file or args.outdir or args.inputs[0].parent}"
-              "（元ファイルは変更しません）")
-    print(f"{total} 本を解析中…")
+              "（元ファイルは変更しません）", file=sys.stderr)
+    print(f"{total} 本を解析中…", file=sys.stderr)
 
 
 def announce_settings(cfg: Config) -> None:
     """設定が固まった時点で、黙っていられない組み合わせだけ警告する。"""
     if cfg.apple and cfg.encoder == "libsvtav1":
         print("注意: AV1はA17 Pro / M3世代以降のApple機でのみ再生できます"
-              "（M1・M2世代では再生できません）")
+              "（M1・M2世代では再生できません）", file=sys.stderr)
 
 
 def describe_source(info: MediaInfo) -> str:
@@ -1944,10 +1944,10 @@ def scan_inputs(sources: list[Path]) -> tuple[list[MediaInfo], int]:
         raise SystemExit(130)
 
     if len(scan) > SCAN_DETAIL_MAX:
-        print(summarize_scan(scan))
+        print(summarize_scan(scan), file=sys.stderr)
     else:
         for info in scan:
-            print(describe_source(info))
+            print(describe_source(info), file=sys.stderr)
     return scan, failed
 
 
@@ -1975,10 +1975,10 @@ def plan_jobs(scan: list[MediaInfo], cfg: Config) -> tuple[list[Job], int]:
         # 文字列で比べると別物に見えるので、inode で確かめる
         same_path = dst.exists() and dst.samefile(src)
         if same_path and not cfg.replace:
-            print(status_line("skip", None, f"{src.name}（出力先が入力と同一）"))
+            print(status_line("skip", None, f"{src.name}（出力先が入力と同一）"), file=sys.stderr)
             continue
         if dst.exists() and not same_path and not cfg.overwrite:
-            print(status_line("skip", None, f"{src.name}（出力が既にあります。作り直すなら --overwrite）"))
+            print(status_line("skip", None, f"{src.name}（出力が既にあります。作り直すなら --overwrite）"), file=sys.stderr)
             continue
 
         # ここから先は「変換はするが、そのまま通すと黙って欠けるもの」の報告。
@@ -1988,7 +1988,7 @@ def plan_jobs(scan: list[MediaInfo], cfg: Config) -> tuple[list[Job], int]:
                      container_audio_warning(plan, suffix),
                      subs.note if subs.dropped else None):
             if note:
-                print(status_line("注意", NOTE_RGB, f"{src.name}: {note}"))
+                print(status_line("注意", NOTE_RGB, f"{src.name}: {note}", sys.stderr), file=sys.stderr)
 
         jobs.append(Job(info, dst, plan, subs))
     return jobs, skipped
@@ -2008,7 +2008,7 @@ def settings_summary(cfg: Config) -> str:
 
 def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]:
     """まとめてエンコードし、終わった順に結果行を出す。"""
-    print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）")
+    print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）", file=sys.stderr)
     results: list[Result] = []
     with (ProgressReporter.for_jobs(jobs, cfg, layout) as progress,
           ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool):
@@ -2022,7 +2022,7 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
             elif result.kept:
                 progress.report(f"{prefix} {result.message}")
             elif not cfg.dry_run:
-                progress.report(f"{prefix} {size_change(result.src_size, result.dst_size)}"
+                progress.report(f"{prefix} {size_change(result.src_size, result.dst_size, stream=sys.stderr)}"
                                 f" / {result.message}")
     return results
 
@@ -2034,16 +2034,18 @@ def report(results: list[Result], skipped: int, multi_audio: bool,
     kept = [r for r in ok if r.kept]
     src_total = sum(r.src_size for r in ok)
     dst_total = sum(r.dst_size for r in ok)
-    print(f"\n完了 {len(ok)}/{len(results)} 本")
+    print(f"\n完了 {len(ok)}/{len(results)} 本", file=sys.stderr)
     if kept:
-        print(f"うち {len(kept)} 本は元より大きくなったため置き換えていません")
+        print(f"うち {len(kept)} 本は元より大きくなったため置き換えていません", file=sys.stderr)
         if multi_audio:
             # 音声を2本以上残せばその分は太る。設定どおりの結果であって失敗ではない
             print("（音声を複数残すぶん出力は大きくなります。"
-                  "--audio-tracks first なら1本だけ残します）")
+                  "--audio-tracks first なら1本だけ残します）", file=sys.stderr)
     if src_total:
         # 結果行と同じ欄に合計を置く
-        print(f"{layout.label('合計')} {size_change(src_total, dst_total, show_saved=True)}")
+        print(f"{layout.label('合計')} "
+              f"{size_change(src_total, dst_total, show_saved=True, stream=sys.stderr)}",
+              file=sys.stderr)
     return 0 if len(ok) == len(results) and not skipped else 1
 
 
@@ -2067,7 +2069,7 @@ def main(argv: list[str]) -> int:
     jobs, skipped = plan_jobs(scan, cfg)
     skipped += probe_failures
     if not jobs:
-        print("処理対象がありません")
+        print("処理対象がありません", file=sys.stderr)
         return 1 if skipped else 0
 
     layout = ResultLayout.for_jobs(jobs)

@@ -9,6 +9,8 @@ Use the standard library only (see termtext for why).
 
 from __future__ import annotations
 
+from typing import TextIO
+
 from .termcolor import RGB, paint
 
 SIZE_UNITS = ("B", "KB", "MB", "GB", "TB", "PB")
@@ -62,13 +64,15 @@ def human(n: float, unit: str | None = None, align: bool = False,
 
 
 def size_change(src_size: int, dst_size: int, show_saved: bool = False,
-                grew_rgb: RGB = GREW_RGB) -> str:
+                grew_rgb: RGB = GREW_RGB, stream: TextIO | None = None) -> str:
     """Build "  1.3 MB →  800.0 KB ( 60%)", with one unit shared by both sides.
 
     Result lines and the total line use the same fields at the same widths, so the
     formatting lives in this one place.
     show_saved=True also puts the absolute change inside the parentheses (for the
     total line).
+    `stream` is where the line is headed, since that is what decides whether the
+    color may be spelled at all - pass it whenever the line is not going to stdout.
 
     When the conversion grew the file, the text says 増加 and the whole parenthesis
     is colored: a negative reduction ("-113.3 MB 削減") takes a beat to read and is
@@ -83,7 +87,7 @@ def size_change(src_size: int, dst_size: int, show_saved: bool = False,
                 else f", {human(-delta, unit)} 増加")
     change = f"({ratio:>4.0%}{note})"
     if delta < 0:
-        change = paint(change, grew_rgb)
+        change = paint(change, grew_rgb, stream)
     return (f"{human(src_size, unit, align=True)} → {human(dst_size, unit, align=True)} "
             f"{change}")
 
