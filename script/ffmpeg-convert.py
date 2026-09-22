@@ -1390,6 +1390,52 @@ def collect_inputs(roots: Sequence[Path], recursive: bool, outdir: Path | None) 
     return sorted(set(found))
 
 
+# 末尾の [ ] を「設定の要約」と見なして剥がすための語彙。自分が書いた名前
+# （[av1 720p crf35]）だけでなく、他所で付けられた [1080p x265] 風の名前も剥がせるよう、
+# 同じものを指す別名も入れてある。
+ENCODER_NAME_ALIASES = frozenset({"x264", "avc", "x265", "h265", "svtav1", "vp8", "vp9"})
+
+# -t/--tune に渡せる値（x264/x265）。設定の要約に現れうるので語彙に含める。
+TUNE_WORDS = frozenset({"animation", "film", "grain", "stillimage",
+                        "fastdecode", "zerolatency", "psnr", "ssim"})
+
+# 「720p」「crf35」のような、語彙に並べられない形の語。
+PARAMETER_TOKEN_RE = re.compile(r"\d{3,4}p|crf\d+")
+
+# 名前の末尾にある [ ]。中に [ ] を含まない、いちばん外側の一組だけを捉える。
+TRAILING_BRACKET_RE = re.compile(r"\s*\[([^\[\]]*)\]$")
+
+
+def is_parameter_token(token: str) -> bool:
+    """[ ] の中の1語が、設定の要約として書かれたものに見えるか。"""
+    word = token.lower()
+    return (word in ENCODER_LIBRARIES or word in ENCODER_NAME_ALIASES
+            or word in TUNE_WORDS or word == "lecture"
+            or PARAMETER_TOKEN_RE.fullmatch(word) is not None)
+
+
+def strip_parameter_suffix(stem: str) -> str:
+    """元名の末尾に付いている設定の要約を落とす。
+
+    一度変換したものを設定を変えて変換し直すと「動画 [1080p h264] [av1 720p crf35]」と
+    積み重なってしまうので、付け替えられるように剥がす。
+
+    剥がすのは末尾の [ ] が設定の語だけで出来ているときに限る。アニメの配布名に付く
+    [A1B2C3D4]（CRC）や「[完]」のような、中身を表す [ ] は残す。[1080p][h264] のように
+    分かれていることもあるので、設定に見える限り繰り返し剥がす。
+    """
+    while (match := TRAILING_BRACKET_RE.search(stem)) is not None:
+        tokens = [t for t in re.split(r"[\s,]+", match.group(1)) if t]
+        if not tokens or not all(is_parameter_token(t) for t in tokens):
+            break
+        rest = stem[:match.start()].rstrip()
+        if not rest:
+            # 名前が [ ] だけで出来ている場合。剥がすと名前が消えるので残す
+            break
+        stem = rest
+    return stem
+
+
 def parameter_suffix(info: MediaInfo, cfg: Config) -> str:
     """出力名に添える設定の要約。元ファイルと並べても、設定を変えて作り直しても区別できる。
 
@@ -1415,8 +1461,9 @@ def parameter_suffix(info: MediaInfo, cfg: Config) -> str:
 def destination_for(info: MediaInfo, suffix: str, cfg: Config) -> Path:
     """出力パスを決める。
 
-    単発ファイルの変換では「元名 [720p hevc high].mp4」のように設定を名前に書く。
+    単発ファイルの変換では「元名 [hevc 720p crf28].mp4」のように設定を名前に書く。
     元ファイルの隣に置いても区別でき、設定を変えて作り直しても衝突しないため。
+    元名に既に設定が書いてあれば、積み重ねずに付け替える。
     ディレクトリを渡された場合は元の名前のまま、入力の構成を出力先に写す。
     --replace では元の名前をそのまま引き継ぐ（設定を名前に書いても、置き換えた先には
     見比べる相手が残らない）。
@@ -1430,7 +1477,8 @@ def destination_for(info: MediaInfo, suffix: str, cfg: Config) -> Path:
         return cfg.output_file
     if cfg.single_file:
         parent = cfg.outdir if cfg.outdir is not None else src.parent
-        return parent / f"{src.stem} [{parameter_suffix(info, cfg)}]{suffix}"
+        stem = strip_parameter_suffix(src.stem)
+        return parent / f"{stem} [{parameter_suffix(info, cfg)}]{suffix}"
     for root in cfg.roots:
         if root.is_dir():
             try:
