@@ -211,6 +211,38 @@ done
 echo ""
 
 
+# ----- Foreground / Background Symmetry -----
+# Whether one RGB value looks the same painted as a glyph and painted as a cell
+# background. Not something a terminal advertises, and easy to assume: any drawing
+# that splits a cell between the two - a half-block gradient, a bar drawn at twice
+# the horizontal resolution with ▌, a sparkline over a colored background - comes
+# out banded when they do not match, with a seam down the middle of every cell.
+#
+# Window transparency breaks it: the background blends with whatever is behind the
+# window while the glyph stays opaque, so the same value comes out darker as a
+# background. Measured at 0.910 of the foreground on iTerm2 with transparency on
+# (2026-09-22), constant across the channels and across the value range.
+# iTerm2: Profiles > Window > Transparency, and "Keep background colors opaque".
+echo "== foreground / background symmetry =="
+echo "The three rows should be the same color, and the third one should have no"
+echo "vertical stripes. Stripes mean a background does not match its foreground."
+
+for rgb in "70 145 240" "255 255 255" "128 128 128"; do
+    set -- ${=rgb}
+    printf '  fg  \x1b[38;2;%s;%s;%sm' "$1" "$2" "$3"
+    for _ in $(seq 24); do printf '\u2588'; done       # █ as a foreground glyph
+    printf '\x1b[0m\n'
+
+    printf '  bg  \x1b[48;2;%s;%s;%sm' "$1" "$2" "$3"
+    printf '%24s' ""                                    # the same color as a background
+    printf '\x1b[0m\n'
+
+    printf '  ▌   \x1b[38;2;%s;%s;%sm\x1b[48;2;%s;%s;%sm' "$1" "$2" "$3" "$1" "$2" "$3"
+    for _ in $(seq 24); do printf '\u258c'; done       # ▌ with both halves set alike
+    printf '\x1b[0m\n\n'
+done
+
+
 # ----- Character Width -----
 # Not an escape sequence, but handy to verify glyph rendering and column width.
 # Wide glyphs should each occupy 2 columns; if the closing bars misalign, the
