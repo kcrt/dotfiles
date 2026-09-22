@@ -47,6 +47,18 @@ typeset -ga CLEAN_TARGETS=(
 	~/.cargo/git
 	# Go
 	~/go/pkg/mod
+	# Chrome (Safari is the daily driver, so these are pure re-download).
+	# ⚠️ Caches only. The on-device AI models (OptGuideOnDeviceModel ~4GB,
+	# OptGuideOnDeviceClassifierModel, optimization_guide_model_store) are
+	# governed by the toggles in chrome://settings/ai - Chrome deletes them
+	# itself when a feature is turned off, and re-downloads them while one is
+	# on. Deleting them here would just burn the download every night.
+	~/Library/Caches/Google/Chrome
+	"$HOME/Library/Application Support/Google/Chrome/extensions_crx_cache"
+	"$HOME/Library/Application Support/Google/Chrome/component_crx_cache"
+	"$HOME/Library/Application Support/Google/Chrome/GrShaderCache"
+	"$HOME/Library/Application Support/Google/Chrome/GraphiteDawnCache"
+	"$HOME/Library/Application Support/Google/Chrome/ShaderCache"
 )
 
 # Combined size of $CLEAN_TARGETS in KiB. du counts allocated blocks, which is
@@ -125,6 +137,19 @@ fi
 cargo cache -a
 # Go
 go clean -modcache
+# Chrome
+# ⚠️ Skip while Chrome is running: it holds these open and can rewrite them
+# mid-delete. The models are left alone on purpose (see CLEAN_TARGETS above).
+if pgrep -f "Google Chrome" > /dev/null 2>&1; then
+	echo_warn "Chrome is running: left its caches alone."
+else
+	rm -rf ~/Library/Caches/Google/Chrome/*(ND)
+	for chromecache in extensions_crx_cache component_crx_cache \
+	                   GrShaderCache GraphiteDawnCache ShaderCache; do
+		rm -rf "$HOME/Library/Application Support/Google/Chrome/$chromecache"
+	done
+	echo_ok "Chrome caches cleaned."
+fi
 
 cacheafter=$(clean_targets_kb)
 freed=$(( cachebefore - cacheafter ))
