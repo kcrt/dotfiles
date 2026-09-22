@@ -81,7 +81,11 @@ backup_directory_rsync() {
         "$src_dir" "kcrt@qnap.local:/share/Backup/$dest_dir"
 }
 
-if [[ -d /Volumes/Backup/ ]]; then
+# Everything below is pushed over ssh to kcrt@qnap.local:/share/Backup, so that
+# is what has to be reachable - not a local mount of the same share. Gating on
+# /Volumes/Backup meant that forgetting to mount it skipped every transfer and
+# still reported the step as finished.
+if ssh -o BatchMode=yes -o ConnectTimeout=10 kcrt@qnap.local '[ -d /share/Backup ]'; then
     OSNotify "prog -> Qnap"
     backup_directory_rsync ~/prog/ prog
     OSNotify "Documents -> Qnap"
@@ -113,6 +117,8 @@ if [[ -d /Volumes/Backup/ ]]; then
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
         --inplace --partial --block-size=128K \
         /nosync/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels"
+else
+    count_failure "kcrt@qnap.local:/share/Backup is not reachable over ssh. Nothing was backed up."
 fi
 
 # Let maintain.sh's run_step know that something did not make it to the NAS.
