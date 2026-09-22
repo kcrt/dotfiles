@@ -28,6 +28,20 @@ PARAKEET_MODEL=mlx-community/parakeet-tdt_ctc-0.6b-ja
 # next run.
 RECORDER_TRANSCRIPTS_PER_RUN=1
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "File the recordings waiting in \$INBOX_DIR and transcribe them:"
+    echo "  <name>_<date>_<time>A0.MP3            -> \$RECORDER_DIR"
+    echo "  *.m4a, prefixed with their own date   -> \$VOICEMEMO_DIR"
+    echo "Everything that has no .txt beside it yet is transcribed with parakeet-mlx,"
+    echo "at most \$RECORDER_TRANSCRIPTS_PER_RUN recorder file(s) per run - one of them"
+    echo "is a whole morning of audio, so the rest waits for the next run."
+    echo ""
+    echo "Requires ffprobe, jq, uv, aluminum.local, a reachable qnap.local and the"
+    echo "Private share mounted. Normally started by maintain.sh."
+    exit 0
+fi
+
 # ffprobe reads the recording date, jq pulls it out of ffprobe's JSON and uv
 # runs the transcriber. Any of them missing used to turn into a pile of
 # half-finished moves instead of a clear error.

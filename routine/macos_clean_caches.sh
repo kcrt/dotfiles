@@ -14,6 +14,20 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+	echo "Usage: ${0:t} [--help]"
+	echo "Empty the caches of the development toolchains (Xcode, Homebrew, npm, pnpm,"
+	echo "bun, Playwright, Cypress, pip, uv, cargo, go) and Chrome's shader and"
+	echo "extension caches, then report how much the directories in \$CLEAN_TARGETS"
+	echo "shrank - df cannot show it, because APFS keeps the freed blocks referenced"
+	echo "by its local snapshots for another day."
+	echo "Chrome's caches are left alone while Chrome is running, and its on-device AI"
+	echo "models are never touched."
+	echo ""
+	echo "Normally started by maintain.sh."
+	exit 0
+fi
+
 # Directories this script empties or prunes. Their combined shrinkage is the
 # only honest measure of what a run achieved: df cannot show it, because APFS
 # keeps local snapshots (hourly, a rolling 24h window) that hold every freed

@@ -14,6 +14,16 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Install the R packages this machine expects (tidyverse, gtsummary, coin,"
+    echo "exactRankTests, languageserver) and update everything already installed."
+    echo "Worth running by hand after installing or upgrading R itself."
+    echo ""
+    echo "Requires R. Normally started by maintain.sh."
+    exit 0
+fi
+
 if ! command -v R > /dev/null 2>&1; then
     OSError "R is not installed. Please install it first."
     exit 1

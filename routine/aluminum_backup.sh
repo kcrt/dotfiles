@@ -13,6 +13,20 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Push the directories worth keeping to the NAS over ssh:"
+    echo "  ~/prog ~/Documents ~/diskimages ~/Calibre ~/Pictures ~/Zotero"
+    echo "  ~/Library/Mail /nosync  ->  kcrt@qnap.local:/share/Backup/<name>"
+    echo "/nosync/Parallels is sent on its own with --inplace, because a single"
+    echo "disk image of ~177G would otherwise be rewritten in full every time."
+    echo "Every transfer uses --delete: what is gone here is deleted there too."
+    echo ""
+    echo "Requires rsync, aluminum.local, and kcrt@qnap.local reachable over ssh."
+    echo "Normally started by maintain.sh."
+    exit 0
+fi
+
 # Check if rsync is installed
 if ! command -v rsync &> /dev/null; then
     OSNotify "rsync is not installed. Please install it first."

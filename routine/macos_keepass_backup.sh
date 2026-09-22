@@ -15,6 +15,19 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Copy ~/Documents/passwords.kdbx to every destination there is: the KyPass"
+    echo "folder in iCloud, gs://auto.backup.kcrt.net/auto/, and a dated copy in"
+    echo "/Volumes/Backup/passwords where the newest \$KEEPASS_GENERATIONS are kept."
+    echo "Every destination is attempted even after one of them fails, and each"
+    echo "failure is reported: a password backup that quietly did not happen is the"
+    echo "one outcome worth shouting about."
+    echo ""
+    echo "Requires gcloud for the cloud copy. Normally started by maintain.sh."
+    exit 0
+fi
+
 KEEPASS_DB=~/Documents/passwords.kdbx
 KEEPASS_GENERATIONS=20
 

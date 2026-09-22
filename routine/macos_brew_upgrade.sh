@@ -13,6 +13,16 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "brew update, list what is outdated, brew upgrade, and write the result back"
+    echo "to \$DOTFILES/Brewfile with 'brew bundle dump -f'. Every step is counted on"
+    echo "its own, so one cask that cannot be upgraded does not hide the rest."
+    echo ""
+    echo "Requires brew. Normally started by maintain.sh."
+    exit 0
+fi
+
 OSNotify "Updating brew..."
 brew update || count_failure "brew update failed."
 brew outdated   # informational only

@@ -14,6 +14,17 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Run 'cargo clean' in every Rust project under \$PROG_DIR (default ~/prog),"
+    echo "so that target/ is not sent to the backup server. target, node_modules,"
+    echo ".git, venv and .venv are pruned from the search, and a project that fails"
+    echo "to clean is skipped rather than failing the whole run."
+    echo ""
+    echo "Requires cargo. Normally started by maintain.sh."
+    exit 0
+fi
+
 if ! command -v cargo > /dev/null 2>&1; then
     OSError "cargo is not installed. Please install it first."
     exit 1

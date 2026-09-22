@@ -9,6 +9,18 @@
 #
 #===============================================================================
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+	echo "Usage: ${0:t} [--help]"
+	echo "Run every maintenance routine for this host, in order, timing each one and"
+	echo "reporting what failed in a single summary at the end. A full run takes"
+	echo "hours and needs the NAS at home to be reachable."
+	echo ""
+	echo "The output is also kept in \$XDG_STATE_HOME/maintain/<date>.log, one file"
+	echo "per day, and the routines themselves live in \$DOTFILES/routine. Each of"
+	echo "them can be run on its own and takes --help as well."
+	exit 0
+fi
+
 # Everything here is addressed relative to $DOTFILES, and the helpers below
 # (echo_info, OSNotify, ...) come from it. Bail out before anything else if it
 # is missing, otherwise the failure surfaces much later as "command not found".
@@ -62,7 +74,9 @@ run_routine(){
 		OSError "Routine not found: $1"
 		return 1
 	fi
-	( . "$routine" )
+	# `source` would hand our own positional parameters to the routine, where
+	# a stray "--help" would print its usage instead of doing the work.
+	( set --; . "$routine" )
 }
 
 typeset -ga FAILED_STEPS=()

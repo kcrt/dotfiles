@@ -11,7 +11,30 @@
 #
 #===============================================================================
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+# `source` hands the caller's positional parameters to this file, so looking at
+# $1 alone made every script that sources it print the help below and exit 0 as
+# soon as that script itself was called with --help - maintain.sh and all of its
+# routines included. Only answer for --help when this file is the one that was
+# started: zsh records the nesting in $ZSH_EVAL_CONTEXT, where a "file"
+# component means a `source`, and bash keeps the started script in $0 while
+# $BASH_SOURCE follows the current file. Any other shell simply does not
+# print it.
+_OSNotify_is_run_directly(){
+	if [ -n "$ZSH_EVAL_CONTEXT" ]; then
+		# One component per level, including the ":shfunc" of this very
+		# function, so match the "file" rather than the whole string.
+		case "$ZSH_EVAL_CONTEXT" in
+			*file*) return 1 ;;
+			*)      return 0 ;;
+		esac
+	elif [ -n "$BASH_SOURCE" ]; then
+		[ "$BASH_SOURCE" = "$0" ]
+	else
+		return 1
+	fi
+}
+
+if _OSNotify_is_run_directly && { [ "$1" = "--help" ] || [ "$1" = "-h" ]; }; then
     echo "Usage: source $(basename "$0")"
     echo "This script provides functions for sending desktop notifications."
     echo "It is intended to be sourced by other scripts, not run directly."

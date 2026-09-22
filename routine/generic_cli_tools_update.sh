@@ -14,6 +14,16 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Update the small command line tools: vim plugins (vim-plug's PlugInstall and"
+    echo "PlugUpdate), the Google Cloud SDK components and the gh-copilot extension."
+    echo "gcloud and gh are skipped when they are not installed."
+    echo ""
+    echo "Requires vim with vim-plug. Normally started by maintain.sh."
+    exit 0
+fi
+
 echo_info "vim update"
 # .vimrc uses vim-plug (PluginInstall is Vundle's command and does not exist).
 # --sync is required so that the updates finish before vim quits.

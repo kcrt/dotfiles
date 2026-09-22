@@ -14,6 +14,17 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Refresh ~/QnapFileList.txt from /Volumes/Backup/QnapFileList.txt, without"
+    echo "the AppleDouble, .DS_Store and .@__thumb entries and sorted by name."
+    echo "The previous list is kept whenever the new one cannot be built."
+    echo ""
+    echo "Requires pv, aluminum.local and /Volumes/Backup mounted."
+    echo "Normally started by maintain.sh."
+    exit 0
+fi
+
 # Check if machine is aluminum
 if [[ "$HOST" != "aluminum.local" ]]; then
     OSNotify "This script is intended to be run on aluminum.local only."

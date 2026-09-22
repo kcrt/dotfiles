@@ -13,6 +13,19 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: ${0:t} [--help]"
+    echo "Update the ClamAV signatures with freshclam, then scan \$SCAN_TARGETS"
+    echo "(~/Downloads) with a clamd started just for this run: clamdscan --multiscan"
+    echo "uses every core, where a plain clamscan needs over ten minutes for the same"
+    echo "files. The daemon and its throwaway config are removed on exit."
+    echo "A virus that is found counts as a failure, and on a terminal the script"
+    echo "waits for Enter so that the message is seen."
+    echo ""
+    echo "Requires clamav (freshclam, clamd, clamdscan). Normally started by maintain.sh."
+    exit 0
+fi
+
 # What to scan. ~/Downloads is where anything from outside lands.
 SCAN_TARGETS=(~/Downloads)
 

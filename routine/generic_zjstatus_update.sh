@@ -24,6 +24,20 @@
 
 source ${DOTFILES}/script/OSNotify.sh
 
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+	echo "Usage: ${0:t} [--help]"
+	echo "Report whether the zjstatus plugin cached by zellij is older than the latest"
+	echo "release. zellij names the download after a hash of its URL and never fetches"
+	echo "it again, so the cached wasm has to be deleted by hand: this prints the rm"
+	echo "command for the stale file(s) rather than touching them itself."
+	echo "The latest tag and its checksum are remembered in"
+	echo "\$XDG_STATE_HOME/zjstatus_release, so the 4MB asset is downloaded once per"
+	echo "release and not once per maintenance run."
+	echo ""
+	echo "Requires curl and shasum. Normally started by maintain.sh."
+	exit 0
+fi
+
 ZJSTATUS_REPO="dj95/zjstatus"
 ZJSTATUS_ASSET_URL="https://github.com/${ZJSTATUS_REPO}/releases/latest/download/zjstatus.wasm"
 # Remembers "<tag> <sha256 of that tag's asset>" so that the 4MB asset is only
