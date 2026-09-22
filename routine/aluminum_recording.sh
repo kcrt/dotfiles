@@ -12,6 +12,7 @@
 #===============================================================================
 
 source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/format_duration.sh
 # The recording directories live on an SMB share, where a plain zsh glob hands
 # back names that cannot be opened again. See the file for the details.
 source ${DOTFILES}/script/nfd_safe_glob.sh
@@ -97,13 +98,32 @@ ingest_voice_memos(){
     done
 }
 
+# One recorder file is a whole morning of audio, and ffprobe is the only thing
+# that knows this before the transcriber starts on it. Printed up front, it is
+# what tells apart "this takes a quarter of an hour" from "this is stuck".
+audio_duration_seconds(){
+    ffprobe -loglevel quiet -of json -show_entries format=duration "$1" \
+        | jq -r '.format.duration // empty'
+}
+
+# realtime_factor <audio seconds> <elapsed seconds> -> " (48x realtime)"
+# Prints nothing when the audio length is unknown: the speed is there to make
+# a slow run recognisable, and a made-up number would defeat that.
+realtime_factor(){
+    local duration=$1
+    local -i elapsed=$2
+    [[ "$duration" =~ '^[0-9]+(\.[0-9]+)?$' ]] || return 0
+    (( elapsed > 0 )) || return 0
+    printf ' (%.0fx realtime)' $(( duration / elapsed ))
+}
+
 # transcribe_directory <directory> <glob pattern> <files per run, 0 = all>
 # Transcribes every file that has no .txt next to it yet.
 transcribe_directory(){
     local dir=$1 pattern=$2 limit=$3
-    local -a files
-    local file
-    local -i transcribed=0
+    local -a files todo=()
+    local file duration
+    local -i transcribed=0 start elapsed
 
     if [[ ! -d "$dir" ]]; then
         count_failure "Transcription directory not found: $dir"
@@ -112,9 +132,25 @@ transcribe_directory(){
 
     nfd_safe_glob files "$dir" "$pattern"
     for file in "${files[@]}"; do
-        [[ -e "${file:r}.txt" ]] && continue
-        echo_info "Transcribing $file"
-        if ! uv tool run parakeet-mlx --model "$PARAKEET_MODEL" "$file" --output-dir "$dir"; then
+        [[ -e "${file:r}.txt" ]] || todo+=("$file")
+    done
+    if (( ${#todo} == 0 )); then
+        echo_ok "$dir: all ${#files} file(s) are transcribed."
+        return 0
+    fi
+    # $limit hands part of the work to the next run, so the size of the backlog
+    # is the only thing that says whether the limit is keeping up with it.
+    echo_info "$dir: ${#todo} of ${#files} file(s) left to transcribe."
+
+    for file in "${todo[@]}"; do
+        duration=$(audio_duration_seconds "$file")
+        echo_info "[$(( transcribed + 1 ))/${#todo}] Transcribing ${file:t} ($(format_duration "$duration"))"
+        start=$SECONDS
+        # The progress bar is drawn by rich, which draws nothing unless it
+        # believes it writes to a terminal - and maintain.sh has replaced
+        # stdout with a pipe. TTY_COMPATIBLE makes it draw the bar anyway,
+        # which is the only progress there is during a run of several hours.
+        if ! TTY_COMPATIBLE=1 uv tool run parakeet-mlx --model "$PARAKEET_MODEL" "$file" --output-dir "$dir"; then
             count_failure "Transcription failed: $file"
             continue
         fi
@@ -125,8 +161,10 @@ transcribe_directory(){
             continue
         fi
         (( ++transcribed ))
+        elapsed=$(( SECONDS - start ))
+        echo_ok "[$transcribed/${#todo}] ${file:t} took $(format_duration $elapsed)$(realtime_factor "$duration" $elapsed)"
         if (( limit > 0 && transcribed >= limit )); then
-            echo_info "Transcribed $transcribed file(s); the rest wait for the next run."
+            echo_info "Transcribed $transcribed file(s); $(( ${#todo} - transcribed )) wait for the next run."
             break
         fi
     done

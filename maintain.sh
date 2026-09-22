@@ -19,6 +19,7 @@ if [[ ! -r "${DOTFILES}/script/OSNotify.sh" ]]; then
 fi
 
 source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/format_duration.sh
 autoload zmv
 
 # A full run takes hours, and the interesting lines scroll out of the
@@ -26,6 +27,10 @@ autoload zmv
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/maintain"
 LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d).log"
 LOG_GENERATIONS=30
+# rsync, parakeet & co. redraw their progress line with CR instead of ending
+# it, which the log copy would otherwise store as one line of several hundred
+# kilobytes. Keep one redraw every this many seconds; 0 would keep them all.
+LOG_PROGRESS_INTERVAL=30
 if mkdir -p "$LOG_DIR"; then
 	print -r -- "===== $(date '+%Y-%m-%d %H:%M:%S') maintain.sh started =====" >> "$LOG_FILE"
 	# Keep the newest $LOG_GENERATIONS daily logs. (NOn): skip if empty,
@@ -34,8 +39,16 @@ if mkdir -p "$LOG_DIR"; then
 	if (( ${#log_generations} > LOG_GENERATIONS )); then
 		rm -f -- "${log_generations[@]:$LOG_GENERATIONS}"
 	fi
-	# tee keeps the terminal colourful while sed stores a readable copy.
-	exec > >(tee >(sed -l 's/\x1b\[[0-9;?]*[a-zA-Z]//g' >> "$LOG_FILE")) 2>&1
+	# tee keeps the terminal colourful while log_filter.py stores a readable
+	# copy. Losing every line of the log to a filter that cannot start would
+	# be worse than an unreadable progress bar, so try it once first and fall
+	# back to plain escape stripping.
+	log_copy=("${DOTFILES}/script/log_filter.py" --interval $LOG_PROGRESS_INTERVAL)
+	if ! print -n "" | "${log_copy[@]}" > /dev/null 2>&1; then
+		echo "maintain.sh: ${log_copy[1]:t} is not usable, keeping the raw progress lines." >&2
+		log_copy=(sed -l 's/\x1b\[[0-9;?]*[a-zA-Z]//g')
+	fi
+	exec > >(tee >("${log_copy[@]}" >> "$LOG_FILE")) 2>&1
 else
 	echo "maintain.sh: cannot write to $LOG_DIR, continuing without a log." >&2
 	LOG_FILE=""
@@ -50,16 +63,6 @@ run_routine(){
 		return 1
 	fi
 	( . "$routine" )
-}
-
-# 3725 -> "62m5s", 42 -> "42s"
-format_duration(){
-	local sec=$1
-	if (( sec >= 60 )); then
-		print -r -- "$(( sec / 60 ))m$(( sec % 60 ))s"
-	else
-		print -r -- "${sec}s"
-	fi
 }
 
 typeset -ga FAILED_STEPS=()
