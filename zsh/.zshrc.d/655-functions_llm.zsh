@@ -4,7 +4,7 @@
 #
 
 LLM_MY_DEFAULT_MODEL='google/gemma-4-12b-qat'
-LLM_MY_HEAVY_MODEL='qwen/qwen3.8-27b'
+LLM_MY_HEAVY_MODEL='orcarouter/qwen3.8-27b-uncensored'
 # 4B 級の小型モデルは未ダウンロードのため、当面 DEFAULT と同じものを指す
 LLM_MY_FAST_MODEL='google/gemma-4-12b-qat'
 # gemma-4-12b-qat は mmproj 同梱でそのまま vision が使える
@@ -54,7 +54,9 @@ Produce only the ${target_lang} translation, without any additional explanations
 
 ${text}"
 	local payload
-	payload=$(python3 -c "import json,sys; print(json.dumps({'model': sys.argv[1], 'messages': [{'role': 'user', 'content': sys.argv[2]}]}))" \
+	# reasoning_effort=none: gemma-4-*-qat 等の思考モデルは、既定だと reasoning が
+	# コンテキストを食い潰して content が空で返ることがある（翻訳に思考は要らない）
+	payload=$(python3 -c "import json,sys; print(json.dumps({'model': sys.argv[1], 'reasoning_effort': 'none', 'messages': [{'role': 'user', 'content': sys.argv[2]}]}))" \
 		"$LLM_MY_TRANSLATE_MODEL" "$prompt")
 	curl -s "$LMS_BASE_URL/chat/completions" \
 		-H "Content-Type: application/json" \
@@ -87,6 +89,7 @@ function llm-ocr() {
 		-H "Content-Type: application/json" \
 		-d "{
 			\"model\": \"$LLM_MY_OCR_MODEL\",
+			\"reasoning_effort\": \"none\",
 			\"messages\": [{
 				\"role\": \"user\",
 				\"content\": [
