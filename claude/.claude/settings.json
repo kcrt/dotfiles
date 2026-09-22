@@ -1,358 +1,7 @@
 {
-  "agentPushNotifEnabled": true,
   "attribution": {
     "commit": "",
     "pr": ""
-  },
-  "autoCompactEnabled": true,
-  "autoMode": {
-    "environment": [
-      "### Org-wide",
-      "**Repository visibility**: assume private unless the remote host and repo name indicate otherwise",
-      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
-      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production`",
-      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
-      "### User-specific",
-      "**Primary use of Claude Code**: software development and medical/research writing",
-      "**Sensitive data locations & audiences**: any file or store holding personal data, patient/medical data, confidential business data, or credentials — never commit or share outside explicitly cleared audiences"
-    ],
-    "soft_deny": [
-      "$defaults",
-      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DELETE*)",
-      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DROP*)"
-    ]
-  },
-  "editorMode": "vim",
-  "effortLevel": "high",
-  "enabledPlugins": {
-    "clangd-lsp@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "eli5@claude-community": true,
-    "firebase@claude-plugins-official": false,
-    "github@claude-plugins-official": true,
-    "joplin-mcp@joplin-mcp": true,
-    "playwright@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true,
-    "swift-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {
-    "claude-community": {
-      "source": {
-        "repo": "anthropics/claude-plugins-community",
-        "source": "github"
-      }
-    },
-    "joplin-mcp": {
-      "source": {
-        "repo": "alondmnt/joplin-mcp",
-        "source": "github"
-      }
-    }
-  },
-  "hooks": {
-    "ConfigChange": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/config_change.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "InstructionsLoaded": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/instructions_loaded.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/notification.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/permission_request.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "PostToolUseFailure": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use_failure.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_compact.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": "auto"
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_tool_use.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_end.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\"",
-            "type": "command"
-          }
-        ],
-        "matcher": "resume"
-      },
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_start.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/stop.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "StopFailure": [
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_start.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_stop.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/task_completed.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/teammate_idle.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/user_prompt_submit.m4a",
-            "type": "command"
-          }
-        ],
-        "matcher": ""
-      },
-      {
-        "hooks": [
-          {
-            "command": "/Users/kcrt/.config/iterm2/cc-status",
-            "type": "command"
-          }
-        ]
-      }
-    ]
-  },
-  "inputNeededNotifEnabled": true,
-  "mcpServers": {
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp"
-    },
-    "playwright": {
-      "args": [
-        "@playwright/mcp@latest"
-      ],
-      "command": "npx",
-      "env": {},
-      "type": "stdio"
-    },
-    "zotero-mcp": {
-      "args": [
-        "zotero-mcp"
-      ],
-      "command": "npx",
-      "disabled": true,
-      "env": {},
-      "type": "stdio"
-    }
-  },
-  "modelSettings": {
-    "claude-opus-5": {
-      "effortLevel": "high"
-    },
-    "claude-sonnet-5": {
-      "effortLevel": "medium"
-    }
   },
   "permissions": {
     "allow": [
@@ -447,6 +96,18 @@
       "Bash(pnpm test *)",
       "Bash(pnpm lint *)"
     ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Bash(dd:*)",
+      "Read(//**/.env.production.local)",
+      "Bash(cat *.env.production.local)",
+      "Bash(grep *.env.production.local)",
+      "Bash(head *.env.production.local)",
+      "Bash(tail *.env.production.local)",
+      "Bash(less *.env.production.local)"
+    ],
     "ask": [
       "Bash(find *-exec*)",
       "Bash(find *-execdir*)",
@@ -482,39 +143,378 @@
       "Bash(scp:*)",
       "Bash(rsync:*)"
     ],
-    "defaultMode": "auto",
-    "deny": [
-      "Bash(rm -rf /)",
-      "Bash(rm -rf /*)",
-      "Bash(rm -rf ~/*)",
-      "Bash(dd:*)",
-      "Read(//**/.env.production.local)",
-      "Bash(cat *.env.production.local)",
-      "Bash(grep *.env.production.local)",
-      "Bash(head *.env.production.local)",
-      "Bash(tail *.env.production.local)",
-      "Bash(less *.env.production.local)"
+    "defaultMode": "auto"
+  },
+  "hooks": {
+    "ConfigChange": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/config_change.m4a"
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/instructions_loaded.m4a"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/notification.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/permission_request.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/post_tool_use_failure.m4a"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_compact.m4a"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/pre_tool_use.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_end.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/say-wrapper.sh \"us\" \"Welcome back.\""
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/session_start.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/stop.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_start.m4a"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/subagent_stop.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/task_completed.m4a"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/teammate_idle.m4a"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/dotfiles/script/playsound.sh ~/dotfiles/materials/audio/claude_hooks/user_prompt_submit.m4a"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kcrt/.config/iterm2/cc-status"
+          }
+        ]
+      }
     ]
   },
-  "preferredNotifChannel": "iterm2_with_bell",
-  "remoteControlAtStartup": true,
+  "statusLine": {
+    "type": "command",
+    "command": "bunx -y ccstatusline@latest",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "clangd-lsp@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "eli5@claude-community": true,
+    "firebase@claude-plugins-official": false,
+    "github@claude-plugins-official": true,
+    "joplin-mcp@joplin-mcp": true,
+    "playwright@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-community": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-community"
+      }
+    },
+    "joplin-mcp": {
+      "source": {
+        "source": "github",
+        "repo": "alondmnt/joplin-mcp"
+      }
+    }
+  },
   "sandbox": {
     "excludedCommands": [
       "git commit *",
       "uv run"
     ]
   },
-  "skipAutoPermissionPrompt": true,
-  "statusLine": {
-    "command": "bunx -y ccstatusline@latest",
-    "padding": 0,
-    "type": "command"
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "high"
+    },
+    "claude-sonnet-5": {
+      "effortLevel": "medium"
+    }
   },
   "tui": "fullscreen",
-  "verbose": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
-  "voiceEnabled": true
+  "editorMode": "vim",
+  "verbose": true,
+  "preferredNotifChannel": "iterm2_with_bell",
+  "autoCompactEnabled": true,
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DELETE*)",
+      "Bash(sqlite3 */Documents/database/mydata.sqlite:* DROP*)"
+    ],
+    "environment": [
+      "### Org-wide",
+      "**Repository visibility**: assume private unless the remote host and repo name indicate otherwise",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production`",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development and medical/research writing",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, patient/medical data, confidential business data, or credentials — never commit or share outside explicitly cleared audiences"
+    ]
+  },
+  "voiceEnabled": true,
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "playwright": {
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "command": "npx",
+      "env": {},
+      "type": "stdio"
+    },
+    "zotero-mcp": {
+      "args": [
+        "zotero-mcp"
+      ],
+      "command": "npx",
+      "disabled": true,
+      "env": {},
+      "type": "stdio"
+    }
+  }
 }

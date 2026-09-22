@@ -203,7 +203,7 @@ brew "fizz"
 # Modular, composable client/server abstractions framework
 brew "wangle"
 # Facebook's branch of Apache Thrift, including a new C++ server
-brew "fbthrift"
+brew "fbthrift", link: false
 # Thrift functions for querying information from a service
 brew "fb303"
 # Shared library for Watchman and Eden projects
@@ -270,8 +270,10 @@ brew "gdal"
 brew "genact"
 # GitHub command-line tool
 brew "gh"
+# Installer for the general purpose language Haskell
+brew "ghcup"
 # Multi-platform software reverse engineering framework
-brew "ghidra", link: false
+brew "ghidra"
 # Image processing and image analysis library
 brew "leptonica"
 # OCR (Optical Character Recognition) engine
@@ -394,6 +396,8 @@ brew "lsusb"
 brew "m-cli"
 # Apple Silicon Monitor Top written in Go Lang
 brew "mactop"
+# Multiple alignments with fast Fourier transforms
+brew "mafft"
 # Securely transfers data between computers
 brew "magic-wormhole"
 # Mac App Store command-line interface
@@ -478,6 +482,8 @@ brew "openjdk@17"
 brew "openvpn"
 # Microsoft Windows password cracker using rainbow tables
 brew "ophcrack"
+# Parchive: Parity Archive Volume Set for data recovery
+brew "par2"
 # Shell command parallelization utility
 brew "parallel"
 # PDF files password cracker
@@ -497,7 +503,7 @@ brew "pkgx"
 # Object-relational database system
 brew "postgresql@15"
 # Command-line shell and scripting language
-brew "powershell", link: false
+brew "powershell"
 # Coreutils progress viewer
 brew "progress"
 # CLI companion with 200+ commands across 33+ Datadog products
@@ -522,6 +528,8 @@ brew "tcl-tk"
 brew "r"
 # Find duplicate files based on content (NOT file names)
 brew "rdfind"
+# Fast, efficient and secure backup program
+brew "restic"
 # Wrapper around ripgrep that adds multiple rich file types
 brew "ripgrep-all"
 # Round Robin Database
@@ -613,7 +621,7 @@ brew "watchman"
 # Internet file retriever
 brew "wget"
 # Port of OpenAI's Whisper model in C/C++
-brew "whisper-cpp"
+brew "whisper.cpp"
 # Swift native on-device speech recognition with Whisper for Apple Silicon
 brew "whisperkit-cli"
 # Automatic workarounds for problems in Wine
@@ -757,6 +765,8 @@ cask "hammerspoon"
 cask "handbrake-app"
 # Allows keymap customization on HHKB HYBRID Type-S and HYBRID models
 cask "hhkb"
+# Homebrew's official GUI
+cask "homebrew-app"
 # Medical image viewer
 cask "horos"
 # Menu bar app that detects keyboard shortcut conflicts
@@ -866,6 +876,8 @@ cask "retroarch-metal"
 cask "rstudio"
 # Tool for sending personal documents to Kindles from Macs
 cask "send-to-kindle"
+# Tool that provides consistent, highly configurable symbols for apps
+cask "sf-symbols"
 # Drive failure monitoring tool
 cask "smartreporter-free"
 # CSV editor
@@ -886,7 +898,6 @@ cask "teamviewer"
 cask "thaw"
 # Menu bar app to show Time Machine information
 cask "timemachinestatus"
-# Pomodoro desktop timer
 cask "tomighty"
 # Web browser focusing on security
 cask "tor-browser"
@@ -967,8 +978,8 @@ mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
 mas "Key Codes", id: 414568915
-mas "Keynote", id: 361285480
 mas "Keynote", id: 409183694
+mas "Keynote", id: 361285480
 mas "Kindle", id: 302584613
 mas "Kindle Classic", id: 405399194
 mas "Klack", id: 6446206067
@@ -979,9 +990,6 @@ mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
-mas "Microsoft Excel", id: 462058435
-mas "Microsoft PowerPoint", id: 462062816
-mas "Microsoft Word", id: 462054704
 mas "MidiPlayerPlus", id: 1612350258
 mas "MIDITrail", id: 421739418
 mas "Motion", id: 434290957
@@ -1111,6 +1119,7 @@ cargo "cargo-compete"
 cargo "cargo-llvm-cov"
 cargo "cargo-modules"
 cargo "cargo-update"
+cargo "cbindgen"
 cargo "create-tauri-app"
 cargo "cross"
 cargo "mdbook"
