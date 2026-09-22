@@ -990,6 +990,9 @@ mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
 mas "MainStage", id: 634159523
+mas "Microsoft Excel", id: 462058435
+mas "Microsoft PowerPoint", id: 462062816
+mas "Microsoft Word", id: 462054704
 mas "MidiPlayerPlus", id: 1612350258
 mas "MIDITrail", id: 421739418
 mas "Motion", id: 434290957
