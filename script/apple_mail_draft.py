@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # -*- coding: utf-8 -*-
 # /// script
-# requires-python = ">=3.13"
+# requires-python = ">=3.14"
 # dependencies = []
 # ///
 """Apple Mail の下書きを作成する (new / reply / reply-all / forward)。

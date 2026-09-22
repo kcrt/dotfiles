@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # -*- coding: utf-8 -*-
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.14"
 # dependencies = []
 # ///
 """動画をH.264/HEVC/AV1へ再圧縮する。単発でもディレクトリ丸ごとでも使える。

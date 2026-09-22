@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # -*- coding: utf-8 -*-
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.14"
 # dependencies = [
 #     "requests",
 # ]

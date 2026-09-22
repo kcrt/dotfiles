@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # -*- coding: utf-8 -*-
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.14"
 # dependencies = []
 # ///
 """libavcodecが復号できない音声トラックを、Appleのデコーダ経由で作り直す。

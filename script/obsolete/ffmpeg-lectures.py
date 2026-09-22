@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # -*- coding: utf-8 -*-
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.14"
 # dependencies = []
 # ///
 """スライド主体のWeb講演動画をHEVC/AV1で再圧縮する。
