@@ -47,7 +47,8 @@ Message-ID は `~/bin/mailsearch --json ...` の出力（`<...>` は省略可）
   - 署名は Apple Mail の設定に従い保存時に自動付与される。
 
 既知の落とし穴（なぜ貼り付け方式なのか）:
-  - AppleScript で outgoing message の `content` をセットすると、Mail(16 系)は
+  - Apple の既知バグ（Feedback FB11734014・未修正）。
+    AppleScript で outgoing message の `content` をセットすると、Mail(16 系)は
     本文を `Apple-Mail-URLShareWrapperClass` 内の `<blockquote type="cite">` で
     包む。プレーンテキストとして送信される段でこの cite ブロックが各行 "> " に
     変換され、返信本文そのものが引用扱いで相手に届く（受信側 Gmail 等では本文が
