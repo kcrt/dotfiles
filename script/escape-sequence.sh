@@ -1,10 +1,11 @@
 #!/usr/bin/env zsh
 
 skip_sixel=0
+skip_kitty=0
 for arg in "$@"; do
     case "$arg" in
         -h|--help)
-            echo "Usage: $(basename "$0") [--skip-sixel]"
+            echo "Usage: $(basename "$0") [--skip-sixel] [--skip-kitty]"
             echo "Demonstrates various terminal escape sequences, including:"
             echo "  - Text styles (bold / dim / italic / underline / blink / rapid blink / reverse / conceal / strikethrough / overline)"
             echo "  - Extended underlines (double / curly / dotted / dashed, with indexed and RGB underline colors)"
@@ -18,18 +19,23 @@ for arg in "$@"; do
             echo "  - Double-width / double-height lines (DECDWL / DECDHL)"
             echo "  - DEC Special Graphics line-drawing charset"
             echo "  - Sixel graphics (skip with --skip-sixel)"
+            echo "  - Kitty graphics protocol (skip with --skip-kitty)"
             echo "  - Hyperlinks (OSC 8)"
             echo "  - Window title setting (OSC 0)"
             echo "  - iTerm2 notifications (OSC 9), if applicable."
             echo ""
             echo "Options:"
             echo "  --skip-sixel   Skip the Sixel section (it garbles on terminals without Sixel support)."
+            echo "  --skip-kitty   Skip the Kitty graphics section."
             echo ""
             echo "Also prints TERM, SHELL, and TERM_PROGRAM environment variables."
             exit 0
             ;;
         --skip-sixel)
             skip_sixel=1
+            ;;
+        --skip-kitty)
+            skip_kitty=1
             ;;
         *)
             echo "Unknown option: $arg" >&2
@@ -47,6 +53,7 @@ echo "SHELL: $SHELL"
 # Terminal.app: TERM_PROGRAM=Apple_Terminal
 # tmux: TERM_PROGRAM=tmux
 # screen: screen doesn't set TERM_PROGRAM
+# kitty: doesn't set TERM_PROGRAM; TERM=xterm-kitty and KITTY_WINDOW_ID is set
 echo "TERM_PROGRAM: $TERM_PROGRAM"
 echo ""
 
@@ -290,6 +297,43 @@ else
         cat "$sixel_logo"
     else
         echo "(skipped: $sixel_logo not found)"
+    fi
+fi
+echo ""
+
+
+# ----- Kitty Graphics Protocol -----
+# ␛_(APC) G _key=value,..._ ; _base64 payload_ ␛\(ST)
+# a=T transmit and display / f=100 payload is PNG / c,r size in cells
+# q=2 suppresses the terminal's OK/error reply, which would otherwise land on
+# stdin and show up at the next prompt.
+# The payload must be sent in chunks of at most 4096 bytes: m=1 on every chunk
+# but the last, which carries m=0. Only the first chunk carries the other keys.
+# Supported by kitty, Ghostty, WezTerm and Konsole; iTerm2 and Terminal.app do
+# not (iTerm2 has its own OSC 1337 inline images instead). Terminals without it
+# should swallow the APC string and print nothing. Inside zellij 0.45.1 the image
+# does show, but offset from where it lands outside (2026-09-23), so judge the
+# placement outside a multiplexer.
+# Spec: https://sw.kovidgoyal.net/kitty/graphics-protocol/
+echo "== Kitty graphics protocol =="
+if [ "$skip_kitty" = "1" ]; then
+    echo "(skipped: --skip-kitty)"
+else
+    kitty_image="$HOME/dotfiles/materials/image/kcrt.png"
+    if [ -f "$kitty_image" ]; then
+        echo "An image should appear below; blank space or nothing means unsupported."
+        kitty_payload=$(base64 < "$kitty_image" | tr -d '\n')
+        kitty_chunk_size=4096
+        kitty_keys="a=T,f=100,c=20,r=10,q=2,"
+        while [ ${#kitty_payload} -gt $kitty_chunk_size ]; do
+            printf '\e_G%sm=1;%s\e\\' "$kitty_keys" "${kitty_payload[1,$kitty_chunk_size]}"
+            kitty_payload=${kitty_payload[$((kitty_chunk_size + 1)),-1]}
+            kitty_keys=""
+        done
+        printf '\e_G%sm=0;%s\e\\' "$kitty_keys" "$kitty_payload"
+        echo ""
+    else
+        echo "(skipped: $kitty_image not found)"
     fi
 fi
 echo ""
