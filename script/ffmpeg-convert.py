@@ -51,6 +51,9 @@ normal + MP4 + 先頭の音声 + 入る字幕）で走る。
 出力先に .ffmpeg-convert（JSON）ができ、次回同じ -o を指定したときは質問せずに
 その設定を使う（端末以外から実行しても使う）。コマンドラインで明示したオプションは
 保存した設定より優先する。読まずに聞き直すときは --no-saved-settings。
+.ffmpeg-convert があるディレクトリは別の変換の出力先とみなし、入力の走査から外す
+（外すたびに「スキップ: …」と出す）。同じ入力から出力先を変えて作り分けても、
+前の出力を入力として拾わない。
   ffmpeg-convert.py . -o out                     初回は質問し、最後に保存するか聞く
   ffmpeg-convert.py new/ -o out                  2回目以降は out/.ffmpeg-convert を使う
 """
@@ -1440,6 +1443,8 @@ def collect_inputs(roots: Sequence[Path], recursive: bool, outdir: Path | None) 
     出力先はパスの文字列ではなくディレクトリの実体（st_dev と st_ino）で見分ける。
     APFSは大文字小文字を区別しないので、`-o AV1` と av1/ は同じディレクトリだが、
     文字列で比べると別物と判定して出力済みファイルを拾ってしまう。
+    今回の出力先でなくても、.ffmpeg-convert があるディレクトリは別の -o の
+    出力先とみなして外す（is_other_output）。
 
     Config ではなく素の3つを受けるのは、対話より前――Configが組み上がる前に
     呼ぶため。何に依存しているかを引数で明示しておく。
@@ -1462,11 +1467,31 @@ def collect_inputs(roots: Sequence[Path], recursive: bool, outdir: Path | None) 
                 dirnames.clear()
                 continue
             # 出力先の下へは降りない。見るのは1段につき stat 1回で済む
-            dirnames[:] = [] if not recursive else [d for d in dirnames if not is_outdir(dirpath / d)]
+            dirnames[:] = [] if not recursive else [
+                d for d in dirnames
+                if not is_outdir(dirpath / d) and not is_other_output(dirpath / d, root)]
             found += [p for name in filenames
                       if (p := dirpath / name).suffix.lower() in VIDEO_SUFFIXES
                       and ".part" not in p.suffixes and p.is_file()]
     return sorted(set(found))
+
+
+def is_other_output(directory: Path, root: Path) -> bool:
+    """別の -o で作った出力先か。そうなら走査から外したことを知らせる。
+
+    `. -o hevc && . -o av1` のように同じ入力から出力先を変えて作ると、2回目は
+    hevc/ の変換済みファイルまで入力として拾ってしまう。設定ファイルがある
+    ディレクトリは出力先の印とみなして外す。黙って外すと「入れたはずの動画が
+    変換されない」の原因が分からないので、外すたびに1行出す。
+
+    起点として直接渡されたディレクトリは対象外（呼び出し側が起点を渡さない）。
+    明示的に指定されたものまで外すのはやりすぎなので。
+    """
+    if not (directory / SETTINGS_FILENAME).is_file():
+        return False
+    print(f"スキップ: {directory.relative_to(root)}/"
+          f"（{SETTINGS_FILENAME} があるので別の変換の出力先とみなします）", file=sys.stderr)
+    return True
 
 
 def directory_identity(path: Path) -> tuple[int, int] | None:
