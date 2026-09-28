@@ -45,7 +45,14 @@
 場合は、どれにするかを対話で聞く。加えて、解析の結果そう聞く理由があるときだけ、
 複数音声のどれを残すかと、入れ物に入らない字幕を落としてよいかを聞く。
 パイプ・cron・--no-interactive では何も聞かず既定（汎用素材 + 元の解像度 + HEVC +
-normal + MP4 + 先頭の音声 + 入る字幕）で走るので、バッチ実行は変わらない。
+normal + MP4 + 先頭の音声 + 入る字幕）で走る。
+
+-o でディレクトリを指定して対話したときは、最後に設定を保存するか聞く。保存すると
+出力先に .ffmpeg-convert（JSON）ができ、次回同じ -o を指定したときは質問せずに
+その設定を使う（端末以外から実行しても使う）。コマンドラインで明示したオプションは
+保存した設定より優先する。読まずに聞き直すときは --no-saved-settings。
+  ffmpeg-convert.py . -o out                     初回は質問し、最後に保存するか聞く
+  ffmpeg-convert.py new/ -o out                  2回目以降は out/.ffmpeg-convert を使う
 """
 
 from __future__ import annotations
@@ -60,7 +67,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,7 +79,7 @@ from pathlib import Path
 # しか書けないため。
 from lib.humanize import clock, common_unit, human, size_change
 from lib.progressbar import BarSlot, LiveLine, rainbow_rgb, wave_level
-from lib.prompt import interactive as stdio_is_interactive, prompt_choice
+from lib.prompt import confirm, interactive as stdio_is_interactive, prompt_choice
 from lib.termcolor import RGB, hue_rgb, paint, scale_rgb, status_line
 from lib.termtext import display_width, pad_display, truncate_display
 from lib.trash import move_to_trash
@@ -238,6 +245,64 @@ WEBM_AUDIO_CODEC_NAMES = frozenset(ENCODER_CODEC_NAME[enc] for enc in WEBM_AUDIO
 
 # -o をファイル名として受け取れる拡張子。ここから出力コンテナも決まる。
 CONTAINER_SUFFIXES = {".mp4": "mp4", ".mkv": "mkv", ".webm": "webm"}
+
+# コマンドラインの選択肢。保存した設定ファイルの検証でも同じものを使う。
+AUDIO_MODE_OPTIONS = ("auto", "prefer-copy", "mono", "stereo")
+AUDIO_CODEC_OPTIONS = ("auto", "aac", "opus")
+CONTAINER_OPTIONS = ("auto", "mp4", "mkv", "webm")
+AUDIO_TRACK_OPTIONS = ("first", "all", "lang")
+SUBTITLE_OPTIONS = ("keep", "drop")
+
+# -o の出力先ディレクトリに置く設定ファイル。対話で決めた設定を保存しておき、
+# 次回同じ -o を指定したときは質問せずにこれを使う。
+SETTINGS_FILENAME = ".ffmpeg-convert"
+SETTINGS_VERSION = 1
+
+
+def _is_positive_int(value: object) -> bool:
+    return type(value) is int and value > 0
+
+
+# 設定ファイルに書くキー（argparse の dest と同じ名前）→ 値の検証。
+# 手で編集されることもあるので、読むときは型まで確かめる。
+SETTINGS_VALIDATORS: dict[str, Callable[[object], bool]] = {
+    "content": lambda v: v in ("general", "lecture"),
+    "size": lambda v: type(v) is int and v >= 0,
+    "apple": lambda v: type(v) is bool,
+    "encoder": lambda v: v in ENCODER_NAMES,
+    "quality": lambda v: v in QUALITY_CHOICES,
+    "crf": lambda v: type(v) is int,
+    "tune": lambda v: isinstance(v, str) and bool(v),
+    "preset": lambda v: isinstance(v, str) and bool(v),
+    "gop_seconds": lambda v: type(v) in (int, float) and v >= 0,
+    "audio_mode": lambda v: v in AUDIO_MODE_OPTIONS,
+    "audio_codec": lambda v: v in AUDIO_CODEC_OPTIONS,
+    "container": lambda v: v in CONTAINER_OPTIONS,
+    "audio_bitrate": _is_positive_int,
+    "mono_bitrate": _is_positive_int,
+    "audio_tracks": lambda v: v in AUDIO_TRACK_OPTIONS,
+    "audio_lang": lambda v: (isinstance(v, list) and bool(v)
+                             and all(isinstance(code, str) and code for code in v)),
+    "subtitles": lambda v: v in SUBTITLE_OPTIONS,
+}
+
+# コマンドラインで指定されなかったときの値。これと違えば「明示された」とみなし、
+# 保存した設定より優先する。ここに無いキーは None が未指定。
+SETTINGS_UNSET_VALUES: dict[str, object] = {
+    "apple": False, "audio_mode": "auto", "audio_codec": "auto",
+    "container": "auto", "subtitles": "keep",
+}
+
+# 一緒でないと意味をなさない設定の組。どれか1つでもコマンドラインで指定されたら、
+# 組の残りも保存した値を使わない。たとえば --hevc を付けたのに、保存したAV1用の
+# CRFやpresetが残ると目盛りが合わない。--container mkv を付けたのに保存した
+# --apple が残ると矛盾する。
+SETTINGS_LINKED_GROUPS: tuple[frozenset[str], ...] = (
+    frozenset({"encoder", "tune", "crf", "preset"}),
+    frozenset({"quality", "crf"}),
+    frozenset({"apple", "container", "audio_codec"}),
+    frozenset({"audio_tracks", "audio_lang"}),
+)
 
 # テキスト字幕。MP4のmov_text・WebMのwebvttへ変換できる。
 # ここに無いものは全て非テキスト扱いにする（変換先が無いので落とすしかない）。
@@ -1561,6 +1626,79 @@ def resolve_output_target(parser: argparse.ArgumentParser, args: argparse.Namesp
     args.outdir = args.output_file.parent
 
 
+def settings_path(args: argparse.Namespace) -> Path | None:
+    """設定ファイルを読み書きする場所。-o でディレクトリを指定したときだけある。
+
+    -o を付けない実行（既定の compressed/ や元と同じ場所）と、-o out.mp4 のように
+    出力ファイル名を指定した実行は対象外。後者で out.mp4 の隣に設定ファイルを
+    置くと、たまたま同じ場所に書いた別の変換にまで効いてしまう。
+    """
+    if args.output is None or args.output_file is not None or args.outdir is None:
+        return None
+    return args.outdir / SETTINGS_FILENAME
+
+
+def load_settings(parser: argparse.ArgumentParser, path: Path) -> dict[str, object]:
+    """設定ファイルを読んで検証する。壊れていたら黙って無視せずエラーにする。"""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        parser.error(f"設定ファイルを読めません: {path}（{exc}）")
+    if not isinstance(data, dict):
+        parser.error(f"設定ファイルの形式が違います: {path}")
+
+    settings: dict[str, object] = {}
+    for key, value in data.items():
+        if key == "version":
+            continue
+        validator = SETTINGS_VALIDATORS.get(key)
+        if validator is None:
+            # 新しい版で増えたキーかもしれないので、止めずに知らせるだけにする
+            print(f"注意: 設定ファイルの {key} は知らない項目なので無視します（{path}）", file=sys.stderr)
+            continue
+        if not validator(value):
+            parser.error(f"設定ファイルの {key} の値が不正です: {value!r}（{path}）")
+        settings[key] = value
+    return settings
+
+
+def is_unset_on_cli(args: argparse.Namespace, key: str) -> bool:
+    return getattr(args, key) == SETTINGS_UNSET_VALUES.get(key)
+
+
+def apply_settings(args: argparse.Namespace, settings: dict[str, object]) -> None:
+    """保存した設定のうち、コマンドラインで指定されなかったものを args に入れる。
+
+    組になった設定（SETTINGS_LINKED_GROUPS）は、どれか1つでも指定されていたら
+    組ごと保存した値を使わない。
+    """
+    explicit = {key for key in SETTINGS_VALIDATORS if not is_unset_on_cli(args, key)}
+    blocked = explicit.union(*(group for group in SETTINGS_LINKED_GROUPS if group & explicit))
+    for key, value in settings.items():
+        if key in blocked:
+            continue
+        setattr(args, key, tuple(value) if key == "audio_lang" else value)
+    # parse_args で --audio-lang に対して行うのと同じ補完。手で書いた設定ファイルに
+    # audio_lang だけがある場合に、言語を指定したのに先頭が残る、を防ぐ
+    if args.audio_lang and args.audio_tracks is None:
+        args.audio_tracks = "lang"
+
+
+def settings_to_save(values: dict[str, object]) -> dict[str, object]:
+    """保存する中身。未指定（None）の項目は書かない。"""
+    kept = {key: list(value) if isinstance(value, tuple) else value
+            for key, value in values.items() if value is not None}
+    assert set(kept) <= set(SETTINGS_VALIDATORS), set(kept) - set(SETTINGS_VALIDATORS)
+    return {"version": SETTINGS_VERSION, **kept}
+
+
+def save_settings(path: Path, values: dict[str, object]) -> None:
+    """設定ファイルを書く。出力先ディレクトリはまだ無いこともあるので作る。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(settings_to_save(values), ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8")
+
+
 def validate_combinations(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """成り立たない指定の組み合わせを、解析を始める前に弾く。
 
@@ -1632,7 +1770,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("-o", "--output", type=Path, default=None,
                    help="出力先ディレクトリ。単発ファイルの変換時は拡張子付きのファイル名も"
                         "受け取る（既定: ディレクトリ入力なら compressed/、単発ファイルなら"
-                        "元と同じ場所）")
+                        f"元と同じ場所）。ディレクトリに {SETTINGS_FILENAME} があれば"
+                        "その設定を使う")
     enc = p.add_mutually_exclusive_group()
     # 既定を置かない（default=SUPPRESS）ことで「未指定」を見分け、端末実行なら聞く。
     enc.add_argument("--hevc", dest="encoder", action="store_const", const="libx265",
@@ -1674,18 +1813,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--gop-seconds", type=float, default=None,
                    help=f"キーフレーム間隔（秒）。既定: --lecture なら "
                         f"{LECTURE_GOP_SECONDS:g}、それ以外はエンコーダ任せ")
-    p.add_argument("--audio-mode", choices=["auto", "prefer-copy", "mono", "stereo"], default="auto",
+    p.add_argument("--audio-mode", choices=AUDIO_MODE_OPTIONS, default="auto",
                    help=f"auto=非可逆{LOSSY_COPY_MAX_BITRATE // 1000}k以下ならコピー、可逆なら圧縮。"
                         "prefer-copy=可能な限りコピー（MP4で再生できないコーデックのみAAC化）")
-    p.add_argument("--audio-codec", choices=["auto", "aac", "opus"], default="auto",
+    p.add_argument("--audio-codec", choices=AUDIO_CODEC_OPTIONS, default="auto",
                    help="auto=--av1ならopus、それ以外はaac（--container mp4 指定時はaac）")
-    p.add_argument("--container", choices=["auto", "mp4", "mkv", "webm"], default="auto",
+    p.add_argument("--container", choices=CONTAINER_OPTIONS, default="auto",
                    help="出力コンテナ。auto=AV1+Opusならwebm、他のOpusならmkv、それ以外はmp4")
     p.add_argument("--audio-bitrate", type=int, default=None,
                    help="ステレオ再エンコード時のkbps（既定: aac 128 / opus 96）")
     p.add_argument("--mono-bitrate", type=int, default=None,
                    help="モノラル再エンコード時のkbps（既定: aac 128 / opus 64）")
-    p.add_argument("--audio-tracks", choices=["first", "all", "lang"],
+    p.add_argument("--audio-tracks", choices=AUDIO_TRACK_OPTIONS,
                    default=argparse.SUPPRESS,
                    help="複数音声があるときにどれを残すか。first=先頭のみ（既定）、all=すべて。"
                         "残す本数が増えると出力も大きくなるので --replace では"
@@ -1693,7 +1832,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--audio-lang", type=parse_languages, default=None, metavar="CODES",
                    help="残す音声の言語（jpn,eng のように複数可）。--audio-tracks lang と同じ。"
                         "指定した言語が無いファイルは先頭のトラックを残す")
-    p.add_argument("--subtitles", choices=["keep", "drop"], default="keep",
+    p.add_argument("--subtitles", choices=SUBTITLE_OPTIONS, default="keep",
                    help="字幕を持ち越すか（既定: keep）。入れ物に入らない字幕は落とす")
     p.add_argument("--no-subtitles", dest="subtitles", action="store_const", const="drop",
                    help="字幕を落とす（--subtitles drop と同じ）")
@@ -1704,6 +1843,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="変換結果で元ファイルを置き換える（元はゴミ箱へ / -o とは併用不可）")
     p.add_argument("--no-interactive", dest="interactive", action="store_false",
                    help="未指定のオプションを聞かず既定で実行する（端末以外では常にこの挙動）")
+    p.add_argument("--no-saved-settings", dest="saved_settings", action="store_false",
+                   help=f"-o 先の {SETTINGS_FILENAME} を読まずに実行する"
+                        "（端末実行なら改めて質問し、保存し直せる）")
     p.add_argument("--no-progress", dest="progress", action="store_false",
                    help="進捗バーを出さない（端末以外・--verbose では常にこの挙動）")
     p.add_argument("--no-recursive", dest="recursive", action="store_false", help="サブディレクトリを辿らない")
@@ -1733,6 +1875,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         p.error("--replace はmacOS専用です（元ファイルの退避先が ~/.Trash 決め打ちのため）")
 
     resolve_output_target(p, args)
+
+    # 保存した設定は、組み合わせの検証より前に入れる。保存した --apple と今回の
+    # --audio-codec opus のような矛盾も、コマンドラインで両方書いたときと同じく弾く。
+    args.settings_path = settings_path(args)
+    args.settings_loaded = False
+    if args.saved_settings and args.settings_path is not None and args.settings_path.is_file():
+        apply_settings(args, load_settings(p, args.settings_path))
+        args.settings_loaded = True
+        # 自動で使うと決めた以上、残りも質問しない（Apple互換や字幕の質問が
+        # 毎回出ては、保存した意味がない）
+        args.interactive = False
+        print(f"保存済みの設定を使います: {args.settings_path}"
+              "（使わないときは --no-saved-settings）", file=sys.stderr)
+
     validate_combinations(p, args)
     return args
 
@@ -1784,6 +1940,22 @@ def prompt_subtitle_drop(doomed: list[tuple[MediaInfo, tuple[SubtitleInfo, ...]]
         print("中断しました", file=sys.stderr)
         raise SystemExit(130)
     return chosen
+
+
+def offer_to_save_settings(path: Path, values: dict[str, object]) -> bool:
+    """今回の設定を -o 先に保存するか聞く。保存したら True。"""
+    question = (f"今回の設定で {path} を上書きしますか" if path.exists()
+                else "今回の設定を保存しますか")
+    if not confirm(f"\n{question}（次回同じ -o を指定すると質問せずに使います）", default=True):
+        return False
+    try:
+        save_settings(path, values)
+    except OSError as exc:
+        # 保存に失敗しても変換そのものは続けられる
+        print(f"設定を保存できませんでした: {path}（{exc}）", file=sys.stderr)
+        return False
+    print(f"設定を保存しました: {path}", file=sys.stderr)
+    return True
 
 
 def resolve_options(args: argparse.Namespace, scan: list[MediaInfo]) -> Config:
@@ -1900,7 +2072,18 @@ def resolve_options(args: argparse.Namespace, scan: list[MediaInfo]) -> Config:
                 container = "mkv"
                 answered.append("--container mkv")
 
-    if answered:
+    saved = interactive and args.settings_path is not None and offer_to_save_settings(
+        args.settings_path, {
+            "content": content, "size": size, "apple": apple, "encoder": encoder,
+            # --crf を明示されていれば -q は使われていない
+            "quality": quality if args.crf is None else None, "crf": args.crf,
+            "tune": args.tune, "preset": args.preset, "gop_seconds": args.gop_seconds,
+            "audio_mode": args.audio_mode, "audio_codec": audio_codec, "container": container,
+            "audio_bitrate": args.audio_bitrate, "mono_bitrate": args.mono_bitrate,
+            "audio_tracks": audio_tracks, "audio_lang": audio_langs or None,
+            "subtitles": subtitles,
+        })
+    if answered and not saved:
         print(f"（次回から {' '.join(answered)} を付けるか、--no-interactive で質問を省けます）", file=sys.stderr)
 
     return Config(
