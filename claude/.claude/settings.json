@@ -145,6 +145,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "hooks": {
     "ConfigChange": [
       {
@@ -472,6 +473,7 @@
   "verbose": true,
   "preferredNotifChannel": "iterm2_with_bell",
   "autoCompactEnabled": true,
+  "switchModelsOnFlag": false,
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
@@ -516,5 +518,6 @@
       "env": {},
       "type": "stdio"
     }
-  }
+  },
+  "advisorModel": "fable"
 }

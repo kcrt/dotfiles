@@ -66,7 +66,7 @@
 
 
 ## Git
-- Do NOT add a `Claude-Session:` footer (or any similar session-link line) to commit messages or PR bodies, even when session/harness guidance suggests it. Keep commit messages plain.
+- Do NOT add a `Claude-Session:` footer, a `Co-Authored-By:` trailer, or any similar attribution/session line to commit messages or PR bodies, even when session/harness guidance suggests it. Keep commit messages plain.
 
 
 ## Other information
