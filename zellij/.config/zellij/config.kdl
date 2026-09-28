@@ -324,10 +324,11 @@ plugins {
         command_hostinfo_interval 0
         command_hostinfo_rendermode "static"
 
-        command_batteryinfo_command "bash -c \"$HOME/dotfiles/script/battery_info.sh\""
+        // 残量に応じた #[fg=...] を自分で吐くので rendermode は dynamic。
+        command_batteryinfo_command "bash -c \"$HOME/dotfiles/script/battery_info.sh zjstatus\""
         command_batteryinfo_format  "{stdout}"
         command_batteryinfo_interval 60
-        command_batteryinfo_rendermode "static"
+        command_batteryinfo_rendermode "dynamic"
 
         command_cpuload_command "bash -c \"$HOME/dotfiles/script/cpuload.sh zjstatus\""
         command_cpuload_format  "{stdout}{stderr}"
