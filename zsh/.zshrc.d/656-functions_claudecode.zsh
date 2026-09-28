@@ -47,7 +47,7 @@ function _claude-code-list-models() {
 		deepseek)
 			echo "Available models:"
 			echo "  $prefix deepseek:deepseek-v4-pro     # DeepSeek V4 Pro"
-			echo "  $prefix deepseek:deepseek-v4-flash   # DeepSeek V4 Flash"
+			echo "  $prefix deepseek:deepseek-flash      # DeepSeek V4.1 Flash"
 			;;
 		openrouter)
 			echo "Available models:"
@@ -184,7 +184,7 @@ function _claude-code-set-env() {
 			export ANTHROPIC_MODEL=$model
 			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
 			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash
+			export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-flash
 			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		openrouter)
