@@ -7,6 +7,8 @@ keybinds clear-defaults=true {
         bind "down" { MoveFocus "down"; }
         bind "up" { MoveFocus "up"; }
         bind "right" { MoveFocus "right"; }
+        // 直前にフォーカスしていたペインへ戻る (zellij 0.45 で追加された既定)
+        bind ";" { FocusLastPane; }
         bind "c" { SwitchToMode "renamepane"; PaneNameInput 0; }
         bind "d" { NewPane "down"; SwitchToMode "normal"; }
         bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "normal"; }
@@ -85,7 +87,16 @@ keybinds clear-defaults=true {
         bind "tab" { MovePane; }
     }
     scroll {
+        // zellij 0.45 で追加された既定。シェルが OSC 133 (semantic prompt) を
+        // 出していないと、どこがプロンプトか分からず何も起きない。
+        //   [ / ]  前 / 次のプロンプトへ飛ぶ
+        //   c      直前のコマンドの出力をクリップボードへコピー
+        //   m      カーソル位置のコマンドを出力ごと選択
+        bind "[" { ScrollToPreviousPrompt; }
+        bind "]" { ScrollToNextPrompt; }
+        bind "c" { CopyLastCommandOutput; SwitchToMode "normal"; }
         bind "e" { EditScrollback; SwitchToMode "normal"; }
+        bind "m" { SelectCommandAtScrollPosition; }
         bind "s" { SwitchToMode "entersearch"; SearchInput 0; }
     }
     search {
@@ -96,6 +107,12 @@ keybinds clear-defaults=true {
         bind "w" { SearchToggleOption "Wrap"; }
     }
     session {
+        // 入れ子のセッション (ssh 先の zellij など) の操作。zellij 0.45 で追加された既定。
+        //   [  内側へ降りて、キーとマウスを内側のセッションへ送る
+        //   ]  外側へ戻る
+        //   f  内側を全画面に広げる / 戻す
+        bind "[" { FocusGuestSession; SwitchToMode "normal"; }
+        bind "]" { FocusHostSession; SwitchToMode "normal"; }
         bind "a" {
             LaunchOrFocusPlugin "zellij:about" {
                 floating true
@@ -110,6 +127,7 @@ keybinds clear-defaults=true {
             }
             SwitchToMode "normal"
         }
+        bind "f" { ToggleHostFullscreen; SwitchToMode "normal"; }
         bind "Ctrl o" { SwitchToMode "normal"; }
         bind "p" {
             LaunchOrFocusPlugin "plugin-manager" {
