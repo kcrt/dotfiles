@@ -1372,22 +1372,45 @@ def collect_inputs(roots: Sequence[Path], recursive: bool, outdir: Path | None) 
     拾い、再圧縮してしまう。中断時に残る *.part.mp4 は出力先の外（--replace なら
     元ファイルの隣）にも生まれるので、拡張子で別に弾く。
 
+    出力先はパスの文字列ではなくディレクトリの実体（st_dev と st_ino）で見分ける。
+    APFSは大文字小文字を区別しないので、`-o AV1` と av1/ は同じディレクトリだが、
+    文字列で比べると別物と判定して出力済みファイルを拾ってしまう。
+
     Config ではなく素の3つを受けるのは、対話より前――Configが組み上がる前に
     呼ぶため。何に依存しているかを引数で明示しておく。
     """
-    def under_outdir(p: Path) -> bool:
-        return outdir is not None and (p == outdir or outdir in p.parents)
+    outdir_id = directory_identity(outdir) if outdir is not None else None
+
+    def is_outdir(d: Path) -> bool:
+        return outdir_id is not None and directory_identity(d) == outdir_id
 
     found: list[Path] = []
     for root in roots:
         if root.is_file():
             found.append(root)
-        elif root.is_dir():
-            it = root.rglob("*") if recursive else root.glob("*")
-            found += [p for p in it
-                      if p.is_file() and p.suffix.lower() in VIDEO_SUFFIXES
-                      and not under_outdir(p) and ".part" not in p.suffixes]
+            continue
+        if not root.is_dir():
+            continue
+        for dirpath, dirnames, filenames in root.walk():
+            if is_outdir(dirpath):
+                # 入力として出力先そのものを渡された場合
+                dirnames.clear()
+                continue
+            # 出力先の下へは降りない。見るのは1段につき stat 1回で済む
+            dirnames[:] = [] if not recursive else [d for d in dirnames if not is_outdir(dirpath / d)]
+            found += [p for name in filenames
+                      if (p := dirpath / name).suffix.lower() in VIDEO_SUFFIXES
+                      and ".part" not in p.suffixes and p.is_file()]
     return sorted(set(found))
+
+
+def directory_identity(path: Path) -> tuple[int, int] | None:
+    """ディレクトリの実体を表す (st_dev, st_ino)。まだ無いディレクトリは None。"""
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    return (st.st_dev, st.st_ino)
 
 
 # 末尾の [ ] を「設定の要約」と見なして剥がすための語彙。自分が書いた名前
