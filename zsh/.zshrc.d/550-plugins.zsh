@@ -16,6 +16,9 @@ function abbrev-alias(){
 
 # ----- sheldon (plugin manager)
 if command -v sheldon &> /dev/null; then
+	# プラグインは `autoload -Uz abbrev-alias` で本物を読み込むが、autoload は
+	# 定義済みの関数を上書きしないため、冒頭のスタブを外してから読み込む。
+	unfunction abbrev-alias
 	eval "$(sheldon source)"
 else
 	echo_warn "Please install sheldon for zsh plugins: https://sheldon.cli.rs/Installation.html"
