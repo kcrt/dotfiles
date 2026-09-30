@@ -9,6 +9,8 @@
 # 取れなかったときは原因を3つに分ける。対処が違うため。
 #   offline - 自分がネットワークに繋がっていない (灰。こちらの問題なのでバーは静かに)
 #   host    - ネットはあるが家まで届かない。宅内なら beryllium 本体が黙っている (橙)
+#   auth    - 家には届いたが ssh の認証に通らなかった (赤 home!)。鍵・ssh-agent の問題で、
+#             放置すると失敗が続いて fail2ban に BAN され、届かない状態に悪化する
 #   relay   - beryllium は応答するが中継だけ死んでいる (橙。中継を起こせば直る)
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
@@ -22,6 +24,9 @@ RELAY_LAN="${SIGNAL_RELAY_URL:-http://192.168.15.13:13004/}"   # beryllium。宅
 RELAY_HOST="${SIGNAL_RELAY_HOST:-home.kcrt.net}"              # 外からは ssh 越しに取る（テスト時は SIGNAL_RELAY_HOST で差し替え）
 CACHE="${TMPDIR:-/tmp}/server_status.cache"
 CACHE_GRACE=90                              # 取得に失敗しても、この秒数までは前回値で表示する
+FRESH_TTL=60                                # 直近この秒数以内に取れた結果 (成功・失敗とも) があれば通信せずそれを返す
+AUTH_FAIL_TTL=300                           # 認証失敗は長く覚えて再試行しない。連打すると fail2ban に BAN される
+FAIL_CACHE="${TMPDIR:-/tmp}/server_status.fail" # 前回失敗の理由。offline は覚えない (復帰の反映を遅らせないため)
 ROUTE="${TMPDIR:-/tmp}/server_status.route" # 前回成功した経路 (lan / ssh)
 SSH_ERR="${TMPDIR:-/tmp}/server_status.ssherr"
 
@@ -80,6 +85,8 @@ classify_failure() {
         print -rn -- relay
     elif [[ "$err" == *resolve* || "$err" == *"not known"* ]]; then
         print -rn -- offline    # 名前が引けない。既定経路はあってもネットは死んでいる
+    elif [[ "$err" == *"Permission denied"* || "$err" == *"Too many authentication failures"* ]]; then
+        print -rn -- auth       # サーバーには着いた。鍵が使えていない (ssh-agent 不在・ロック等)
     elif (( ssh_status != 255 )); then
         print -rn -- relay      # ssh は通った = beryllium は生きていて中継だけ黙っている
     elif [[ "$err" == *"No route to host"* || "$err" == *"Network is unreachable"* ]]; then
@@ -110,13 +117,37 @@ fetch_status() {
     return 1
 }
 
-fetch_status
-if [[ -n "$line" ]]; then
-    print -r -- "$line" > "$CACHE"
-elif [[ -f "$CACHE" ]]; then
+file_age() {
+    echo $(( $(date +%s) - $(stat -f %m "$1" 2>/dev/null || stat -c %Y "$1") ))
+}
+
+use_recent_result() {
+    # zjstatus はタブごとに本スクリプトを起動するので、タブ数ぶんの ssh が並ぶのを防ぐ。
+    # 期限内の成功した1行、無ければ期限内の失敗の理由を line / fail に入れて 0 を返す。
+    if [[ -f "$CACHE" ]] && (( $(file_age "$CACHE") <= FRESH_TTL )); then
+        line=$(<"$CACHE")
+        return 0
+    fi
+    if [[ -f "$FAIL_CACHE" ]]; then
+        local reason="$(<"$FAIL_CACHE")" ttl=$FRESH_TTL
+        [[ "$reason" == auth ]] && ttl=$AUTH_FAIL_TTL
+        (( $(file_age "$FAIL_CACHE") <= ttl )) && { fail="$reason"; return 0; }
+    fi
+    return 1
+}
+
+if ! use_recent_result; then
+    fetch_status
+    if [[ -n "$line" ]]; then
+        print -r -- "$line" > "$CACHE"
+        rm -f "$FAIL_CACHE"
+    elif [[ "$fail" == (host|relay|auth) ]]; then
+        print -rn -- "$fail" > "$FAIL_CACHE"
+    fi
+fi
+if [[ -z "$line" && -f "$CACHE" ]]; then
     # 1回きりの取りこぼしでバーがちらつかないよう、少しだけ前回値を使う。
-    cache_age=$(( $(date +%s) - $(stat -f %m "$CACHE" 2>/dev/null || stat -c %Y "$CACHE") ))
-    (( cache_age <= CACHE_GRACE )) && { line=$(<"$CACHE"); fail="" }
+    (( $(file_age "$CACHE") <= CACHE_GRACE )) && { line=$(<"$CACHE"); fail="" }
 fi
 
 level="${line[1]}"
@@ -134,6 +165,7 @@ mark=""
 case "$fail" in
     offline) fail_color="#6C7086"; fail_label="offline";    fail_text="offline (no network from here)" ;;
     host)    fail_color="#E28C36"; fail_label="home?";      fail_text="cannot reach home ($RELAY_LAN / $RELAY_HOST)" ;;
+    auth)    fail_color="#d74242"; fail_label="home!";      fail_text="ssh auth to $RELAY_HOST failed (check ssh-agent / key; retries can get us banned by fail2ban)" ;;
     relay)   fail_color="#E28C36"; fail_label="relay?";     fail_text="relay down on beryllium" ;;
     *)       fail_color="#6C7086"; fail_label="?";          fail_text="relay unreachable" ;;
 esac
