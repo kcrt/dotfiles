@@ -295,7 +295,7 @@ plugins {
         format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | {tabs}"
         format_center ""
         // progressinfo は転送中のみ出力し、区切りの " | " も自分で前置する
-        format_right  " | {command_claudeinfo}{command_progressinfo} | {command_batteryinfo} {command_cpuload} {command_serverstatus} {datetime}"
+        format_right  " | {command_progressinfo} |{command_batteryinfo} {command_cpuload} {command_serverstatus} {datetime}"
         format_space  "#[bg=#677589] "
 
         border_enabled  "false"
@@ -326,11 +326,6 @@ plugins {
         tab_normal   "#[fg=#45BEC9,bg=#677589]/ {fullscreen_indicator}{name} \\"
         tab_active   "#[bg=#45BEC9,bold]/ {fullscreen_indicator}{name} \\"
         tab_fullscreen_indicator "⛶ "
-
-        command_claudeinfo_command "bash -c \"$HOME/dotfiles/script/claude_code_status.sh\""
-        command_claudeinfo_format  "{stdout}"
-        command_claudeinfo_interval 60
-        command_claudeinfo_rendermode "dynamic"
 
         command_progressinfo_command "bash -c \"$HOME/dotfiles/script/progress_info.sh zjstatus\""
         command_progressinfo_format  "{stdout}"
