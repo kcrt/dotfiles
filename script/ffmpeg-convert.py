@@ -56,6 +56,10 @@ normal + MP4 + 先頭の音声 + 入る字幕）で走る。
 前の出力を入力として拾わない。
   ffmpeg-convert.py . -o out                     初回は質問し、最後に保存するか聞く
   ffmpeg-convert.py new/ -o out                  2回目以降は out/.ffmpeg-convert を使う
+
+変換中も他の作業が重くならないよう、既定で nice 19（最低優先度）で走る。
+ffmpeg/ffprobe はこの優先度を引き継ぐ。空いているマシンでは実質遅くならない。
+優先度を下げたくないときは --nice 0。
 """
 
 from __future__ import annotations
@@ -104,6 +108,10 @@ PROBE_WORKERS = min(8, os.cpu_count() or 4)
 # 解析行を1本ずつ出すのはこの本数まで。超えたら集計だけにする。
 # でないと大量の行でウィザードの質問が画面外へ流れてしまう。
 SCAN_DETAIL_MAX = 20
+
+# 既定の nice 値。エンコードは長時間コアを使い切るので、最低優先度で走らせて
+# 対話的な作業を邪魔しないようにする。
+DEFAULT_NICE = 19
 
 # MP4に入れても広く再生できる音声コーデック。Opus/Vorbisは規格上MP4に入るが
 # QuickTime/Safariが再生できないため、コピーせずAACに変換する。
@@ -1786,6 +1794,31 @@ def parse_size(value: str) -> int:
     return pixels
 
 
+def parse_nice(text: str) -> int:
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"整数で指定してください: {text}") from None
+    if not 0 <= value <= 19:
+        raise argparse.ArgumentTypeError(f"0〜19で指定してください: {value}")
+    return value
+
+
+def lower_priority(niceness: int) -> None:
+    """自プロセスの nice 値を niceness まで上げる。子の ffmpeg/ffprobe も引き継ぐ。
+
+    一般ユーザーは優先度を上げ戻せないので、既に niceness 以上なら何もしない
+    （nice -n 19 で起動された場合に 0 へ戻そうとして失敗しないように）。
+    サンドボックス等で変更を拒まれても、変換自体は止めずに警告だけ出す。
+    """
+    try:
+        if niceness > os.getpriority(os.PRIO_PROCESS, 0):
+            os.setpriority(os.PRIO_PROCESS, 0, niceness)
+    except OSError as e:
+        print(f"警告: 優先度を nice {niceness} に下げられませんでした（{e.strerror}）",
+              file=sys.stderr)
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="動画をH.264/HEVC/AV1で再圧縮する",
@@ -1862,6 +1895,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--no-subtitles", dest="subtitles", action="store_const", const="drop",
                    help="字幕を落とす（--subtitles drop と同じ）")
     p.add_argument("-j", "--jobs", type=int, default=1, help="並列実行数")
+    p.add_argument("--nice", type=parse_nice, default=DEFAULT_NICE, metavar="N",
+                   help="この nice 値（0〜19、大きいほど低優先度）で走らせる。0 で下げない")
     p.add_argument("--overwrite", action="store_true",
                    help="出力が既にあっても上書きする（既定はスキップ）")
     p.add_argument("--replace", action="store_true",
@@ -2330,6 +2365,7 @@ def report(results: list[Result], skipped: int, multi_audio: bool,
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    lower_priority(args.nice)
     sources = collect_inputs(args.inputs, args.recursive, args.outdir)
     if not sources:
         print("対象の動画が見つかりませんでした", file=sys.stderr)
