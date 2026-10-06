@@ -1,4 +1,5 @@
 {
+  "cleanupPeriodDays": 365,
   "attribution": {
     "commit": "",
     "pr": ""
@@ -22,7 +23,7 @@
       "Bash(realpath:*)",
       "Bash(readlink:*)",
       "Bash(test:*)",
-      "Bash([*:*)",
+      "Bash([ *)",
       "Bash(find -print *)",
       "Bash(find -name *)",
       "Bash(find -type *)",
@@ -145,7 +146,7 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
+  "model": "opus",
   "hooks": {
     "ConfigChange": [
       {
@@ -464,6 +465,7 @@
       "effortLevel": "medium"
     }
   },
+  "advisorModel": "fable",
   "tui": "fullscreen",
   "voice": {
     "enabled": true,
@@ -519,5 +521,5 @@
       "type": "stdio"
     }
   },
-  "advisorModel": "fable"
+  "skipWorkflowUsageWarning": true
 }
