@@ -47,8 +47,12 @@ COLORS: Final[dict[str, tuple[float, float, float]]] = {
     "blue": (0.53, 0.81, 0.98),
     "pink": (1.0, 0.63, 0.76),
     "orange": (1.0, 0.75, 0.35),
+    "red": (1.0, 0.45, 0.45),
+    "gray": (0.80, 0.80, 0.80),
+    "darkyellow": (0.80, 0.73, 0.25),
 }
 DEFAULT_COLOR: Final[str] = "yellow"
+DEFAULT_AUTHOR: Final[str] = "Claude"
 HYPHENS: Final[tuple[str, ...]] = ("-", "‐", "­")
 SAME_LINE_TOLERANCE: Final[float] = 1.0          # これ以下の y 差は同じ行とみなす（pt）
 MAX_WORD_GAP: Final[float] = 1.0                 # 語間をつなぐ上限（行の高さに対する倍率）
@@ -164,7 +168,7 @@ def merge_rects(rects: list[pymupdf.Rect]) -> list[pymupdf.Rect]:
     return merged
 
 
-def highlight_page(page: pymupdf.Page, tokens: list[Token], mark: Mark) -> int:
+def highlight_page(page: pymupdf.Page, tokens: list[Token], mark: Mark, author: str) -> int:
     """1ページ分のハイライトを引き、引いた箇所の数を返す。"""
     color = COLORS.get(mark.color, COLORS[DEFAULT_COLOR])
     hits = 0
@@ -175,7 +179,7 @@ def highlight_page(page: pymupdf.Page, tokens: list[Token], mark: Mark) -> int:
         annot = page.add_highlight_annot(rects)
         annot.set_colors(stroke=color)
         if mark.note:
-            annot.set_info(title="Claude", content=mark.note)
+            annot.set_info(title=author, content=mark.note)
         annot.update()
         hits += 1
     return hits
@@ -198,7 +202,7 @@ def save_document(document: pymupdf.Document, pdf_path: Path, out_path: Path) ->
         raise
 
 
-def highlight(pdf_path: Path, marks: list[Mark], out_path: Path) -> dict[str, list[int]]:
+def highlight(pdf_path: Path, marks: list[Mark], out_path: Path, author: str = DEFAULT_AUTHOR) -> dict[str, list[int]]:
     """PDF 全体にハイライトを引いて保存し、語句ごとの該当ページ（1始まり）を返す。
 
     1件も当たらなかったときは保存しない（`--overwrite` で元ファイルを壊さないため）。
@@ -208,7 +212,7 @@ def highlight(pdf_path: Path, marks: list[Mark], out_path: Path) -> dict[str, li
         for number, page in enumerate(document, start=1):
             tokens = page_tokens(page)
             for mark in marks:
-                if highlight_page(page, tokens, mark):
+                if highlight_page(page, tokens, mark, author):
                     found[mark.text].append(number)
         if any(found.values()):
             save_document(document, pdf_path, out_path)
@@ -237,6 +241,7 @@ def main() -> int:
     parser.add_argument("--note", default="", help="-m で指定した語句に付けるメモ")
     parser.add_argument("--color", default=DEFAULT_COLOR, choices=sorted(COLORS), help=f"色（既定: {DEFAULT_COLOR}）")
     parser.add_argument("--json", type=Path, help="語句・メモ・色をまとめて書いた JSON")
+    parser.add_argument("--author", default=DEFAULT_AUTHOR, help=f"注釈の作成者名（既定: {DEFAULT_AUTHOR}）")
     output = parser.add_mutually_exclusive_group()
     output.add_argument("-o", "--output", type=Path, help="出力先（既定: <元名>.highlighted.pdf）")
     output.add_argument("--overwrite", action="store_true", help="元ファイルに直接引く")
@@ -252,7 +257,7 @@ def main() -> int:
 
     pdf_path = args.pdf.resolve()
     out_path = pdf_path if args.overwrite else (args.output or args.pdf.with_suffix(".highlighted.pdf")).resolve()
-    found = highlight(pdf_path, marks, out_path)
+    found = highlight(pdf_path, marks, out_path, args.author)
 
     print(f"{out_path}" if any(found.values()) else "1件も当たらなかったので何も書いていない")
     missing = [text for text, pages in found.items() if not pages]
