@@ -4,7 +4,7 @@
 #
 #          FILE:  tar-zstd-compress.sh
 #
-#         USAGE:  ./tar-zstd-compress.sh [--encrypt [--recipient EMAIL]] [--fast | --eager] [--long] TARGET_PATH
+#         USAGE:  ./tar-zstd-compress.sh [--encrypt [--recipient EMAIL]] [--fast | --eager] [--long] [--nfc] TARGET_PATH
 #                 ./tar-zstd-compress.sh --help
 #
 #   DESCRIPTION:  Compresses the TARGET_PATH (file or directory) into TARGET_PATH.tar.zst using tar and zstd.
@@ -17,8 +17,9 @@
 #                 --fast            Use faster compression (level 1).
 #                 --eager           Use higher compression (level 19).
 #                 --long            Use long distance matching with window size 31.
+#                 --nfc             Store every name in NFC (needs tar_nfc.py next to this script).
 #                 --help            Show usage and expansion instructions.
-#  REQUIREMENTS:  tar, zstd (gpg if --encrypt is used, pv if available)
+#  REQUIREMENTS:  tar, zstd (gpg if --encrypt is used, pv if available, uv if --nfc is used)
 #          BUGS:  ---
 #         NOTES:  Recipient for encryption is hardcoded to kcrt@kcrt.net
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
@@ -27,6 +28,7 @@
 #===============================================================================
 
 set -e # Exit immediately if a command exits with a non-zero status.
+set -o pipefail # A failing tar must not leave a truncated archive looking successful.
 
 # Check if required commands are available
 if ! command -v tar >/dev/null 2>&1; then
@@ -92,10 +94,12 @@ TARGET_PATH=""
 RECIPIENT="kcrt@kcrt.net" # Default recipient
 COMPRESSION_LEVEL=3 # Default zstd compression level
 USE_LONG=false # Flag for --long option
+USE_NFC=false # Flag for --nfc option
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Function to display help message
 usage() {
-  echo "Usage: $0 [--encrypt [--recipient RECIPIENT_EMAIL]] [--fast | --eager] [--long] TARGET_PATH"
+  echo "Usage: $0 [--encrypt [--recipient RECIPIENT_EMAIL]] [--fast | --eager] [--long] [--nfc] TARGET_PATH"
   echo "       $0 --help"
   echo ""
   echo "Compresses TARGET_PATH (file or directory) using tar with zstd compression."
@@ -107,6 +111,8 @@ usage() {
   echo "  --fast                Use faster compression (level 1)."
   echo "  --eager               Use higher compression (level 19)."
   echo "  --long                Use long distance matching with window size 31."
+  echo "  --nfc                 Store every name in NFC. macOS reads names on SMB shares as NFD,"
+  echo "                        which unpack as split dakuten on Linux/Windows."
   echo "  --help                Show this help message."
   echo ""
   echo "Output file:"
@@ -145,6 +151,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --long)
       USE_LONG=true
+      shift
+      ;;
+    --nfc)
+      USE_NFC=true
       shift
       ;;
     --help)
@@ -218,6 +228,15 @@ if [ "$USE_LONG" = true ]; then
   zstd_flags="$zstd_flags --long=31"
 fi
 
+# Write the tar stream for TARGET_PATH to stdout
+create_tar() {
+  if [ "$USE_NFC" = true ]; then
+    "$SCRIPT_DIR/tar_nfc.py" "$TARGET_PATH"
+  else
+    tar -c -f - "$TARGET_PATH"
+  fi
+}
+
 # Perform compression (and optionally encryption)
 if [ "$ENCRYPT" = true ]; then
   echo "Compressing and encrypting '$TARGET_PATH' to '$TARGET_FILENAME' for recipient '$RECIPIENT'..."
@@ -227,17 +246,17 @@ if [ "$ENCRYPT" = true ]; then
     exit 1
   fi
   if [ "$USE_PV" = true ]; then
-    tar -c -f - "$TARGET_PATH" | pv -s "$BEFORE_SIZE" | zstd $zstd_flags | gpg --encrypt --recipient "$RECIPIENT" --output "$TARGET_FILENAME"
+    create_tar | pv -s "$BEFORE_SIZE" | zstd $zstd_flags | gpg --encrypt --recipient "$RECIPIENT" --output "$TARGET_FILENAME"
   else
-    tar -c -f - "$TARGET_PATH" | zstd $zstd_flags | gpg --encrypt --recipient "$RECIPIENT" --output "$TARGET_FILENAME"
+    create_tar | zstd $zstd_flags | gpg --encrypt --recipient "$RECIPIENT" --output "$TARGET_FILENAME"
   fi
   echo "Compression and encryption complete: '$TARGET_FILENAME'"
 else
   echo "Compressing '$TARGET_PATH' to '$TARGET_FILENAME'..."
   if [ "$USE_PV" = true ]; then
-    tar -c -f - "$TARGET_PATH" | pv -s "$BEFORE_SIZE" | zstd $zstd_flags > "$TARGET_FILENAME"
+    create_tar | pv -s "$BEFORE_SIZE" | zstd $zstd_flags > "$TARGET_FILENAME"
   else
-    tar -c -f - "$TARGET_PATH" | zstd $zstd_flags > "$TARGET_FILENAME"
+    create_tar | zstd $zstd_flags > "$TARGET_FILENAME"
   fi
   echo "Compression complete: '$TARGET_FILENAME'"
 fi
