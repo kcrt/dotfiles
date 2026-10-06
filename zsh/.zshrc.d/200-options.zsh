@@ -15,6 +15,7 @@ setopt hist_reduce_blanks			# 余分な空白を削除して保存
 setopt share_history				# ターミナル間の履歴を共有する
 setopt append_history				# 履歴を追記する
 setopt inc_append_history			# 履歴をすぐに追記する
+setopt extended_history				# 履歴に実行日時と所要時間を記録する
 
 # ----- ファイル操作関連
 setopt auto_cd						# ディレクトリ名でcd
