@@ -12,4 +12,6 @@ today=$(date +"%Y%m%d")
 dir_name="${today}_${name}"
 
 mkdir -p "$dir_name"
-echo "Created: $dir_name"
+# 作成したディレクトリ名だけを stdout に出す（zsh の mkdirtoday 関数が cd 先として受け取る）
+echo "Created: $dir_name" >&2
+echo "$dir_name"

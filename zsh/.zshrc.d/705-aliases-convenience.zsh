@@ -84,6 +84,15 @@ for f in "${DOTFILES}"/script/*; do
 	alias "${f:t:r}"="$f"
 done
 
+# スクリプトは親シェルのカレントディレクトリを変えられないので、
+# 作成後に cd したいものは関数で包む（エイリアスが残ると関数定義が展開されてしまうので先に外す）
+unalias mkdirtoday 2>/dev/null
+function mkdirtoday() {
+	local dir_name
+	dir_name=$("${DOTFILES}/script/mkdirtoday.sh" "$@") || return
+	cd -- "$dir_name"
+}
+
 # Private scripts. Same treatment as above, but the secrets submodule may not be
 # checked out on every machine, so (N) makes an absent directory a no-op rather
 # than a "no matches found" error.
