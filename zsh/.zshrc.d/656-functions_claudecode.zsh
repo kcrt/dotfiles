@@ -370,46 +370,48 @@ function claude-code-to() {
 }
 
 # Restore configuration from config file on shell load
-local config_file="$HOME/.claude-code-to.json"
-if [[ -f "$config_file" ]]; then
-	local target=$(jq -r '.target // "anthropic"' "$config_file" 2>/dev/null)
-	local model=$(jq -r '.model // ""' "$config_file" 2>/dev/null)
-	case "$target" in
-		zai)
-			if [[ -n "$ZAI_API_KEY" ]]; then
-				_claude-code-set-env "zai" "$model"
-				echo_info "Z.ai proxy (${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}) enabled for Claude."
-			fi
-			;;
-		kimi)
-			if [[ -n "$MOONSHOT_API_KEY" ]]; then
-				_claude-code-set-env "kimi"
-				echo_info "Kimi (Moonshot AI) enabled for Claude."
-			fi
-			;;
-		deepseek)
-			if [[ -n "$model" ]] && [[ -n "$DEEPSEEK_API_KEY" ]]; then
-				_claude-code-set-env "deepseek" "$model"
-				echo_info "DeepSeek ($model) enabled for Claude."
-			fi
-			;;
-		ollama)
-			if [[ -n "$model" ]]; then
-				_claude-code-set-env "ollama" "$model"
-				echo_info "Ollama ($model) enabled for Claude."
-			fi
-			;;
-		lmstudio)
-			if [[ -n "$model" ]]; then
-				_claude-code-set-env "lmstudio" "$model"
-				echo_info "LM Studio ($model) enabled for Claude."
-			fi
-			;;
-		openrouter)
-			if [[ -n "$model" ]] && [[ -n "$OPENROUTER_API_KEY" ]]; then
-				_claude-code-set-env "openrouter" "$model"
-				echo_info "OpenRouter ($model) enabled for Claude."
-			fi
-			;;
-	esac
-fi
+() {
+	local config_file="$HOME/.claude-code-to.json"
+	if [[ -f "$config_file" ]]; then
+		local target=$(jq -r '.target // "anthropic"' "$config_file" 2>/dev/null)
+		local model=$(jq -r '.model // ""' "$config_file" 2>/dev/null)
+		case "$target" in
+			zai)
+				if [[ -n "$ZAI_API_KEY" ]]; then
+					_claude-code-set-env "zai" "$model"
+					echo_info "Z.ai proxy (${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}) enabled for Claude."
+				fi
+				;;
+			kimi)
+				if [[ -n "$MOONSHOT_API_KEY" ]]; then
+					_claude-code-set-env "kimi"
+					echo_info "Kimi (Moonshot AI) enabled for Claude."
+				fi
+				;;
+			deepseek)
+				if [[ -n "$model" ]] && [[ -n "$DEEPSEEK_API_KEY" ]]; then
+					_claude-code-set-env "deepseek" "$model"
+					echo_info "DeepSeek ($model) enabled for Claude."
+				fi
+				;;
+			ollama)
+				if [[ -n "$model" ]]; then
+					_claude-code-set-env "ollama" "$model"
+					echo_info "Ollama ($model) enabled for Claude."
+				fi
+				;;
+			lmstudio)
+				if [[ -n "$model" ]]; then
+					_claude-code-set-env "lmstudio" "$model"
+					echo_info "LM Studio ($model) enabled for Claude."
+				fi
+				;;
+			openrouter)
+				if [[ -n "$model" ]] && [[ -n "$OPENROUTER_API_KEY" ]]; then
+					_claude-code-set-env "openrouter" "$model"
+					echo_info "OpenRouter ($model) enabled for Claude."
+				fi
+				;;
+		esac
+	fi
+}
