@@ -13,6 +13,9 @@ import sys
 import requests
 import json
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("markdown_file", help="The markdown file to summarize")
@@ -63,10 +66,8 @@ Here is the markdown document:
 
 def main():
     args = parse_args()
-    api_key = os.environ.get("CLAUDE_API_KEY")
-    if not api_key:
-        print("Please set the CLAUDE_API_KEY environment variable")
-        sys.exit(1)
+    require_secrets("CLAUDE_API_KEY")
+    api_key = os.environ["CLAUDE_API_KEY"]
     
     with open(args.markdown_file, "r") as f:
         markdown = f.read()

@@ -23,6 +23,9 @@ from io import BytesIO
 
 from PIL import Image, ImageTk
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 
 # --- Constants ---
 DEFAULT_PROVIDER = "openai"
@@ -936,6 +939,7 @@ def main() -> None:
         help='Enable debug output'
     )
     args = parser.parse_args()
+    require_secrets("OPENAI_API_KEY", "OPENAI_ORG_ID", "ZAI_API_KEY")
 
     # Set global DEBUG flag
     global DEBUG

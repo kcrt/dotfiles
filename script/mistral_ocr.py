@@ -8,6 +8,9 @@ import os
 import argparse
 from typing import Optional, Union, Dict, Any
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 
 # MistralAI team code ---
 def replace_images_in_markdown(markdown_str: str, images_dict: dict) -> str:
@@ -126,6 +129,7 @@ def process_ocr(
 
 def main():
     args = parse_args()
+    require_secrets("MISTRALAI_API_KEY")
     
     try:
         process_ocr(

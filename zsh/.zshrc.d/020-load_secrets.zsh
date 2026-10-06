@@ -2,6 +2,10 @@
 #	020-load_secrets.zsh
 #		Load encrypted secrets using GPG
 #
+#	Only low-risk values live here, because everything started from the shell
+#	inherits them. API keys and passwords are kept in with-secret
+#	(https://github.com/kcrt/with-secret) and handed to one command at a time.
+#
 
 
 # Set GPG_TTY for proper terminal handling

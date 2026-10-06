@@ -11,13 +11,19 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$#" = 0 ]; then
     echo "                   -p 2 retries every 60s for up to 1h until acknowledged"
     echo "    -U <url>       Supplementary URL to attach to the notification"
     echo ""
-    echo "Required environment variables (loaded from dotfiles secrets):"
+    echo "Secrets (taken from with-secret; Touch ID unless allowed):"
     echo "    PUSHOVER_APP_LOCAL_TOKEN  Application token of the 'local' Pushover app"
     echo "    PUSHOVER_USER_KEY         Pushover user key"
     echo ""
     echo "Example: $(basename "$0") -t 'Backup' -p 1 'Nightly backup failed'"
     echo "         df -h | $(basename "$0") -t 'Disk usage' -"
     exit 0
+fi
+
+# Secrets come from with-secret: re-run this script through it (Touch ID) if unset.
+# Done before getopts consumes the arguments.
+if [ -z "${PUSHOVER_APP_LOCAL_TOKEN:-}" ] || [ -z "${PUSHOVER_USER_KEY:-}" ]; then
+    exec with-secret PUSHOVER_APP_LOCAL_TOKEN,PUSHOVER_USER_KEY -- "$0" "$@"
 fi
 
 TITLE=$(hostname -s)
@@ -36,13 +42,6 @@ shift $((OPTIND - 1))
 
 if [ "$#" = 0 ]; then
     echo "Error: no message given. Run with --help for usage." >&2
-    exit 1
-fi
-
-if [ -z "$PUSHOVER_APP_LOCAL_TOKEN" ] || [ -z "$PUSHOVER_USER_KEY" ]; then
-    echo "Error: PUSHOVER_APP_LOCAL_TOKEN and PUSHOVER_USER_KEY must be set." >&2
-    echo "They are loaded from the dotfiles secrets on shell startup;" >&2
-    echo "start a new shell if you have just added them." >&2
     exit 1
 fi
 

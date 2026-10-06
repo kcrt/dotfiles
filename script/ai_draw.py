@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Optional
 import requests
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 
 def get_next_filename(base_name: str = "ai", extension: str = "png") -> str:
     """Generate next available filename with incrementing number."""
@@ -436,6 +439,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Main entry point."""
     args = parse_args()
+    require_secrets("OPENAI_API_KEY", "OPENAI_ORG_ID")
 
     # Validate mode-specific requirements
     if args.mode == "edit":

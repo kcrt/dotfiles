@@ -1,6 +1,6 @@
 #
 #	656-functions_claudecode.zsh
-#		Z.ai API proxy for Claude
+#		Launch Claude Code against another provider (Z.ai, DeepSeek, ...)
 #
 
 # Default model used when a Z.ai target is given without an explicit model.
@@ -11,32 +11,29 @@ _CLAUDE_CODE_ZAI_HAIKU_MODEL=glm-5.3-flash
 function _claude-code-show-help() {
 	cat <<'EOF'
 Usage:
-  claude-code-to [TARGET]              # Switch the current shell to TARGET
-  claude-code-to --run TARGET [ARGS]   # Launch `claude ARGS` with TARGET in a subshell
-                                       #   (current shell environment is not modified)
+  claude-code-to TARGET [ARGS]   # Launch `claude ARGS` against TARGET
+                                 #   (the current shell environment is not modified)
 
 Targets: anthropic | zai[:MODEL] | kimi | deepseek:MODEL | ollama:MODEL | lmstudio:MODEL | openrouter:MODEL
 
+API keys come from with-secret, which asks for Touch ID on every launch.
+
 Examples:
-  claude-code-to anthropic                 # Use Anthropic API directly
-  claude-code-to zai                       # Use Z.ai proxy (default model)
-  claude-code-to zai:MODEL                 # Use Z.ai proxy with specified model
-  claude-code-to kimi                      # Use Kimi (Moonshot AI)
-  claude-code-to deepseek:MODEL            # Use DeepSeek with specified model
-  claude-code-to ollama:MODEL              # Use Ollama with specified model
-  claude-code-to lmstudio:MODEL            # Use LM Studio with specified model
-  claude-code-to openrouter:MODEL          # Use OpenRouter with specified model
-  claude-code-to --run zai                 # One-shot: run `claude` against Z.ai
-  claude-code-to --run deepseek:MODEL -c   # Forward extra args to `claude`
+  claude-code-to zai                              # Z.ai (default model)
+  claude-code-to zai:MODEL                        # Z.ai with specified model
+  claude-code-to kimi                             # Kimi (Moonshot AI)
+  claude-code-to "deepseek:deepseek-flash[1m]"    # DeepSeek with specified model
+  claude-code-to ollama:MODEL                     # Ollama with specified model
+  claude-code-to lmstudio:MODEL                   # LM Studio with specified model
+  claude-code-to openrouter:MODEL                 # OpenRouter with specified model
+  claude-code-to deepseek:MODEL -c                # Forward extra args to `claude`
 EOF
 }
 
 # List available models for a model-requiring provider.
-# $2 is the command prefix used in the suggestions (e.g. "claude-code-to" or
-# "claude-code-to --run"), defaulting to "claude-code-to".
 function _claude-code-list-models() {
 	local provider=$1
-	local prefix=${2:-claude-code-to}
+	local prefix=claude-code-to
 
 	case "$provider" in
 		zai)
@@ -77,341 +74,117 @@ function _claude-code-list-models() {
 	esac
 }
 
-# Validate target+model and required env vars for a one-shot run.
+# Check that the target is known and has a model when it needs one.
 # Echoes errors and returns non-zero on failure.
 function _claude-code-validate() {
 	local provider=$1
 	local model=$2
 
 	case "$provider" in
-		anthropic)
+		anthropic|zai|kimi)
 			;;
-		zai)
-			[[ -z "$ZAI_API_KEY" ]] && { echo "Error: ZAI_API_KEY environment variable is not set."; return 1; }
-			;;
-		kimi)
-			[[ -z "$MOONSHOT_API_KEY" ]] && { echo "Error: MOONSHOT_API_KEY environment variable is not set."; return 1; }
-			;;
-		deepseek)
-			[[ -z "$model" ]] && { echo "Error: deepseek requires a model."; echo ""; _claude-code-list-models deepseek "claude-code-to --run"; return 1; }
-			[[ -z "$DEEPSEEK_API_KEY" ]] && { echo "Error: DEEPSEEK_API_KEY environment variable is not set."; return 1; }
-			;;
-		openrouter)
-			[[ -z "$model" ]] && { echo "Error: openrouter requires a model."; echo ""; _claude-code-list-models openrouter "claude-code-to --run"; return 1; }
-			[[ -z "$OPENROUTER_API_KEY" ]] && { echo "Error: OPENROUTER_API_KEY environment variable is not set."; return 1; }
-			;;
-		ollama)
-			[[ -z "$model" ]] && { echo "Error: ollama requires a model."; echo ""; _claude-code-list-models ollama "claude-code-to --run"; return 1; }
-			;;
-		lmstudio)
-			[[ -z "$model" ]] && { echo "Error: lmstudio requires a model."; echo ""; _claude-code-list-models lmstudio "claude-code-to --run"; return 1; }
+		deepseek|openrouter|ollama|lmstudio)
+			if [[ -z "$model" ]]; then
+				echo "Error: $provider requires a model."
+				echo ""
+				_claude-code-list-models "$provider"
+				return 1
+			fi
 			;;
 		*)
 			echo "Error: Unknown target '$provider'."
+			echo ""
+			_claude-code-show-help
 			return 1
 			;;
 	esac
 	return 0
 }
 
-# Providers other than Anthropic authenticate via ANTHROPIC_AUTH_TOKEN, and
-# Claude Code prefers ANTHROPIC_API_KEY when both are present. Mask it with an
-# empty value while a proxy target is active, stashing the original so that
-# switching back to `anthropic` restores it.
-function _claude-code-mask-api-key() {
-	[[ -z ${_CLAUDE_CODE_TO_SAVED_API_KEY+x} ]] && export _CLAUDE_CODE_TO_SAVED_API_KEY="${ANTHROPIC_API_KEY-}"
-	export ANTHROPIC_API_KEY=""
+# The with-secret name holding the API key for a provider (none for local ones).
+function _claude-code-secret-name() {
+	case "$1" in
+		zai) echo ZAI_API_KEY ;;
+		kimi) echo MOONSHOT_API_KEY ;;
+		deepseek) echo DEEPSEEK_API_KEY ;;
+		openrouter) echo OPENROUTER_API_KEY ;;
+	esac
 }
 
-function _claude-code-restore-api-key() {
-	if [[ -n "${_CLAUDE_CODE_TO_SAVED_API_KEY-}" ]]; then
-		export ANTHROPIC_API_KEY="$_CLAUDE_CODE_TO_SAVED_API_KEY"
-	else
-		unset ANTHROPIC_API_KEY
-	fi
-	unset _CLAUDE_CODE_TO_SAVED_API_KEY
-}
-
-# Helper function to set environment variables for Claude Code targets
-function _claude-code-set-env() {
-	local target=$1
+# Export the provider's endpoint and model settings. Meant to run in a
+# subshell. The API key itself is added later by with-secret.
+function _claude-code-export-env() {
+	local provider=$1
 	local model=$2
 
-	# Model-requiring providers cannot be configured without a model
-	case "$target" in
-		deepseek|openrouter|ollama|lmstudio)
-			[[ -z "$model" ]] && return 0
-			;;
-	esac
+	# Claude Code prefers ANTHROPIC_API_KEY over ANTHROPIC_AUTH_TOKEN.
+	unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
 
-	if [[ "$target" == "anthropic" ]]; then
-		_claude-code-restore-api-key
-	else
-		_claude-code-mask-api-key
-	fi
-
-	case "$target" in
-		anthropic)
-			unset ANTHROPIC_BASE_URL
-			unset ANTHROPIC_AUTH_TOKEN
-			unset ANTHROPIC_MODEL
-			unset ANTHROPIC_DEFAULT_OPUS_MODEL
-			unset ANTHROPIC_DEFAULT_SONNET_MODEL
-			unset ANTHROPIC_DEFAULT_HAIKU_MODEL
-			unset CLAUDE_CODE_SUBAGENT_MODEL
-			;;
+	local base_url haiku_model=""
+	case "$provider" in
 		zai)
-			export ANTHROPIC_BASE_URL=https://api.z.ai/api/anthropic
-			export ANTHROPIC_AUTH_TOKEN=$ZAI_API_KEY
-			export ANTHROPIC_MODEL=${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$_CLAUDE_CODE_ZAI_HAIKU_MODEL
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
+			base_url=https://api.z.ai/api/anthropic
+			model=${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}
+			haiku_model=$_CLAUDE_CODE_ZAI_HAIKU_MODEL
 			;;
 		kimi)
-			export ANTHROPIC_BASE_URL=https://api.moonshot.ai/anthropic
-			export ANTHROPIC_AUTH_TOKEN=$MOONSHOT_API_KEY
-			export ANTHROPIC_MODEL=kimi-k2.5
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
+			base_url=https://api.moonshot.ai/anthropic
+			model=kimi-k2.5
 			;;
 		deepseek)
-			export ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic
-			export ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_API_KEY
-			export ANTHROPIC_MODEL=$model
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-flash
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
+			base_url=https://api.deepseek.com/anthropic
+			haiku_model=deepseek-flash
 			;;
 		openrouter)
-			export ANTHROPIC_BASE_URL=https://openrouter.ai/api
-			export ANTHROPIC_AUTH_TOKEN=$OPENROUTER_API_KEY
-			export ANTHROPIC_MODEL=$model
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
+			base_url=https://openrouter.ai/api
 			;;
 		ollama)
-			export ANTHROPIC_BASE_URL=http://localhost:11434
+			base_url=http://localhost:11434
 			export ANTHROPIC_AUTH_TOKEN=ollama
-			export ANTHROPIC_MODEL=$model
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 		lmstudio)
-			export ANTHROPIC_BASE_URL=http://localhost:1234
+			base_url=http://localhost:1234
 			export ANTHROPIC_AUTH_TOKEN=lm-studio
-			export ANTHROPIC_MODEL=$model
-			export ANTHROPIC_DEFAULT_OPUS_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_SONNET_MODEL=$ANTHROPIC_MODEL
-			export ANTHROPIC_DEFAULT_HAIKU_MODEL=$ANTHROPIC_MODEL
-			export CLAUDE_CODE_SUBAGENT_MODEL=$ANTHROPIC_MODEL
 			;;
 	esac
+
+	export ANTHROPIC_BASE_URL=$base_url
+	export ANTHROPIC_MODEL=$model
+	export ANTHROPIC_DEFAULT_OPUS_MODEL=$model
+	export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
+	export ANTHROPIC_DEFAULT_HAIKU_MODEL=${haiku_model:-$model}
+	export CLAUDE_CODE_SUBAGENT_MODEL=$model
 }
 
 function claude-code-to() {
-	# Check if jq is available
-	if ! command -v jq &>/dev/null; then
-		echo "Error: jq is required but not installed."
-		echo "Install it with: brew install jq"
-		return 1
+	local target=$1
+	if [[ -z "$target" || "$target" == "--help" || "$target" == "-h" ]]; then
+		_claude-code-show-help
+		return 0
 	fi
+	shift
 
-	# --run: launch `claude` in a subshell with the target's env vars set,
-	# without modifying the current shell or the persisted config file.
-	if [[ "$1" == "--run" ]]; then
-		shift
-		local run_target=$1
-		if [[ -z "$run_target" ]]; then
-			echo "Error: --run requires a target."
-			echo ""
-			_claude-code-show-help
-			return 1
-		fi
-		shift
-		local run_provider="${run_target%%:*}"
-		local run_model=""
-		[[ "$run_target" == *:* ]] && run_model="${run_target#*:}"
-		if ! _claude-code-validate "$run_provider" "$run_model"; then
-			return 1
-		fi
-		(
-			_claude-code-set-env "$run_provider" "$run_model"
-			command claude "$@"
-		)
+	local provider="${target%%:*}"
+	local model=""
+	[[ "$target" == *:* ]] && model="${target#*:}"
+	_claude-code-validate "$provider" "$model" || return 1
+
+	if [[ "$provider" == "anthropic" ]]; then
+		command claude "$@"
 		return $?
 	fi
 
-	local target=$1
-	local config_file="$HOME/.claude-code-to.json"
-
-	if [[ -z "$target" ]]; then
-		# Show current configuration
-		if [[ -f "$config_file" ]]; then
-			local current=$(jq -r '.target // "anthropic"' "$config_file" 2>/dev/null)
-			echo "Current Claude Code target: $current"
+	local secret_name=$(_claude-code-secret-name "$provider")
+	(
+		_claude-code-export-env "$provider" "$model"
+		if [[ -z "$secret_name" ]]; then
+			command claude "$@"
 		else
-			_claude-code-show-help
+			# with-secret puts the key in the environment under its own name;
+			# zsh renames it to the variable Claude Code reads and drops the original.
+			with-secret "$secret_name" -- /bin/zsh -fc \
+				'export ANTHROPIC_AUTH_TOKEN=${(P)1}; unset $1; shift; exec claude "$@"' \
+				claude-code-to "$secret_name" "$@"
 		fi
-		return 0
-	fi
-
-	case "$target" in
-		--help|-h)
-			_claude-code-show-help
-			return 0
-			;;
-		anthropic)
-			echo "Anthropic API (direct) enabled for Claude."
-			echo '{"target":"anthropic"}' > "$config_file"
-			_claude-code-set-env "anthropic"
-			;;
-		zai|zai:*)
-			local model=""
-			[[ "$target" == zai:* ]] && model="${target#zai:}"
-			# Check if ZAI_API_KEY is set
-			if [[ -z "$ZAI_API_KEY" ]]; then
-				echo "Error: ZAI_API_KEY environment variable is not set. Please set it to use Z.ai model."
-				return 1
-			fi
-			if [[ -n "$model" ]]; then
-				echo_info "Z.ai proxy ($model) enabled for Claude."
-				echo "{\"target\":\"zai\",\"model\":\"$model\"}" > "$config_file"
-			else
-				echo_info "Z.ai proxy ($_CLAUDE_CODE_ZAI_DEFAULT_MODEL) enabled for Claude."
-				echo '{"target":"zai"}' > "$config_file"
-			fi
-			_claude-code-set-env "zai" "$model"
-			;;
-		kimi)
-			if [[ -z "$MOONSHOT_API_KEY" ]]; then
-				echo "Error: MOONSHOT_API_KEY environment variable is not set. Please set it to use Kimi."
-				return 1
-			fi
-			echo_info "Kimi (Moonshot AI) enabled for Claude."
-			echo '{"target":"kimi"}' > "$config_file"
-			_claude-code-set-env "kimi"
-			;;
-		deepseek)
-			echo "Error: DeepSeek requires a model to be specified."
-			echo ""
-			_claude-code-list-models deepseek
-			return 1
-			;;
-		deepseek:*)
-			local model="${target#deepseek:}"
-			if [[ -z "$DEEPSEEK_API_KEY" ]]; then
-				echo "Error: DEEPSEEK_API_KEY environment variable is not set. Please set it to use DeepSeek."
-				return 1
-			fi
-			echo_info "DeepSeek ($model) enabled for Claude."
-			echo "{\"target\":\"deepseek\",\"model\":\"$model\"}" > "$config_file"
-			_claude-code-set-env "deepseek" "$model"
-			;;
-		ollama)
-			_claude-code-list-models ollama
-			return 1
-			;;
-		ollama:*)
-			local model="${target#ollama:}"
-			echo_info "Ollama ($model) enabled for Claude."
-			echo "{\"target\":\"ollama\",\"model\":\"$model\"}" > "$config_file"
-			_claude-code-set-env "ollama" "$model"
-			;;
-		lmstudio)
-			_claude-code-list-models lmstudio
-			return 1
-			;;
-		lmstudio:*)
-			local model="${target#lmstudio:}"
-			echo_info "LM Studio ($model) enabled for Claude."
-			echo "{\"target\":\"lmstudio\",\"model\":\"$model\"}" > "$config_file"
-			_claude-code-set-env "lmstudio" "$model"
-			;;
-		openrouter)
-			echo "Error: OpenRouter requires a model to be specified."
-			echo ""
-			_claude-code-list-models openrouter
-			return 1
-			;;
-		openrouter:*)
-			local model="${target#openrouter:}"
-			if [[ -z "$OPENROUTER_API_KEY" ]]; then
-				echo "Error: OPENROUTER_API_KEY environment variable is not set. Please set it to use OpenRouter."
-				return 1
-			fi
-			echo_info "OpenRouter ($model) enabled for Claude."
-			echo "{\"target\":\"openrouter\",\"model\":\"$model\"}" > "$config_file"
-			_claude-code-set-env "openrouter" "$model"
-			;;
-		*)
-			echo "Error: Unknown target '$target'."
-			echo ""
-			echo "Valid options:"
-			echo "  anthropic              - Use Anthropic API directly"
-			echo "  zai                    - Use Z.ai proxy (default model)"
-			echo "  zai:MODEL_NAME         - Use Z.ai proxy with specified model"
-			echo "  kimi                   - Use Kimi (Moonshot AI)"
-			echo "  deepseek:MODEL_NAME    - Use DeepSeek with specified model"
-			echo "  ollama:MODEL_NAME      - Use Ollama with specified model"
-			echo "  lmstudio:MODEL_NAME    - Use LM Studio with specified model"
-			echo "  openrouter:MODEL_NAME  - Use OpenRouter with specified model"
-			return 1
-			;;
-	esac
-}
-
-# Restore configuration from config file on shell load
-() {
-	local config_file="$HOME/.claude-code-to.json"
-	if [[ -f "$config_file" ]]; then
-		local target=$(jq -r '.target // "anthropic"' "$config_file" 2>/dev/null)
-		local model=$(jq -r '.model // ""' "$config_file" 2>/dev/null)
-		case "$target" in
-			zai)
-				if [[ -n "$ZAI_API_KEY" ]]; then
-					_claude-code-set-env "zai" "$model"
-					echo_info "Z.ai proxy (${model:-$_CLAUDE_CODE_ZAI_DEFAULT_MODEL}) enabled for Claude."
-				fi
-				;;
-			kimi)
-				if [[ -n "$MOONSHOT_API_KEY" ]]; then
-					_claude-code-set-env "kimi"
-					echo_info "Kimi (Moonshot AI) enabled for Claude."
-				fi
-				;;
-			deepseek)
-				if [[ -n "$model" ]] && [[ -n "$DEEPSEEK_API_KEY" ]]; then
-					_claude-code-set-env "deepseek" "$model"
-					echo_info "DeepSeek ($model) enabled for Claude."
-				fi
-				;;
-			ollama)
-				if [[ -n "$model" ]]; then
-					_claude-code-set-env "ollama" "$model"
-					echo_info "Ollama ($model) enabled for Claude."
-				fi
-				;;
-			lmstudio)
-				if [[ -n "$model" ]]; then
-					_claude-code-set-env "lmstudio" "$model"
-					echo_info "LM Studio ($model) enabled for Claude."
-				fi
-				;;
-			openrouter)
-				if [[ -n "$model" ]] && [[ -n "$OPENROUTER_API_KEY" ]]; then
-					_claude-code-set-env "openrouter" "$model"
-					echo_info "OpenRouter ($model) enabled for Claude."
-				fi
-				;;
-		esac
-	fi
+	)
 }

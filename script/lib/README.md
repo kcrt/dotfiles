@@ -57,6 +57,7 @@ from lib.progressbar import BarSlot, LiveLine
 | `ffprobe.py` | ffprobeで章と容器のメタデータを読む（`-show_streams` 等の生JSONも） |
 | `par2.py` | PAR2ファイルをパケット単位で分解・再構成する（索引の抽出、リカバリスライスの取り出し、境界が揃いかつ端数の出ないスライスサイズの算出） |
 | `trash.py` | macOSのゴミ箱へ移す（ボリュームを跨がない） |
+| `with_secret.py` | 秘密の環境変数が無ければ `with-secret` 経由で自分を起動し直す（Touch ID で承認） |
 | `sample.py` | 上記すべての動作確認・デモ（直接実行する） |
 
 ## 動作確認
@@ -76,7 +77,7 @@ lib を触ったら `sample.py` を直接叩く。各モジュールの出力を
 
 ## 利用しているスクリプト
 
-`grep -l '^from lib\.' script/*.py` で一覧が出る。現在17本:
+`grep -l '^from lib\.' script/*.py` で一覧が出る。現在23本:
 
 | モジュール | 使っているスクリプト |
 | --- | --- |
@@ -88,3 +89,4 @@ lib を触ったら `sample.py` を直接叩く。各モジュールの出力を
 | `ffprobe.py` | `split_mp4_by_chapter.py` `keep_only_audio_and_tag.py` |
 | `par2.py` | `paper_backup.py` |
 | `trash.py` | `ffmpeg-convert.py` |
+| `with_secret.py` | `ai_draw.py` `ai_draw_gui.py` `summarize_md_claude.py` `mistral_ocr.py` `geocoding_latlon.py` `proxy_to_zai.py` |

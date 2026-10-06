@@ -18,6 +18,9 @@ from flask import Flask, request, Response
 import requests
 import os
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 app = Flask(__name__)
 
 ZAI_API_KEY = os.getenv("ZAI_API_KEY", "YOUR_API_KEY_HERE")
@@ -72,7 +75,7 @@ def proxy(path):
         return {"error": str(e)}, 500
 
 if __name__ == '__main__':
+    require_secrets("ZAI_API_KEY")
     print("Starting Z.AI Proxy Server...")
     print(f"Proxying localhost:8080/v1/* -> {TARGET_BASE_URL}/*")
-    print(f"Using API Key: {ZAI_API_KEY[:10]}...")
     app.run(host='127.0.0.1', port=8080, debug=True)

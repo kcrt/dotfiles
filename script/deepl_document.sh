@@ -13,7 +13,7 @@
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
 #       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
 #
-#          NOTE:  Before running this script, set DEEPL_API_KEY in your environment.
+#          NOTE:  DEEPL_API_KEY is taken from with-secret (asks for Touch ID unless allowed).
 #                 Set DEBUG=1 for verbose information
 #
 #===============================================================================
@@ -24,7 +24,7 @@ show_help() {
     echo "       $(basename "$0") --help | -h"
     echo ""
     echo "Translates documents using the DeepL API."
-    echo "Requires the DEEPL_API_KEY environment variable to be set."
+    echo "DEEPL_API_KEY is taken from with-secret (asks for Touch ID unless allowed)."
     echo "Set DEBUG=1 for verbose information."
     echo ""
     echo "Arguments:"
@@ -75,11 +75,8 @@ else # More than 3 arguments
     show_help
 fi
 
-# check for $DEEPL_API_KEY
-if [ -z "$DEEPL_API_KEY" ]; then
-    echo "Error: DEEPL_API_KEY is not set." >&2
-    exit 1
-fi
+# Secrets come from with-secret: re-run this script through it (Touch ID) if unset.
+[ -n "${DEEPL_API_KEY:-}" ] || exec with-secret DEEPL_API_KEY -- "$0" "$@"
 
 # Check if FILENAME is set (it might not be if only 'list_lang' or '--help' was called and logic was different)
 if [ -z "$FILENAME" ]; then

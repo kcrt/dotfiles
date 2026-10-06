@@ -1,9 +1,7 @@
 #!/bin/sh
 
-if [ "$OPENAI_API_KEY" = "" ]; then
-    echo "Please set the OPENAI_API_KEY environment variable"
-    exit 1
-fi
+# Secrets come from with-secret: re-run this script through it (Touch ID) if unset.
+[ -n "${OPENAI_API_KEY:-}" ] || exec with-secret OPENAI_API_KEY -- "$0" "$@"
 
 # infinit loop
 while true; do

@@ -6,8 +6,10 @@ import os
 import argparse
 import requests
 
+# Shared helper in script/lib/ (on sys.path as the script's own directory).
+from lib.with_secret import require_secrets
+
 URL = "https://maps.googleapis.com/maps/api/geocode/json"
-API_KEY = os.environ['GOOGLE_MAPS_API_KEY']
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Get lat/lon from name of place')
@@ -18,7 +20,7 @@ def parse_args():
 def get_latlon(place):
     params = {
         'address': place,
-        'key': API_KEY
+        'key': os.environ['GOOGLE_MAPS_API_KEY']
     }
     try:
         response = requests.get(URL, params=params)
@@ -35,6 +37,7 @@ def get_latlon(place):
 
 def main():
     args = parse_args()
+    require_secrets('GOOGLE_MAPS_API_KEY')
     latlon = get_latlon(args.place)
     print(f"{args.place}, {latlon[0]}, {latlon[1]}")
     pass
