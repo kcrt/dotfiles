@@ -33,7 +33,7 @@ Notes:
       to nudge Spotlight, but the index may still be stale right afterwards.
       Use `list` to see the truth.
     - How the tags on this Mac are meant to be used is documented in
-      ~/Documents/cowork/ファイル整理.md ("Finderタグ" section).
+      ~/Documents/cowork/共通ルール.md ("Finderタグ" section).
 """
 
 import argparse
