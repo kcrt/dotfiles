@@ -294,8 +294,10 @@ plugins {
     zjstatus location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
         format_left   "{mode} #[fg=#45BEC9,bold]{command_hostinfo} | {tabs}"
         format_center ""
-        // progressinfo は転送中のみ出力し、区切りの " | " も自分で前置する
-        format_right  " | {command_progressinfo} |{command_batteryinfo} {command_cpuload} {command_serverstatus} {datetime}"
+        // progressinfo は表示するもの (転送中の progress と、--title で手動報告された進捗) が
+        // あるときだけ出力し、項目ごとに区切りの " | " も自分で前置する。何も無ければ空なので、
+        // ここに " | " を書くと空の区切りが残る。
+        format_right  "{command_progressinfo} |{command_batteryinfo} {command_cpuload} {command_serverstatus} {datetime}"
         format_space  "#[bg=#677589] "
 
         border_enabled  "false"

@@ -86,6 +86,7 @@ from pathlib import Path
 # しか書けないため。
 from lib.humanize import clock, common_unit, human, size_change
 from lib.progressbar import BarSlot, LiveLine, rainbow_rgb, wave_level
+from lib.statusprogress import StatusProgress
 from lib.prompt import confirm, interactive as stdio_is_interactive, prompt_choice
 from lib.termcolor import RGB, hue_rgb, paint, scale_rgb, status_line
 from lib.termtext import display_width, pad_display, truncate_display
@@ -208,6 +209,10 @@ TUNE_ENCODERS = frozenset({"libx264", "libx265"})
 # Opusは音声において AAC-LC の1.5〜2倍効率が良いので、同品質をより少ないビットで買える。
 # 64k mono ≒ 128k AAC mono。
 DEFAULT_AUDIO_BITRATE = {"aac": {1: 128, 2: 128}, "libopus": {1: 64, 2: 96}}
+
+# zellij のステータスバー (progress_info.sh) に出すときの見出し。
+# 🔄 は East Asian Width = Wide で、どの端末でも 2 桁に収まる。
+STATUS_TITLE = "ff🔄"
 
 # 結果行でファイル名に割り当てる表示幅の上限。これを超える名前は欄からはみ出す。
 RESULT_NAME_MAX_WIDTH = 40
@@ -2324,12 +2329,15 @@ def run_jobs(jobs: list[Job], cfg: Config, layout: ResultLayout) -> list[Result]
     """まとめてエンコードし、終わった順に結果行を出す。"""
     print(f"\n{len(jobs)} 本を {settings_summary(cfg)} で圧縮します（並列 {cfg.jobs}）", file=sys.stderr)
     results: list[Result] = []
+    # 端末の進捗行とは別に、zellij のステータスバーにも本数を出す (離れていても見える)
     with (ProgressReporter.for_jobs(jobs, cfg, layout) as progress,
+          StatusProgress(STATUS_TITLE, total=len(jobs), enabled=not cfg.dry_run) as status,
           ThreadPoolExecutor(max_workers=max(cfg.jobs, 1)) as pool):
         futures = [pool.submit(encode, job, cfg, progress) for job in jobs]
         for done, future in enumerate(as_completed(futures), start=1):
             result = future.result()
             results.append(result)
+            status.update(done)
             prefix = layout.prefix(done, result.src.name)
             if not result.ok:
                 progress.report(f"{prefix} {paint('NG', NG_RGB, sys.stderr)} {result.message}", error=True)

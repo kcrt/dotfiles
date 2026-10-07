@@ -4,10 +4,14 @@
 #
 #          FILE:  progress_info.sh
 #         USAGE:  ./progress_info.sh [zjstatus|tmux]
+#                 ./progress_info.sh --title TITLE [--set TEXT] [--num N --of M] [--pid PID]
+#                 ./progress_info.sh --title TITLE --done
+#                 ./progress_info.sh --list | --clear
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
 #   DESCRIPTION:  Summarise `progress` (Coreutils Viewer) output into a single
-#                 short line for a status bar. Prints nothing when no monitored
-#                 command is transferring data.
+#                 short line for a status bar, together with any progress that
+#                 a script reported by hand through --title. Prints nothing when
+#                 neither has anything to show.
 #
 #===============================================================================
 
@@ -63,14 +67,54 @@ FALLBACK_ICON="⏳"
 # Each costs two cells, so past this many the remainder collapses to "+N".
 EXTRA_ICON_LIMIT=3
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+# ----- Progress reported by hand (--title)
+# `progress` only sees bytes moving through a file descriptor, so a job that
+# counts in its own units (12 videos, 35 loop rounds) has nothing to show there.
+# Such a job reports itself with --title, which writes one file per title into
+# STATE_DIR; every status-bar poll reads them back. Neither source suppresses
+# the other: both are shown.
+#
+# One file per title, replaced with mv, so concurrent writers never interleave
+# and a reader never sees half a line. Not $TMPDIR: the zellij plugin and the
+# writer would not agree on it (a sandboxed shell gets its own).
+STATE_DIR="${PROGRESS_INFO_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/progress_info}"
+
+# Cells of the gauge drawn for --num/--of. Same glyphs as lib/progressbar.py.
+MANUAL_BAR_CELLS=6
+
+# After --done the entry stays this long, marked finished, so a job that ends
+# between two glances is still seen to have ended.
+DONE_LINGER_SECONDS=60
+
+# Safety net for a job that died without --done and without --pid: an entry
+# not updated for this long is dropped. Long, because a slow job may update
+# rarely; --pid is the precise way out.
+STALE_SECONDS=21600		# 6 hours
+
+# Appended to a finished entry. U+2713 is a text symbol (one cell), unlike the
+# EAW=Neutral emoji the icon table warns about.
+DONE_MARK="✓"
+
+# Appended instead when the --pid process vanished without --done: the job
+# crashed or was killed. It lingers like a finished one (DONE_LINGER_SECONDS),
+# in red, so a failure is not mistaken for an entry that quietly completed.
+# U+2717 is one cell for the same reason as DONE_MARK.
+LOST_MARK="✗"
+
+usage() {
 	echo "Usage: $(basename "$0") [zjstatus|tmux]"
-	echo "Summarises running file transfers (cp, mv, dd, tar, rsync, ...) as one short line."
-	echo "Prints nothing when nothing is being transferred."
+	echo "       $(basename "$0") --title TITLE [--set TEXT] [--num N --of M] [--pid PID]"
+	echo "       $(basename "$0") --title TITLE --done"
+	echo "       $(basename "$0") --list | --clear"
+	echo ""
+	echo "Without --title: print one short status-bar line made of"
+	echo "  * progress reported by hand (see below), and"
+	echo "  * running file transfers (cp, mv, dd, tar, rsync, ...) seen by \`progress\`."
+	echo "Prints nothing when neither has anything to show."
 	echo "Transfers smaller than ${MIN_SIZE_BYTES} bytes are ignored."
 	echo ""
 	echo "Arguments (optional):"
-	echo "  zjstatus - Colour with zjstatus markup and prepend a ' | ' separator."
+	echo "  zjstatus - Colour with zjstatus markup; each item gets a ' | ' separator."
 	echo "  tmux     - Colour with tmux status-bar markup."
 	echo "  (none)   - Plain text."
 	echo ""
@@ -80,12 +124,227 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
 	echo ""
 	echo "Set PROGRESS_ARGS to monitor extra commands, e.g."
 	echo "  export PROGRESS_ARGS=\"-a zstd -a ffmpeg\""
+	echo ""
+	echo "Reporting progress by hand (one entry per TITLE; repeat to update it):"
+	echo "  --title TITLE  Name shown in front of the entry (an emoji is fine)."
+	echo "  --set TEXT     Free text shown after the gauge."
+	echo "  --num N --of M Count; shown as 'N/M' with a ${MANUAL_BAR_CELLS}-cell gauge."
+	echo "  --pid PID      If PID ends without --done, mark it failed ('${LOST_MARK}' for ${DONE_LINGER_SECONDS}s)."
+	echo "  --done         Mark finished: shown with '${DONE_MARK}' for ${DONE_LINGER_SECONDS}s, then dropped."
+	echo "  --list         Print the stored entries, one per line (tab-separated)."
+	echo "  --clear        Drop every entry (with --title: just that one)."
+	echo "Entries not updated for ${STALE_SECONDS}s are dropped. Stored in"
+	echo "  ${STATE_DIR}  (override with PROGRESS_INFO_STATE_DIR)."
+	echo ""
+	echo "Example: $(basename "$0") --title ff🔄 --num 2 --of 12 --set clip.mp4"
+	echo "         -> ff🔄 2/12 [█░░░░░] clip.mp4"
+}
+
+# 実体のあるディレクトリから引く (PATH 上のシンボリックリンク経由でも lib が見つかるように)
+. "$(dirname "$(readlink -f "$0")")/lib/textbar.sh"
+
+# ----- Manual entries: storage
+# One field per line, in this order:
+#   title, num, of, text, updated, done_at, pid, outcome
+# Empty fields stay as empty lines; done_at is 0 while running. outcome is
+# empty while running, then "done" (--done) or "lost" (the --pid process went
+# away first). Not one
+# tab-separated line: `read` treats a tab in IFS as whitespace and collapses
+# the empty fields between two tabs, which would shift every field after them.
+
+# entry_file <title>
+# The title is also stored inside the file, so the name only has to be unique
+# and harmless: "/" would make a path, and a leading "." would hide the file.
+entry_file() {
+	printf '%s/%s.entry' "$STATE_DIR" "$(printf '%s' "$1" | tr '/\t\n' '___' | sed 's/^\./_/')"
+}
+
+# one_field <text>
+# A newline would break the format; a status bar shows one line anyway.
+one_field() {
+	printf '%s' "$1" | tr '\t\n' '  '
+}
+
+# write_entry <title> <num> <of> <text> <done_at> <pid> <outcome>
+write_entry() {
+	mkdir -p "$STATE_DIR" || exit 1
+	_file=$(entry_file "$1")
+	_tmp=$(mktemp "$STATE_DIR/.write.XXXXXX") || exit 1
+	printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' \
+		"$(one_field "$1")" "$2" "$3" "$(one_field "$4")" "$(date +%s)" "$5" "$6" "$7" > "$_tmp"
+	mv -f "$_tmp" "$_file"
+}
+
+# read_entry <file>  -> sets e_title e_num e_of e_text e_updated e_done e_pid e_outcome
+# Returns non-zero only when there is no title, so a file written before a
+# field was added (one line short) still reads, the missing field empty.
+read_entry() {
+	e_title="" e_num="" e_of="" e_text="" e_updated="" e_done="" e_pid="" e_outcome=""
+	{
+		IFS= read -r e_title
+		IFS= read -r e_num
+		IFS= read -r e_of
+		IFS= read -r e_text
+		IFS= read -r e_updated
+		IFS= read -r e_done
+		IFS= read -r e_pid
+		IFS= read -r e_outcome
+	} < "$1" 2>/dev/null
+	[ -n "$e_title" ]
+}
+
+is_count() {
+	case "$1" in
+		''|*[!0-9]*) return 1 ;;
+		*) return 0 ;;
+	esac
+}
+
+# pid_gone <pid>
+# True only when the process is known not to exist. kill -0 also fails on
+# another user's process (EPERM: a sudo job), and anything that cannot tell
+# (a sandbox refusing the call) must not turn a running job into a red ✗;
+# the stale timer still catches it. Hence: gone only on "No such process".
+pid_gone() {
+	case "$(LC_ALL=C kill -0 "$1" 2>&1)" in
+		*"No such process"*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+# ----- Manual entries: display
+# paint <text> <zjstatus colour> <tmux colour>
+# Each item carries its own " | ", as the transfer line always has, so the
+# zjstatus format string needs no separator that would dangle when idle.
+paint() {
+	case "$STYLE" in
+		zjstatus) printf '#[fg=#eaf0f6] | #[fg=%s]%s#[fg=#eaf0f6]' "$2" "$1" ;;
+		tmux)     printf '#[fg=%s]%s#[default] ' "$3" "$1" ;;
+		*)        printf '%s  ' "$1" ;;
+	esac
+}
+
+# render_manual
+# Print every live entry, in file-name order (alphabetical by title), and prune the
+# ones that are finished, orphaned or stale.
+render_manual() {
+	[ -d "$STATE_DIR" ] || return 0
+	_now=$(date +%s)
+	for _file in "$STATE_DIR"/*.entry; do
+		[ -f "$_file" ] || continue
+		read_entry "$_file" || continue
+		if [ "${e_done:-0}" -gt 0 ] && [ $(( _now - e_done )) -ge "$DONE_LINGER_SECONDS" ]; then
+			rm -f "$_file"; continue
+		fi
+		if [ "${e_done:-0}" -eq 0 ]; then
+			if [ -n "$e_pid" ] && pid_gone "$e_pid"; then
+				write_entry "$e_title" "$e_num" "$e_of" "$e_text" "$_now" "" lost
+				e_done=$_now
+				e_outcome=lost
+			elif [ $(( _now - ${e_updated:-0} )) -ge "$STALE_SECONDS" ]; then
+				rm -f "$_file"; continue
+			fi
+			if [ $(( _now - ${e_updated:-0} )) -ge "$STALE_SECONDS" ]; then
+				rm -f "$_file"; continue
+			fi
+		fi
+
+		_line=$e_title
+		if is_count "$e_num" && is_count "$e_of"; then
+			_line="$_line $e_num/$e_of [$(text_bar "$e_num" "$e_of" "$MANUAL_BAR_CELLS")]"
+		fi
+		[ -n "$e_text" ] && _line="$_line $e_text"
+		if [ "$e_outcome" = "lost" ]; then
+			paint "$_line $LOST_MARK" "#D74242" "red"
+		elif [ "${e_done:-0}" -gt 0 ]; then
+			paint "$_line $DONE_MARK" "#9AA5B1" "colour245"
+		else
+			paint "$_line" "#45BEC9" "cyan"
+		fi
+	done
+}
+
+# ----- Arguments
+STYLE=""
+TITLE=""
+SET_TEXT=""
+HAVE_SET=""
+NUM=""
+OF=""
+PID=""
+ACTION="show"
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-h|--help) usage; exit 0 ;;
+		--title)   TITLE=$2; shift ;;
+		--set)     SET_TEXT=$2; HAVE_SET=1; shift ;;
+		--num)     NUM=$2; shift ;;
+		--of)      OF=$2; shift ;;
+		--pid)     PID=$2; shift ;;
+		--done)    ACTION="done" ;;
+		--list)    ACTION="list" ;;
+		--clear)   ACTION="clear" ;;
+		zjstatus|tmux) STYLE=$1 ;;
+		*) echo "$(basename "$0"): unknown argument: $1" >&2; usage >&2; exit 2 ;;
+	esac
+	shift
+done
+
+case "$ACTION" in
+	list)
+		for _file in "$STATE_DIR"/*.entry; do
+			[ -f "$_file" ] || continue
+			read_entry "$_file"
+			printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+				"$e_title" "$e_num" "$e_of" "$e_text" "$e_updated" "$e_done" "$e_pid" "$e_outcome"
+		done
+		exit 0
+		;;
+	clear)
+		if [ -n "$TITLE" ]; then
+			rm -f "$(entry_file "$TITLE")"
+		else
+			# .write.* are temp files left by a writer killed before its mv
+			rm -f "$STATE_DIR"/*.entry "$STATE_DIR"/.write.*
+		fi
+		exit 0
+		;;
+	done)
+		[ -n "$TITLE" ] || { echo "$(basename "$0"): --done needs --title" >&2; exit 2; }
+		_file=$(entry_file "$TITLE")
+		# Finishing an entry never reported keeps nothing to show; stay quiet.
+		[ -f "$_file" ] || exit 0
+		read_entry "$_file"
+		write_entry "$TITLE" "$e_num" "$e_of" "$e_text" "$(date +%s)" "" done
+		exit 0
+		;;
+esac
+
+if [ -n "$TITLE" ]; then
+	for _value in "$NUM" "$OF" "$PID"; do
+		if [ -n "$_value" ] && ! is_count "$_value"; then
+			echo "$(basename "$0"): --num/--of/--pid take a non-negative integer: $_value" >&2
+			exit 2
+		fi
+	done
+	# Fields not given this time keep their earlier value, so a job may update
+	# the count and the text from different places.
+	_file=$(entry_file "$TITLE")
+	e_num="" e_of="" e_text="" e_pid=""
+	[ -f "$_file" ] && read_entry "$_file"
+	[ -n "$NUM" ] && e_num=$NUM
+	[ -n "$OF" ] && e_of=$OF
+	[ -n "$HAVE_SET" ] && e_text=$SET_TEXT
+	[ -n "$PID" ] && e_pid=$PID
+	# Reporting again after --done (or a lost pid) starts the entry afresh:
+	# done_at and outcome go back to "running".
+	write_entry "$TITLE" "$e_num" "$e_of" "$e_text" 0 "$e_pid"
 	exit 0
 fi
 
-command -v progress >/dev/null 2>&1 || exit 0
+render_manual
 
-STYLE="$1"
+command -v progress >/dev/null 2>&1 || exit 0
 
 # `progress -q` stays silent when nothing matches, so an empty result simply
 # means "no transfer in flight".
