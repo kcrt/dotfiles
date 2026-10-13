@@ -41,11 +41,6 @@ if [[ $OSTYPE = *darwin* ]] ; then
 		export SDKPATH=`xcrun --show-sdk-path`/usr/include
 	fi
 
-	# Set up pkg-config path
-	if [[ -d "/usr/local/opt/libxml2/lib/pkgconfig" || -d "/usr/local/opt/zlib/lib/pkgconfig" ]]; then
-		export PKG_CONFIG_PATH="/usr/local/opt/libxml2/lib/pkgconfig:/usr/local/opt/zlib/lib/pkgconfig"
-	fi
-
 	# Set Android SDK path if it exists
 	[[ -d "$HOME/Library/Android/sdk" ]] && export ANDROID_SDK=$HOME/Library/Android/sdk
 
