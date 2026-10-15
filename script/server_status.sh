@@ -6,12 +6,15 @@
 #       zjstatus - zjstatus のステータスバー用に色を付ける (A / U は玉を点滅させる)
 #   なし     - 中継の生の1行をそのまま出す
 #
-# 取れなかったときは原因を3つに分ける。対処が違うため。
+# 取れなかったときは原因ごとに分ける。対処が違うため。
 #   offline - 自分がネットワークに繋がっていない (灰。こちらの問題なのでバーは静かに)
 #   host    - ネットはあるが家まで届かない。宅内なら beryllium 本体が黙っている (橙)
 #   auth    - 家には届いたが ssh の認証に通らなかった (赤 home!)。鍵・ssh-agent の問題で、
 #             放置すると失敗が続いて fail2ban に BAN され、届かない状態に悪化する
 #   relay   - beryllium は応答するが中継だけ死んでいる (橙。中継を起こせば直る)
+#   key     - ssh-agent に家用の鍵が無いので ssh を打たなかった (橙 key?。ssh-add すれば直る)。
+#             KeePassXC はスリープでロックすると agent から鍵を抜く。鍵無しで打つと sshd に
+#             「認証途中で切断」が残り、fail2ban に BAN される (一度 BAN された IP は1〜2本で再 BAN)
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: $(basename "$0") [zjstatus]"
@@ -31,9 +34,10 @@ ROUTE="${TMPDIR:-/tmp}/server_status.route" # 前回成功した経路 (lan / ss
 SSH_ERR="${TMPDIR:-/tmp}/server_status.ssherr"
 
 line=""         # 中継から取れた1行
-fail=""         # 取れなかった理由 (offline / host / relay)
+fail=""         # 取れなかった理由 (offline / host / auth / relay / key)
 lan_status=0    # try_lan の終了コード。7 は相手が RST を返した = ホストは生きている印
 ssh_status=0    # try_ssh の終了コード。255 は ssh 自体が繋がらなかった印
+key_missing=0   # agent に鍵が無く、ssh を打たなかった
 
 have_default_route() {
     # 経路表を見るだけなので、ネットワークに触らず即答する。到達性までは問わない。
@@ -64,7 +68,27 @@ on_relay_lan() {
     fi
 }
 
+agent_has_relay_key() {
+    # $RELAY_HOST 用の IdentityFile のどれかが agent に載っているか。ネットワークには触らない。
+    # 鍵ファイルを手元に置かず agent だけで運用している環境では、agent が空でないことだけ見る。
+    local agent_keys file fp checked=0
+    agent_keys=$(ssh-add -l -E sha256 2>/dev/null) || return 1    # 1 = 鍵なし、2 = agent に繋がらない
+    for file in ${(f)"$(ssh -G "$RELAY_HOST" 2>/dev/null | awk '$1 == "identityfile" { print $2 }')"}; do
+        file="${file/#\~/$HOME}"
+        [[ -r "$file" ]] || continue
+        checked=1
+        fp=$(ssh-keygen -lf "$file" 2>/dev/null | awk '{ print $2 }')    # 暗号化された鍵でも公開部から引ける
+        [[ -n "$fp" && "$agent_keys" == *"$fp"* ]] && return 0
+    done
+    (( ! checked ))
+}
+
 try_ssh() {
+    # 鍵が無いまま打つと BAN の引き金になるので、確かめてから打つ (冒頭の key の説明)。
+    if ! agent_has_relay_key; then
+        key_missing=1
+        return 1
+    fi
     # ControlPersist でコネクションを使い回す。毎回ハンドシェイクすると15秒間隔には重い。
     # 終了コード 255 は ssh 自体が繋がらなかった印。それ以外は向こうの curl の終了コードが
     # そのまま返るので、beryllium は生きていて中継だけ死んでいると分かる。
@@ -78,11 +102,14 @@ try_ssh() {
 classify_failure() {
     # ssh の終了コードと言い分から原因を決める。心当たりが無いときは家のせいにせず ? に落とす
     # (ControlPath が長すぎる等、こちらの設定が壊れていても ssh は 255 を返してくる)。
-    local err="$(<"$SSH_ERR")"
+    local err=""
+    [[ -f "$SSH_ERR" ]] && err="$(<"$SSH_ERR")"    # ssh を打たなかった回は無いことがある
     if (( lan_status == 7 )) && on_relay_lan; then
         # 宅内から繋いで RST が返った。beryllium は生きていて中継だけ黙っている。
         # 宅外へ出る経路 (hairpin NAT 等) の都合より、この手掛かりの方が確か。
         print -rn -- relay
+    elif (( key_missing )); then
+        print -rn -- key        # ssh を打っていないので、$SSH_ERR は前回の残りで当てにならない
     elif [[ "$err" == *resolve* || "$err" == *"not known"* ]]; then
         print -rn -- offline    # 名前が引けない。既定経路はあってもネットは死んでいる
     elif [[ "$err" == *"Permission denied"* || "$err" == *"Too many authentication failures"* ]]; then
@@ -167,6 +194,7 @@ case "$fail" in
     host)    fail_color="#E28C36"; fail_label="home?";      fail_text="cannot reach home ($RELAY_LAN / $RELAY_HOST)" ;;
     auth)    fail_color="#d74242"; fail_label="home!";      fail_text="ssh auth to $RELAY_HOST failed (check ssh-agent / key; retries can get us banned by fail2ban)" ;;
     relay)   fail_color="#E28C36"; fail_label="relay?";     fail_text="relay down on beryllium" ;;
+    key)     fail_color="#E28C36"; fail_label="key?";       fail_text="no key for $RELAY_HOST in ssh-agent, ssh skipped (ssh-add, e.g. unlock KeePassXC)" ;;
     *)       fail_color="#6C7086"; fail_label="?";          fail_text="relay unreachable" ;;
 esac
 
