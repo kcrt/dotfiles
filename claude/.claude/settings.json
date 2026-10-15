@@ -454,7 +454,12 @@
     "excludedCommands": [
       "git commit *",
       "uv run"
-    ]
+    ],
+    "filesystem": {
+      "allowWrite": [
+        "~/.local/state/progress_info"
+      ]
+    }
   },
   "effortLevel": "high",
   "modelSettings": {
