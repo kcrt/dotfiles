@@ -82,10 +82,10 @@ lib を触ったら `sample.py` を直接叩く。各モジュールの出力を
 
 | モジュール | 使っているスクリプト |
 | --- | --- |
-| `termtext.py` | `ffmpeg-convert.py` `ble_monitor.py` |
+| `termtext.py` | `ffmpeg-convert.py` `ble_monitor.py` `check_network.py` |
 | `termcolor.py` | `ffmpeg-convert.py` `snapshot_restore.py` `check_network.py` `pubmed_get_abstract.py` `pubmed_listup_journal.py` `paper_backup.py` |
 | `humanize.py` | `ffmpeg-convert.py` `compare_dir.py` `snapshot_restore.py` `fix-broken-movie.py` `repack_images.py` `split_mp4_by_chapter.py` `python_finddup.py` `average_filesize_in_zip.py` `paper_backup.py` |
-| `progressbar.py` | `ffmpeg-convert.py` `repack_images.py` `paper_backup.py` |
+| `progressbar.py` | `ffmpeg-convert.py` `repack_images.py` `paper_backup.py` `check_network.py` |
 | `prompt.py` | `ffmpeg-convert.py` `analyse-mail.py` `manage_imap_mail.py` `repack_images.py` `split_spread_pdf.py` `split_mp4_by_chapter.py` `paper_backup.py` |
 | `ffprobe.py` | `split_mp4_by_chapter.py` `keep_only_audio_and_tag.py` |
 | `par2.py` | `paper_backup.py` |
