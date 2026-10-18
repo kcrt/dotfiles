@@ -32,12 +32,34 @@ AUTH_FAIL_TTL=300                           # 認証失敗は長く覚えて再�
 FAIL_CACHE="${TMPDIR:-/tmp}/server_status.fail" # 前回失敗の理由。offline は覚えない (復帰の反映を遅らせないため)
 ROUTE="${TMPDIR:-/tmp}/server_status.route" # 前回成功した経路 (lan / ssh)
 SSH_ERR="${TMPDIR:-/tmp}/server_status.ssherr"
+SSH_CONTROL_PATH="${TMPDIR:-/tmp}/ssh-signal-%r@%h:%p"
+SSH_TIMEOUT=6                               # ssh 全体の打ち切り秒数。zjstatus の間隔 (15秒) より短く
+TIMEOUT_STATUS=124                          # run_with_timeout が打ち切ったときの終了コード (GNU timeout に揃える)
 
 line=""         # 中継から取れた1行
 fail=""         # 取れなかった理由 (offline / host / auth / relay / key)
 lan_status=0    # try_lan の終了コード。7 は相手が RST を返した = ホストは生きている印
 ssh_status=0    # try_ssh の終了コード。255 は ssh 自体が繋がらなかった印
 key_missing=0   # agent に鍵が無く、ssh を打たなかった
+
+run_with_timeout() {
+    # macOS には timeout(1) が無いので自前で。$1 秒で終わらなければ TERM して TIMEOUT_STATUS を返す。
+    # 見張りの出力は捨てる。$(...) の中で呼ばれたとき、見張りがパイプを掴むと呼び出し側が待たされる。
+    # 子 (ProxyCommand 等) も先に止める。出力を掴んだまま残ると同じく待たされる。
+    # 本体を先に止めると子は init に付け替えられて -P で辿れなくなる。
+    # (非対話の zsh では monitor を立てられず、プロセスグループごとは止められない)
+    local secs=$1 pid watchdog exit_status
+    shift
+    "$@" &
+    pid=$!
+    ( sleep "$secs"; pkill -TERM -P "$pid"; kill -TERM "$pid" ) > /dev/null 2>&1 &
+    watchdog=$!
+    wait "$pid"
+    exit_status=$?
+    kill "$watchdog" 2> /dev/null
+    (( exit_status == 128 + 15 )) && return $TIMEOUT_STATUS    # TERM で死んだ = 見張りが打ち切った
+    return $exit_status
+}
 
 have_default_route() {
     # 経路表を見るだけなので、ネットワークに触らず即答する。到達性までは問わない。
@@ -92,10 +114,20 @@ try_ssh() {
     # ControlPersist でコネクションを使い回す。毎回ハンドシェイクすると15秒間隔には重い。
     # 終了コード 255 は ssh 自体が繋がらなかった印。それ以外は向こうの curl の終了コードが
     # そのまま返るので、beryllium は生きていて中継だけ死んでいると分かる。
-    line=$(ssh -o BatchMode=yes -o ConnectTimeout=3 \
-        -o ControlMaster=auto -o ControlPath="${TMPDIR:-/tmp}/ssh-signal-%r@%h:%p" -o ControlPersist=10m \
+    # ConnectTimeout は TCP 接続にしか効かない。回線が切り替わって親 (mux) が死んだ経路を
+    # 掴んだままだと ssh は永久に待ち、zjstatus が15秒ごとに起動する本スクリプトが溜まって
+    # zellij の fd が尽きる (バーに "Too many open files")。なので全体を時間で打ち切る。
+    line=$(run_with_timeout $SSH_TIMEOUT ssh -o BatchMode=yes -o ConnectTimeout=3 \
+        -o ServerAliveInterval=2 -o ServerAliveCountMax=2 \
+        -o ControlMaster=auto -o ControlPath="$SSH_CONTROL_PATH" -o ControlPersist=10m \
         "$RELAY_HOST" 'curl -s --max-time 2 http://localhost:13004/' 2> "$SSH_ERR")
     ssh_status=$?
+    if (( ssh_status == TIMEOUT_STATUS )); then
+        # 親が壊れている見込みが高い。残すと次回も同じ親に繋いで固まるので畳んでおく。
+        run_with_timeout 2 ssh -o ControlPath="$SSH_CONTROL_PATH" -O exit "$RELAY_HOST" > /dev/null 2>&1
+        rm -f "${TMPDIR:-/tmp}"/ssh-signal-*(N=)
+        print -r -- "timed out after ${SSH_TIMEOUT}s" >> "$SSH_ERR"
+    fi
     [[ -n "$line" ]]
 }
 
@@ -114,6 +146,8 @@ classify_failure() {
         print -rn -- offline    # 名前が引けない。既定経路はあってもネットは死んでいる
     elif [[ "$err" == *"Permission denied"* || "$err" == *"Too many authentication failures"* ]]; then
         print -rn -- auth       # サーバーには着いた。鍵が使えていない (ssh-agent 不在・ロック等)
+    elif (( ssh_status == TIMEOUT_STATUS )); then
+        print -rn -- host       # 打ち切った。家まで届いていない (回線切り替えで親が死んだ等)
     elif (( ssh_status != 255 )); then
         print -rn -- relay      # ssh は通った = beryllium は生きていて中継だけ黙っている
     elif [[ "$err" == *"No route to host"* || "$err" == *"Network is unreachable"* ]]; then
