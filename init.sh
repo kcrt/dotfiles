@@ -5,10 +5,12 @@ set -e
 # Init script - set up my environment after OS clean installation
 # To use:
 # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)"
+# To re-run (with `bash -c`, the first argument becomes $0, hence the `_`):
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/kcrt/dotfiles/main/init.sh)" _ -f
 # --------------------------------------------------------------
 
-brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnupg2 gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle kindle-comic-converter  kotlin lame lepton lha libdvdcss linein llvm lua luajit m-cli macdown macgdbp mactex macvim mark-text mas meld zotero mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv opencv3 openemu openjpeg osirix-quicklook p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlcolorcode qlmarkdown qlprettypatch qlstephen quicklook-csv quicklook-json r rar readline rstudio rsync sequel-pro sl blackhole-16ch sourcetree sqlite stow suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm yt-dlp zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters docker bat ripgrep rustup bun deno uv pipx )
-mas_packages=( 1206246482 1024640650 414855915 420874236 424389933 425424353 434290957 445189367 484757536 504700302 539883307 549083868 634148309 634159523 824171161 824183456 462054704 462058435 462062816 881418622 1547912640 921923693 451732904 1444383602 405399194 1342896380 504700302 414855915 441258766  928871589)
+brew_packages=( adobe-acrobat-pro adobe-acrobat-reader afio appcleaner asciidoc atomicparsley atool audacity autoconf automake bartender bathyscaphe bchunk blender boost burn cabextract caffeine cairo calibre cgdb clamav clipy cmake cmigemo color-oracle coreutils cowsay cscope ctags ddd ddrescue dfc diff-so-fancy docbook duet emojify exiv2 fcrackzip ffmpeg figlet fontconfig fortune freetype fribidi fzf fzy gcc gdb gettext git glib gmp gnupg gnutls go google-chrome google-cloud-sdk grandperspective graphviz handbrake highlight htop icu4c imagemagick imageoptim inkscape iterm2 john jq karabiner-elements keepassxc kindle-comic-converter kotlin lame lha libdvdcss llvm lua luajit m-cli macgdbp mactex macvim mas meld zotero mosh musescore mutt nasm neovim nginx nkf nmap node numpy opencv openjpeg p11-kit p7zip pandoc pdfcrack peco pv pyenv python3 qlmarkdown r readline rstudio rsync sl blackhole-16ch sourcetree sqlite stow suspicious-package testdisk the_silver_searcher thefuck tigervnc-viewer tmux transmission tree tripmode vim vlc w3m webp wget x264 x265 xquartz xvid xz yarn yasm yt-dlp zbar zenity zsh zsh-syntax-highlighting iina atok forklift visual-studio-code zoom hammerspoon deepl lyrics-master menumeters docker bat ripgrep rustup bun deno uv pipx sheldon )
+mas_packages=( 1206246482 1024640650 414855915 420874236 424389933 425424353 434290957 445189367 484757536 504700302 539883307 549083868 634148309 634159523 824171161 824183456 462054704 462058435 462062816 881418622 1547912640 921923693 451732904 1444383602 405399194 1342896380 441258766 928871589 )
 
 # --------------------------------------------------------------
 
@@ -30,8 +32,28 @@ select_packages_dialog(){
 	shift
 	local pkg_info=("$@")
 
+	local selected
 	selected=$(whiptail --title "$title" --checklist "Please select packages to install." 0 0 0 "${pkg_info[@]}" 3>&1 1>&2 2>&3)
 	echo "${selected//\"/}"
+}
+
+# Install only the apt packages that have an installation candidate.
+# Unavailable ones (renamed or dropped in newer releases) are reported and skipped,
+# so that a single stale name doesn't abort the whole run under `set -e`.
+apt_install_available(){
+	local available=()
+	local p candidate
+	for p in "$@"; do
+		candidate=$(apt-cache policy "$p" 2>/dev/null | awk '/Candidate:/ {print $2}')
+		if [ -n "$candidate" ] && [ "$candidate" != "(none)" ]; then
+			available+=( "$p" )
+		else
+			echo_red "$p is not available. skipping..."
+		fi
+	done
+	if [ ${#available[@]} -gt 0 ]; then
+		sudo apt install "${available[@]}"
+	fi
 }
 
 # --------------------------------------------------------------
@@ -51,17 +73,16 @@ fi
 if ! command -v sudo > /dev/null 2>&1; then
 	echo_red "You need 'sudo' to execute this script."
 	echo_red "Please install 'sudo' first."
+	exit 1
 fi
 
 echo_aqua "Are you a member of sudoers? (y/N): "
 read -r ans
 if [ "$ans" != "y" ] ; then
-	echo_aqua "This script need 'sudo', and you need to be a member of sudoers."
-	echo_aqua "Going to edit /etc/sudoers first."
-	echo_aqua "Input the password of *root*, and execute visudo..."
-	# shellcheck disable=SC2117
-	su
-	echo_aqua "Please execute this script again!"
+	echo_aqua "This script needs 'sudo', and you need to be a member of the sudo group."
+	echo_aqua "Adding $USER to the sudo group. Input the password of *root*..."
+	su -c "/usr/sbin/usermod -aG sudo $USER"	# su keeps the user PATH, which lacks /usr/sbin
+	echo_aqua "Please log out, log in again (to apply the group), and execute this script again!"
 	exit
 fi
 
@@ -86,24 +107,17 @@ mkdir -p ~/.trash
 echo_aqua "ok."
 
 echo_aqua "(2/5) : Application Installation --------------------"
-if [ -x /usr/bin/yum ] ; then
-	# ----- Fedora, CentOS ---------------------------------
-	OSType=Fedora
-	echo_aqua "Detected yum..."
-	sudo yum update
-	sudo yum -y install perl zsh yum-utils vim-common vim-enhanced screen rsync subversion w3m yafc rdiff-backup fastest-mirror mutt clamav
-elif command -v brew > /dev/null 2>&1; then
-	OSType=HomeBrew
+if command -v brew > /dev/null 2>&1; then
 	echo_aqua "Detected Homebrew..."
 	# ---- Homebrew
-	brew doctor
+	brew doctor || true	# exits 1 on any warning
 	brew update
 
 	brew install newt # for whiptail
 
 	# for java
 	brew install openjdk
-	sudo ln -sfn /usr/local/opt/openjdk/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+	sudo ln -sfn "$(brew --prefix)/opt/openjdk/libexec/openjdk.jdk" /Library/Java/JavaVirtualMachines/openjdk.jdk
 
 	echo_aqua "Gathering information of brew packages.... This will take a few minutes."
 	declare -a brew_info	# associative array doesn't work on macOS bash (because it's ver. 3)
@@ -118,12 +132,12 @@ elif command -v brew > /dev/null 2>&1; then
 		fi
 	done
 
-	selected=$(select_packages_dialog "Homebrew packages" "${brew_info[@]}")
+	brew_selected=$(select_packages_dialog "Homebrew packages" "${brew_info[@]}")
 	# shellcheck disable=SC2206
-	selected=($selected)
-	for p in "${selected[@]}"; do
+	brew_selected=($brew_selected)
+	for p in "${brew_selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
-		brew install "$p"
+		brew install "$p" || echo_red "Failed to install: $p"
 	done 
 
 	echo "Do you want to install fonts? (Y/n)"
@@ -135,23 +149,17 @@ elif command -v brew > /dev/null 2>&1; then
 	
 	# ---- Mac App Store
 	echo "Going to install Mac App Store software"
-	if ! mas account ; then
-		echo_aqua "Please log-in to App Store."
-		open "/System/Applications/App Store.app"
-	fi
-	while ! mas account; do
-		sleep 5
-		mas account
-	done
-	echo "Login confirmed."
+	# mas can no longer check the sign-in state (`mas account` was removed)
+	echo_aqua "Please sign in to the App Store, then push Enter."
+	open "/System/Applications/App Store.app"
+	read -r
 
-	mas install 497799835 # Xcode
+	mas install 497799835 || echo_red "Failed to install: Xcode"	# Xcode
 	# sudo xcodebuild -license
 	echo_aqua "Gathering information of mac app store packages.... This will take a few minutes."
 	declare -a mas_info	# associative array doesn't work on macOS bash (because it's ver. 3)
 	for p in "${mas_packages[@]}"; do
-		ret=$(mas info "$p")
-		if [ "$?" -ne 0 ]; then
+		if ! ret=$(mas info "$p" 2>/dev/null); then
 			echo_red "$p is not available."
 		else
 			info=$(echo "$ret" | head -n1)
@@ -161,35 +169,42 @@ elif command -v brew > /dev/null 2>&1; then
 		fi
 	done
 
-	selected=$(select_packages_dialog "Mac App Store packages" "${mas_info[@]}")
+	mas_selected=$(select_packages_dialog "Mac App Store packages" "${mas_info[@]}")
 	# shellcheck disable=SC2206
-	selected=($selected)
-	for p in "${selected[@]}"; do
+	mas_selected=($mas_selected)
+	for p in "${mas_selected[@]}"; do
 		echo_aqua "Going to install: $p ..."
-		mas install "$p"
+		mas install "$p" || echo_red "Failed to install: $p"
 	done 
 
 elif [ "$(uname)" = "Darwin" ]; then
 	echo_aqua "Homebrew not found!"
 	echo_aqua "Please install homebrew first."
 	open "https://brew.sh"
-	read ans
 	echo_aqua "If ready, try again.";
 	exit
 elif [ -x /usr/bin/apt ]; then
 	# ----- Debian, Ubuntu --------------------------------
-	OSType=Debian
 	echo_aqua "Detected apt..."
 	sudo apt update
 	sudo apt upgrade
 	sudo apt install locales
 	sudo dpkg-reconfigure locales
-	sudo apt install perl w3m zsh clamav tmux less ntpdate rsync vim vim-common wget iputils-ping net-tools
-	sudo apt install cron-apt locales manpages-ja nmap tcpdump fping atool lsof
-	sudo apt install hexer yafc sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git htop
-	sudo apt install apt-file rhino fortune-mod mc dfc ccze pv python3 dstat
-	sudo apt install curl make nodejs make g++
-	sudo apt install ffmpeg
+	# ntpdate: not needed, systemd-timesyncd keeps the clock
+	# cron-apt: superseded by unattended-upgrades (asked below)
+	apt_install_available perl w3m zsh clamav tmux less rsync vim vim-common wget iputils-ping net-tools \
+		manpages-ja nmap tcpdump fping atool lsof \
+		hexer sl zip rdiff-backup ncurses-term ntfs-3g whois mutt git stow htop \
+		apt-file fortune-mod mc dfc ccze pv python3 dstat \
+		curl make nodejs g++ \
+		ffmpeg \
+		fzf fd-find bat zoxide direnv gh 7zip
+	# Debian/Ubuntu ship bat, fd and 7zz (as Homebrew names it) as batcat, fdfind and 7z
+	for cmd in bat:batcat fd:fdfind 7zz:7z; do
+		if ! command -v "${cmd%%:*}" > /dev/null 2>&1 && command -v "${cmd#*:}" > /dev/null 2>&1; then
+			ln -sf "$(command -v "${cmd#*:}")" ~/bin/"${cmd%%:*}"
+		fi
+	done
 	echo "Current hostname is: $(hostname)"
 	echo_aqua "Do you want to install and enable openssh-server? (y/N): "
 	read -r ans
@@ -207,9 +222,22 @@ elif [ -x /usr/bin/apt ]; then
 		if [ "$ans" = "y" ] ; then
 			mkdir -p ~/.ssh
 			chmod 700 ~/.ssh
-			curl -fsSL https://github.com/kcrt.keys >> ~/.ssh/authorized_keys
+			touch ~/.ssh/authorized_keys
 			chmod 600 ~/.ssh/authorized_keys
-			echo_aqua "GitHub keys from https://github.com/kcrt.keys added to authorized_keys."
+			github_keys=$(curl -fsSL https://github.com/kcrt.keys)
+			# Compare by key type + blob, not the whole line: keys imported by the Ubuntu
+			# installer (ssh-import-id) carry a trailing comment, and lines may have options.
+			while read -r key_type key_blob _; do
+				[ -n "$key_blob" ] || continue
+				if awk -v t="$key_type" -v b="$key_blob" \
+					'{ for (i = 1; i < NF; i++) if ($i == t && $(i+1) == b) found = 1 } END { exit !found }' \
+					~/.ssh/authorized_keys; then
+					echo_aqua "Already registered: $key_type ${key_blob:0:16}..."
+				else
+					echo "$key_type $key_blob" >> ~/.ssh/authorized_keys
+					echo_aqua "Added: $key_type ${key_blob:0:16}..."
+				fi
+			done <<< "$github_keys"
 		fi
 	fi
 	echo_aqua "Do you install and enable avahi-daemon? (y/N): "
@@ -230,17 +258,18 @@ elif [ -x /usr/bin/apt ]; then
 		read -r ans
 		sudo vim /etc/apt/apt.conf.d/50unattended-upgrades
 	fi
-	echo_aqua "Do you want to install sSMTP for mail transfer? (y/N): "
+	echo_aqua "Do you want to install msmtp for mail transfer? (y/N): "
 	read -r ans
 	if [ "$ans" = "y" ] ; then
-		sudo apt install ssmtp
-		sudo vim /etc/ssmtp/ssmtp.conf
+		# msmtp instead of the unmaintained sSMTP; msmtp-mta provides /usr/sbin/sendmail
+		sudo apt install msmtp msmtp-mta
+		sudo vim /etc/msmtprc
 		echo_aqua "Test mail? (Your address): "
 		read -r ans
 		if [ "$ans" = "" ] ; then
 			echo "skipping..."
 		else
-			ssmtp "$ans" << EOF
+			msmtp "$ans" << EOF
 To: $ans
 From: kcrtrg@kcrt.net
 Subject: Test mail
@@ -254,11 +283,8 @@ EOF
 	echo_aqua "Do you want to install GUI applications? (y/N): "
 	read -r ans
 	if [ "$ans" = "y" ] ; then
-		sudo apt-get install adobe-flashplugin
-		sudo apt-get install vlc
-		sudo apt-get install ubuntu-restricted-extras
-		sudo apt-get install chromium-browser chromium-browser-l10n chromium-codecs-ffmpeg-extra
-		sudo apt-get install ibus-mozc
+		# ubuntu-restricted-extras / chromium-browser exist only on Ubuntu, chromium only on Debian
+		apt_install_available vlc ubuntu-restricted-extras chromium chromium-browser chromium-browser-l10n ibus-mozc
 		if [ -d "$HOME/ドキュメント" ] ; then
 			echo_aqua "renaming directory name into English..."
 			LANG=C xdg-user-dirs-gtk-update
@@ -274,17 +300,21 @@ if [ -f ~/.ssh/id_ed25519 ]; then
 	echo_aqua "key found."
 else
 	echo_aqua "generation public/secret keys..."
-	ssh-keygen -t ed25519
+	ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 fi
-echo_aqua "Please add this public key to github"
+echo_aqua "If you use this machine with GitHub or other git servers, add this public key."
+echo_aqua "(Not needed for the dotfiles below: they are cloned via https.)"
 echo_aqua "-----"
 cat ~/.ssh/id_ed25519.pub
 echo_aqua "-----"
 echo_aqua "push Enter to proceed."
-read -r pause
+read -r
 
-cd ~
-git clone --depth=1 https://github.com/kcrt/dotfiles.git
+if [ -d ~/dotfiles/.git ]; then
+	git -C ~/dotfiles pull
+else
+	git clone --depth=1 https://github.com/kcrt/dotfiles.git ~/dotfiles
+fi
 cd ~/dotfiles
 stow R asdf ccstatusline chawan claude cloudshell git hammerspoon mutt nethack opencode ripgrep ripgrep-all screen tmux vim zellij zsh
 
@@ -297,12 +327,22 @@ echo_aqua "(4/5) : Changing Default Shell ----------------------"
 chsh -s "$(command -v zsh)"
 
 echo_aqua "(5/5) : Optional Step -------------------------------"
-echo_aqua "Do you want to install vim plugin manager Vundle? (Y/n): "
+echo_aqua "Do you want to install vim plugin manager vim-plug? (Y/n): "
 read -r ans
 if [ "$ans" != "n" ] ; then
-	mkdir ~/.vim
-	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-	vim -c ':PluginInstall' -c ':qall'
+	curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+	vim +PlugInstall +qall
+fi
+
+if ! command -v sheldon > /dev/null 2>&1 && ! [ -x ~/bin/sheldon ] && ! [ -x ~/.cargo/bin/sheldon ]; then
+	echo_aqua "Do you want to install sheldon (zsh plugin manager) into ~/bin? (Y/n): "
+	read -r ans
+	if [ "$ans" != "n" ] ; then
+		# Prebuilt binary: building with cargo needs OpenSSL headers, and Ubuntu's apt rustup is broken for `rustup run`
+		curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh \
+			| bash -s -- --repo rossmacarthur/sheldon --to ~/bin \
+			|| echo_red "Failed to install sheldon. See https://sheldon.cli.rs/Installation.html"
+	fi
 fi
 
 if [ "$(uname)" = "Darwin" ]; then
@@ -310,10 +350,11 @@ if [ "$(uname)" = "Darwin" ]; then
 
 	# rga (ripgrep-all) on macOS reads config from ~/Library/Application Support,
 	# not ~/.config. Symlink to keep dotfiles-managed config working.
+	mkdir -p ~/Library/Application\ Support/ripgrep-all
 	ln -sf ~/.config/ripgrep-all/config.jsonc \
 		~/Library/Application\ Support/ripgrep-all/config.jsonc
 
-	sudo nvram SystemAudioVolume=%00					# no boot sound
+	sudo nvram StartupMute=%01						# no boot sound
 	defaults write -g AppleKeyboardUIMode -int 3				# Full keyboard access
 	defaults write -g AppleShowAllExtensions -bool true			# Show file extentions
 	defaults write -g InitialKeyRepeat -int 15				# time until key repeat
@@ -327,12 +368,17 @@ if [ "$(uname)" = "Darwin" ]; then
 	defaults write bluetoothaudiod "Enable AptX codec" -bool true
 	defaults write com.apple.DiskUtility DUDebugMenuEnabled -bool true
 	defaults write com.apple.DiskUtility advanced-image-options -bool true
-	defaults write com.apple.Safari IncludeDevelopMenu -bool true
-	defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-	defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
-	defaults write com.apple.Safari ShowStatusBar -bool true
-	defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-	defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+	# Safari's preferences are sandboxed: writing them needs Full Disk Access for the terminal
+	if ! {
+		defaults write com.apple.Safari IncludeDevelopMenu -bool true &&
+		defaults write com.apple.Safari IncludeInternalDebugMenu -bool true &&
+		defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true &&
+		defaults write com.apple.Safari ShowStatusBar -bool true &&
+		defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true &&
+		defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+	} 2>/dev/null; then
+		echo_red "Could not write Safari settings. Grant Full Disk Access to the terminal and set them later."
+	fi
 	defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 	defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 	defaults write com.apple.dock magnification -bool true
@@ -340,11 +386,9 @@ if [ "$(uname)" = "Darwin" ]; then
 	defaults write com.apple.dock wvous-bl-corner -int 5	# Start screen saver on bottom left corner
 	defaults write com.apple.dock wvous-bl-modifier -int 0
 	defaults write com.apple.finder FXPreferredViewStyle Nlsv		# Use list view for default
-	defaults write com.apple.finder QLEnableTextSelection -bool true	# Enable text selection on quicklook
 	defaults write com.apple.finder ShowPathbar -bool true
 	defaults write com.apple.finder ShowStatusBar -bool true
 	defaults write com.apple.finder ShowTabView -bool true
-	defaults write com.apple.menuextra.battery ShowPercent -string "YES"
 	defaults write com.apple.screencapture name "ScreenShot_"		# Screen shot file name
 	defaults write com.apple.screencapture type -string "png"		# use png for screen shot
 	defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true	# Tap to click
