@@ -263,19 +263,40 @@ elif [ -x /usr/bin/apt ]; then
 	if [ "$ans" = "y" ] ; then
 		# msmtp instead of the unmaintained sSMTP; msmtp-mta provides /usr/sbin/sendmail
 		sudo apt install msmtp msmtp-mta
+		# msmtp ships no config file, so start from a template instead of an empty buffer
+		if [ ! -f /etc/msmtprc ]; then
+			sudo tee /etc/msmtprc > /dev/null <<-'EOF'
+				# System-wide msmtp config (also used by /usr/sbin/sendmail via msmtp-mta)
+				# Note: this file is world-readable; mind the password below.
+				defaults
+				auth           on
+				tls            on
+				tls_trust_file /etc/ssl/certs/ca-certificates.crt
+				syslog         LOG_MAIL
+
+				account        default
+				host           smtp.example.com
+				port           587
+				from           you@example.com
+				user           USERNAME
+				password       PASSWORD
+			EOF
+		fi
+		echo_aqua "Edit host / from / user / password in /etc/msmtprc. Push Enter to open vim."
+		read -r
 		sudo vim /etc/msmtprc
 		echo_aqua "Test mail? (Your address): "
 		read -r ans
 		if [ "$ans" = "" ] ; then
 			echo "skipping..."
-		else
-			msmtp "$ans" << EOF
-To: $ans
-From: kcrtrg@kcrt.net
-Subject: Test mail
+		elif ! msmtp "$ans" <<-EOF
+				To: $ans
+				Subject: Test mail
 
-Hello world!
-EOF
+				Hello world!
+			EOF
+		then
+			echo_red "Test mail failed. Check /etc/msmtprc later (msmtp --serverinfo --account=default)."
 		fi
 	else
 		echo_aqua "Please consider to install postfix or other MTAs."
