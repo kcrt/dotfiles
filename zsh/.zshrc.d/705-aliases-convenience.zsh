@@ -153,3 +153,6 @@ if [[ -f ~/.ssh/config ]]; then
 		eval "alias la_$host=\"ssh $host ls -a \""
 	done
 fi
+
+# Temporary passwordless sudo on a host: allow-sudo HOST grant [30m] | revoke | status
+alias allow-sudo="$HOME/dotfiles/script/allow-sudo.sh"
