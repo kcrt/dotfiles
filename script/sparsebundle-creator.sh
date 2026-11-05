@@ -10,7 +10,7 @@ echo ""
 DEFAULT_SIZE="10g"
 DEFAULT_FS="APFS"
 DEFAULT_VOLNAME="MyVolume"
-DEFAULT_BAND_SIZE="8388608"  # 8MB (bytes)
+DEFAULT_BAND_SIZE="16384"  # 8MB (in 512-byte sectors)
 DEFAULT_FILENAME="MyDiskImage.sparsebundle"
 DEFAULT_LOCATION="${HOME}/Desktop"
 
@@ -91,7 +91,7 @@ echo "===== Confirmation ====="
 echo "Size: $SIZE"
 echo "File system: $FS"
 echo "Volume name: $VOLNAME"
-echo "Band size: $BAND_SIZE bytes ($(( BAND_SIZE / 1024 / 1024 ))MB)"
+echo "Band size: $BAND_SIZE sectors ($(( BAND_SIZE * 512 / 1024 / 1024 ))MB)"
 if [ -n "$ENCRYPTION" ]; then
     echo "Encryption: ${ENCRYPTION#-encryption }"
 else
