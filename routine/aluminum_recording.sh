@@ -5,7 +5,7 @@
 #          FILE:  aluminum_recording.sh
 #         USAGE:  ./aluminum_recording.sh
 #   DESCRIPTION:  This script is a backup utility for recorded files.
-#  REQUIREMENTS:  ffprobe, jq, uv
+#  REQUIREMENTS:  ffmpeg, ffprobe, jq, uv
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
 #       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
 #
@@ -22,30 +22,31 @@ RECORDING_DIR=/Volumes/Private/Recording
 VOICEMEMO_DIR="$RECORDING_DIR/VoiceMemo"
 RECORDER_DIR="$RECORDING_DIR/Recorder"
 INBOX_DIR=/nosync/RecordingToSend
-PARAKEET_MODEL=mlx-community/parakeet-tdt_ctc-0.6b-ja
 # One recorder MP3 is hours long, so transcribing the whole backlog would keep
-# maintain.sh busy all night. Take the oldest one and leave the rest for the
-# next run.
-RECORDER_TRANSCRIPTS_PER_RUN=1
+# maintain.sh busy all night. Take the oldest few and leave the rest for the
+# next run. Five keeps a run to about half an hour (parakeet does ~48x realtime)
+# while the 657 recordings whose transcripts were redone in 2026-11 catch up.
+RECORDER_TRANSCRIPTS_PER_RUN=5
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: ${0:t} [--help]"
     echo "File the recordings waiting in \$INBOX_DIR and transcribe them:"
     echo "  <name>_<date>_<time>A0.MP3            -> \$RECORDER_DIR"
     echo "  *.m4a, prefixed with their own date   -> \$VOICEMEMO_DIR"
-    echo "Everything that has no .txt beside it yet is transcribed with parakeet-mlx,"
+    echo "Everything that has no .txt beside it yet is loudness-normalized (two-pass"
+    echo "loudnorm, script/loudnorm_wav.sh) and transcribed with parakeet-mlx (script/parakeet_srt.sh),"
     echo "at most \$RECORDER_TRANSCRIPTS_PER_RUN recorder file(s) per run - one of them"
     echo "is a whole morning of audio, so the rest waits for the next run."
     echo ""
-    echo "Requires ffprobe, jq, uv, aluminum.local, a reachable qnap.local and the"
+    echo "Requires ffmpeg, ffprobe, jq, uv, aluminum.local, a reachable qnap.local and the"
     echo "Private share mounted. Normally started by maintain.sh."
     exit 0
 fi
 
-# ffprobe reads the recording date, jq pulls it out of ffprobe's JSON and uv
-# runs the transcriber. Any of them missing used to turn into a pile of
-# half-finished moves instead of a clear error.
-for required_command in ffprobe jq uv; do
+# ffprobe reads the recording date, jq pulls it out of ffprobe's JSON, ffmpeg
+# normalizes the loudness and uv runs the transcriber. Any of them missing used
+# to turn into a pile of half-finished moves instead of a clear error.
+for required_command in ffmpeg ffprobe jq uv; do
     if ! command -v "$required_command" &> /dev/null; then
         OSError "$required_command is not installed. Please install it first."
         exit 1
@@ -136,7 +137,7 @@ realtime_factor(){
 transcribe_directory(){
     local dir=$1 pattern=$2 limit=$3
     local -a files todo=()
-    local file duration
+    local file duration work_dir normalized_wav
     local -i transcribed=0 start elapsed
 
     if [[ ! -d "$dir" ]]; then
@@ -156,21 +157,37 @@ transcribe_directory(){
     # is the only thing that says whether the limit is keeping up with it.
     echo_info "$dir: ${#todo} of ${#files} file(s) left to transcribe."
 
+    # The normalized WAV of a recorder file is several hundred MB, so it is
+    # made on the local disk rather than on the SMB share, one file at a time.
+    work_dir=$(mktemp -d) || { count_failure "Could not create a work directory."; return 1; }
+    normalized_wav="$work_dir/normalized.wav"
+
     for file in "${todo[@]}"; do
         duration=$(audio_duration_seconds "$file")
         echo_info "[$(( transcribed + 1 ))/${#todo}] Transcribing ${file:t} ($(format_duration "$duration"))"
         start=$SECONDS
+        # Voice memos and the recorder come in at very different levels; the
+        # quiet ones lose speech without this.
+        if ! "${DOTFILES}/script/loudnorm_wav.sh" "$file" "$normalized_wav"; then
+            count_failure "Loudness normalization failed: $file"
+            continue
+        fi
         # The progress bar is drawn by rich, which draws nothing unless it
         # believes it writes to a terminal - and maintain.sh has replaced
         # stdout with a pipe. TTY_COMPATIBLE makes it draw the bar anyway,
-        # which is the only progress there is during a run of several hours.
-        if ! TTY_COMPATIBLE=1 uv tool run parakeet-mlx --model "$PARAKEET_MODEL" "$file" --output-dir "$dir"; then
+        # which is the only progress there is while an hours-long file is
+        # being transcribed.
+        # The SRT goes to the local disk first, so a run cut short never leaves
+        # a half transcript beside the recording (see the mv below).
+        if ! TTY_COMPATIBLE=1 "${DOTFILES}/script/parakeet_srt.sh" "$normalized_wav" "$work_dir/transcript.srt"; then
             count_failure "Transcription failed: $file"
+            rm -f "$normalized_wav"
             continue
         fi
-        # parakeet writes SRT; keeping it as .txt is what makes the next run
-        # skip this file.
-        if ! mv "${file:r}.srt" "${file:r}.txt"; then
+        rm -f "$normalized_wav"
+        # parakeet writes SRT; keeping it as .txt beside the recording is what
+        # makes the next run skip this file.
+        if ! mv "$work_dir/transcript.srt" "${file:r}.txt"; then
             count_failure "Transcript of $file was not written where expected."
             continue
         fi
@@ -182,6 +199,7 @@ transcribe_directory(){
             break
         fi
     done
+    rm -rf "$work_dir"
     return 0
 }
 
