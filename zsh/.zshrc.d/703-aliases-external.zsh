@@ -49,6 +49,16 @@ if [[ -x "$HOME/.lmstudio/bin/lms" ]]; then
 fi
 
 # ============================================================================
+# tailscale (Tailscale.app CLI)
+# ============================================================================
+
+# Tailscale.app は CLI を PATH に置かないので、アプリ内の実体を alias で呼ぶ。
+# Linux はパッケージが /usr/bin に入れるので、この alias は要らない。
+if [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]]; then
+	alias tailscale='/Applications/Tailscale.app/Contents/MacOS/Tailscale'
+fi
+
+# ============================================================================
 # dsh (DeepSeek Harness) TUI
 # ============================================================================
 
