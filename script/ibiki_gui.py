@@ -2,10 +2,8 @@
 # /// script
 # requires-python = ">=3.14"
 # dependencies = [
-#     "audioop-lts",
 #     "numpy",
 #     "pyaudio",
-#     "pydub",
 # ]
 # ///
 
@@ -22,23 +20,84 @@ import threading
 import time
 from collections import deque
 import queue
+import shutil
+import subprocess
 import sys
-import os
-from pydub import AudioSegment
-from pydub.exceptions import CouldntDecodeError
+from pathlib import Path
 
 # --- Constants ---
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
-RECORD_SECONDS_PER_SEGMENT = 1  # How long each segment/bar represents
-MAX_SEGMENTS = 120 # Keep last 2 minutes (120 seconds * 1 segment/second)
-CANVAS_WIDTH = 800
+BAR_SECONDS = 0.25 # How long each bar of the graph represents
+CHUNKS_PER_BAR = round(RATE * BAR_SECONDS / CHUNK) # 11 chunks (~0.26 s)
+# Wakeup detection judges ~1 s segments made of consecutive bars, independent of the display resolution
+BARS_PER_SEGMENT = round(1 / BAR_SECONDS)
+HISTORY_SECONDS = 120 # Keep last 2 minutes
+MAX_BARS = round(HISTORY_SECONDS / BAR_SECONDS)
+PLAYBACK_CONTEXT_BARS = round(2 / BAR_SECONDS) # Clicking a bar plays 2 s before and after it
+CANVAS_WIDTH = 960
 CANVAS_HEIGHT = 150
-BAR_WIDTH = CANVAS_WIDTH / MAX_SEGMENTS
+BAR_WIDTH = CANVAS_WIDTH / MAX_BARS
 GUI_UPDATE_INTERVAL_MS = 100 # How often to update the GUI
-DEFAULT_WAKEUP_VOLUME_THRESHOLD = 0.05 # Default volume level to trigger wakeup sound
+# Volume of a bar/segment = loudest per-chunk RMS (~23 ms window) within it.
+# A single click is too short to raise the RMS much, while a snore is not.
+DEFAULT_WAKEUP_VOLUME_THRESHOLD = 0.02 # Default volume level for a segment to count as loud
+MIN_WAKEUP_VOLUME_THRESHOLD = 0.001
+MAX_WAKEUP_VOLUME_THRESHOLD = 1.0
+THRESHOLD_STEP_RATIO = 1.1 # Each mouse wheel step multiplies/divides the threshold by this
+# Snoring repeats with each breath, so wake up only when it is sustained:
+# at least TRIGGER_MIN_LOUD_SEGMENTS loud segments among the last TRIGGER_WINDOW_SEGMENTS.
+TRIGGER_WINDOW_SEGMENTS = 15
+TRIGGER_MIN_LOUD_SEGMENTS = 3
+# Bars are drawn in dBFS, from DISPLAY_MIN_DBFS (bottom) to 0 dBFS (top)
+DISPLAY_MIN_DBFS = -60.0
+# Bar colors by volume relative to the threshold: (upper bound of volume/threshold, color)
+VOLUME_COLOR_BANDS = ((0.2, "green"), (0.6, "cyan"), (1.0, "yellow"), (4.0, "orange"))
+LOUDEST_VOLUME_COLOR = "red"
+WAKEUP_SOUND_PATH = Path(__file__).resolve().parent.parent / "materials" / "audio" / "wakeup.m4a"
+WAKEUP_SOUND_TIMEOUT_SECONDS = 10
+# Players that can decode m4a, in order of preference
+SOUND_PLAYER_COMMANDS = (
+    ["afplay"],
+    ["mpv", "--no-video", "--really-quiet"],
+    ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"],
+)
+
+
+def chunk_rms(data: bytes) -> float:
+    """Returns the RMS of 16-bit PCM audio data, normalized to 0.0-1.0."""
+    samples = np.frombuffer(data, dtype=np.int16) / 32768.0
+    return float(np.sqrt(np.mean(np.square(samples)))) if samples.size > 0 else 0.0
+
+
+def volume_to_dbfs(volume: float) -> float:
+    """Converts a normalized volume (0.0-1.0) to dBFS, floored at DISPLAY_MIN_DBFS."""
+    return max(DISPLAY_MIN_DBFS, 20 * np.log10(volume)) if volume > 0 else DISPLAY_MIN_DBFS
+
+
+def volume_to_canvas_y(volume: float) -> float:
+    """Maps a normalized volume to a canvas y coordinate (0 dBFS at the top)."""
+    return CANVAS_HEIGHT * volume_to_dbfs(min(volume, 1.0)) / DISPLAY_MIN_DBFS
+
+
+def volume_color(volume: float, threshold: float) -> str:
+    """Picks a bar color from how loud the volume is relative to the threshold."""
+    ratio = volume / threshold
+    for upper_ratio, color in VOLUME_COLOR_BANDS:
+        if ratio < upper_ratio:
+            return color
+    return LOUDEST_VOLUME_COLOR
+
+
+def find_sound_player_command() -> list[str] | None:
+    """Returns the first available command that can play an m4a file, or None."""
+    for command in SOUND_PLAYER_COMMANDS:
+        if shutil.which(command[0]):
+            return command
+    return None
+
 
 class IbikiMonitorApp:
     """
@@ -52,20 +111,22 @@ class IbikiMonitorApp:
 
         # --- Application State ---
         self.audio_queue = queue.Queue()
-        self.history_data = deque(maxlen=MAX_SEGMENTS) # Stores (timestamp, max_volume, audio_data_bytes)
-        self.canvas_items = {} # Maps timestamp to (canvas_item_id, audio_data_bytes, volume)
+        self.history_data = deque(maxlen=MAX_BARS) # Stores (timestamp, volume, audio_data_bytes) per bar
         self.pyaudio_instance = None
         self.audio_stream = None
         self.recording_thread = None
         self.stop_event = threading.Event()
         self.playback_pyaudio = None # Separate instance for playback
-        self.last_wakeup_time = 0 # Track when the wakeup sound was last played
-        self.wakeup_sound_data = None # To store raw audio data for wakeup sound
+        self.wakeup_player_command = None # Command prefix used to play the wakeup sound
+        # Set by any thread when the wakeup sound cannot be played; shown until the app closes
+        self.wakeup_error: str | None = None
+        self.recent_loud_count = 0 # Loud segments in the current trigger window (for display)
         self.monitoring_start_time = None # Time when monitoring started
         self.wakeup_volume_threshold = DEFAULT_WAKEUP_VOLUME_THRESHOLD # Initialize the instance variable
 
         # --- Setup GUI ---
         self.setup_gui()
+        self._prepare_wakeup_sound()
 
         # --- Start Audio Processing ---
         self.start_audio_processing()
@@ -87,54 +148,78 @@ class IbikiMonitorApp:
         self.status_label = ttk.Label(self.master, text="Initializing...")
         self.status_label.pack(pady=2)
 
+        self.threshold_label = ttk.Label(self.master)
+        self.threshold_label.pack(pady=2)
+        self._update_threshold_label()
+
+        self.error_label = ttk.Label(self.master, foreground="red")
+        self.error_label.pack(pady=2)
+
         # Bind mouse wheel event to the canvas
         self.canvas.bind("<MouseWheel>", self._on_mouse_wheel) # For Windows and macOS
         self.canvas.bind("<Button-4>", self._on_mouse_wheel) # For Linux (scroll up)
         self.canvas.bind("<Button-5>", self._on_mouse_wheel) # For Linux (scroll down)
+        # Bars are too thin to click individually, so map the click position to a bar
+        self.canvas.bind("<Button-1>", lambda event: self.play_audio(int(event.x // BAR_WIDTH)))
 
 
     def _on_mouse_wheel(self, event):
         """Handles mouse wheel events to adjust the threshold."""
         # Determine scroll direction and adjust threshold
         # event.delta is for Windows/macOS, event.num is for Linux
+        # Multiplicative steps keep the low range (where snoring usually is) fine-grained
         if event.delta > 0 or event.num == 4: # Scroll up
-            self.wakeup_volume_threshold += 0.01 # Increase threshold
+            self.wakeup_volume_threshold *= THRESHOLD_STEP_RATIO # Increase threshold
         elif event.delta < 0 or event.num == 5: # Scroll down
-            self.wakeup_volume_threshold -= 0.01 # Decrease threshold
+            self.wakeup_volume_threshold /= THRESHOLD_STEP_RATIO # Decrease threshold
 
-        # Clamp threshold to a valid range (e.g., 0.0 to 1.0)
-        self.wakeup_volume_threshold = max(0.0, min(1.0, self.wakeup_volume_threshold))
+        self.wakeup_volume_threshold = max(MIN_WAKEUP_VOLUME_THRESHOLD,
+                                           min(MAX_WAKEUP_VOLUME_THRESHOLD, self.wakeup_volume_threshold))
 
-        print(f"Threshold adjusted to: {self.wakeup_volume_threshold:.3f}")
+        print(f"Threshold adjusted to: {self.wakeup_volume_threshold:.4f}")
+        self._update_threshold_label()
 
-        # Redraw the canvas to update the threshold line
+        # Redraw the canvas to update the threshold line and bar colors
         self._redraw_canvas()
 
+    def _update_threshold_label(self):
+        """Shows the current threshold in the GUI."""
+        threshold = self.wakeup_volume_threshold
+        self.threshold_label.config(
+            text=f"Threshold: {threshold:.4f} ({volume_to_dbfs(threshold):.1f} dBFS) - scroll on the graph to adjust")
 
-    def _load_wakeup_sound(self):
-        """Loads the wakeup sound file into memory."""
-        wakeup_path = None # Initialize to ensure it's bound
-        # Ensure PyAudio instance exists before proceeding
-        if self.pyaudio_instance is None:
-            print("Error: PyAudio instance not initialized before loading sound.", file=sys.stderr)
-            self.status_label.config(text="Error: PyAudio init failed.")
+    def _report_wakeup_error(self, message: str):
+        """Records a wakeup sound failure so it stays visible in the GUI."""
+        print(f"Error: {message}", file=sys.stderr)
+        self.wakeup_error = f"[{time.strftime('%H:%M:%S')}] Wakeup sound unavailable: {message}"
+
+    def _prepare_wakeup_sound(self):
+        """Checks that the wakeup sound file and a player for it are available."""
+        if not WAKEUP_SOUND_PATH.is_file():
+            self._report_wakeup_error(f"file not found: {WAKEUP_SOUND_PATH}")
             return
+        self.wakeup_player_command = find_sound_player_command()
+        if self.wakeup_player_command is None:
+            players = ", ".join(command[0] for command in SOUND_PLAYER_COMMANDS)
+            self._report_wakeup_error(f"no sound player found (tried {players})")
+            return
+        print(f"Wakeup sound: {' '.join(self.wakeup_player_command)} {WAKEUP_SOUND_PATH}")
+
+    def _play_wakeup_sound_thread(self):
+        """Target function for the wakeup thread - plays the sound with an external player."""
+        if self.wakeup_player_command is None:
+            return # Already reported by _prepare_wakeup_sound
         try:
-            wakeup_path = os.path.join(os.path.dirname(__file__), '..', 'materials', 'audio', 'wakeup.m4a')
-            print(f"Loading wakeup sound from: {wakeup_path}")
-            sound = AudioSegment.from_file(wakeup_path)
-            sound = sound.set_frame_rate(RATE).set_channels(CHANNELS).set_sample_width(self.pyaudio_instance.get_sample_size(FORMAT))
-            self.wakeup_sound_data = sound.raw_data
-            print(f"Wakeup sound loaded successfully ({len(self.wakeup_sound_data)} bytes).")
-        except CouldntDecodeError:
-             print("Error: Could not decode wakeup sound file. Is ffmpeg installed and in PATH?", file=sys.stderr)
-             self.status_label.config(text="Error: Failed to load wakeup sound (decode).")
-        except FileNotFoundError:
-            print(f"Error: Wakeup sound file not found at {wakeup_path}", file=sys.stderr)
-            self.status_label.config(text="Error: Wakeup sound file not found.")
-        except Exception as e:
-            print(f"Error loading wakeup sound: {e}", file=sys.stderr)
-            self.status_label.config(text=f"Error: {e}")
+            result = subprocess.run([*self.wakeup_player_command, str(WAKEUP_SOUND_PATH)],
+                                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.PIPE, text=True,
+                                    timeout=WAKEUP_SOUND_TIMEOUT_SECONDS)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            self._report_wakeup_error(str(e))
+            return
+        if result.returncode != 0:
+            detail = result.stderr.strip() or f"exit status {result.returncode}"
+            self._report_wakeup_error(f"{self.wakeup_player_command[0]} failed: {detail}")
 
     def start_audio_processing(self):
         """Initializes PyAudio and starts the recording thread."""
@@ -153,8 +238,6 @@ class IbikiMonitorApp:
                                                             frames_per_buffer=CHUNK,
                                                             input_device_index=input_device_index)
 
-            self._load_wakeup_sound()
-
             self.stop_event.clear()
             self.recording_thread = threading.Thread(target=self._audio_processor_thread, daemon=True)
             self.recording_thread.start()
@@ -170,11 +253,13 @@ class IbikiMonitorApp:
 
     def _audio_processor_thread(self):
         """
-        Thread target function to continuously read audio and put segments
-        into the queue.
+        Thread target function to continuously read audio, put bars into the
+        queue, and judge wakeup on segments of BARS_PER_SEGMENT bars.
         """
-        segment_frames = []
-        segment_start_time = time.time()
+        bar_frames = []
+        bar_chunk_volumes = []
+        segment_bar_volumes = []
+        recent_loud_flags = deque(maxlen=TRIGGER_WINDOW_SEGMENTS)
 
         while not self.stop_event.is_set():
             try:
@@ -184,40 +269,34 @@ class IbikiMonitorApp:
                     break
 
                 data = self.audio_stream.read(CHUNK, exception_on_overflow=False)
-                segment_frames.append(data)
+                bar_frames.append(data)
+                bar_chunk_volumes.append(chunk_rms(data))
+                if len(bar_frames) < CHUNKS_PER_BAR:
+                    continue
 
-                current_time = time.time()
-                if current_time - segment_start_time >= RECORD_SECONDS_PER_SEGMENT:
-                    # Process the completed segment
-                    audio_data_segment = b''.join(segment_frames)
-                    # Ensure data is not empty before processing
-                    if audio_data_segment:
-                        x = np.frombuffer(audio_data_segment, dtype=np.int16) / 32768.0
-                        max_volume = np.max(np.abs(x)) if len(x) > 0 else 0.0
-                    else:
-                        max_volume = 0.0
-                        print("Warning: Empty audio segment detected.")
+                # Process the completed bar
+                bar_volume = max(bar_chunk_volumes)
+                # Put raw audio data bytes into the queue for the GUI thread
+                self.audio_queue.put((time.time(), bar_volume, b''.join(bar_frames)))
+                bar_frames = []
+                bar_chunk_volumes = []
 
-                    # --- Wakeup Sound Logic ---
-                    if max_volume >= self.wakeup_volume_threshold:
-                        now = time.time()
-                        # Play only if sound data is loaded and cooldown period passed
-                        if self.wakeup_sound_data and (now - self.last_wakeup_time > 2):
-                            print(f"Volume threshold exceeded ({max_volume:.3f} >= {self.wakeup_volume_threshold:.3f}). Playing wakeup sound.")
-                            # Play the loaded sound data in a separate thread
-                            playback_thread = threading.Thread(target=self._play_audio_bytes_thread, args=(self.wakeup_sound_data,), daemon=True)
-                            playback_thread.start()
-                            self.last_wakeup_time = now
-                        elif not self.wakeup_sound_data:
-                             print("Wakeup threshold exceeded, but sound data not loaded.", file=sys.stderr)
-                    # --- End Wakeup Sound Logic ---
+                segment_bar_volumes.append(bar_volume)
+                if len(segment_bar_volumes) < BARS_PER_SEGMENT:
+                    continue
 
-                    # Put raw audio data bytes into the queue for the GUI thread
-                    self.audio_queue.put((current_time, max_volume, audio_data_segment))
-
-                    # Start new segment
-                    segment_frames = []
-                    segment_start_time = current_time
+                # --- Wakeup Sound Logic (per segment) ---
+                segment_volume = max(segment_bar_volumes)
+                segment_bar_volumes = []
+                recent_loud_flags.append(segment_volume >= self.wakeup_volume_threshold)
+                if sum(recent_loud_flags) >= TRIGGER_MIN_LOUD_SEGMENTS:
+                    print(f"{TRIGGER_MIN_LOUD_SEGMENTS} loud segments within {TRIGGER_WINDOW_SEGMENTS} s "
+                          f"(threshold {self.wakeup_volume_threshold:.4f}). Playing wakeup sound.")
+                    threading.Thread(target=self._play_wakeup_sound_thread, daemon=True).start()
+                    # Require sustained snoring again before the next wakeup
+                    recent_loud_flags.clear()
+                self.recent_loud_count = sum(recent_loud_flags)
+                # --- End Wakeup Sound Logic ---
 
             except IOError as e:
                 if e.errno == pyaudio.paInputOverflowed:
@@ -255,13 +334,11 @@ class IbikiMonitorApp:
         try:
             processed_new_data = False
             while not self.audio_queue.empty():
-                timestamp, max_volume, audio_bytes = self.audio_queue.get_nowait()
-                self.history_data.append((timestamp, max_volume, audio_bytes))
+                timestamp, volume, audio_bytes = self.audio_queue.get_nowait()
+                self.history_data.append((timestamp, volume, audio_bytes))
                 processed_new_data = True
 
-            # Only redraw if there's new data or the history isn't full yet
-            # (to handle initial population)
-            if processed_new_data or len(self.canvas_items) < len(self.history_data):
+            if processed_new_data:
                 self._redraw_canvas()
 
             # Update status label with timer if monitoring started
@@ -269,7 +346,11 @@ class IbikiMonitorApp:
                 elapsed_seconds = int(time.time() - self.monitoring_start_time)
                 minutes = elapsed_seconds // 60
                 seconds = elapsed_seconds % 60
-                self.status_label.config(text=f"Monitoring... {minutes:02d}:{seconds:02d}")
+                self.status_label.config(
+                    text=f"Monitoring... {minutes:02d}:{seconds:02d}  "
+                         f"(loud {self.recent_loud_count}/{TRIGGER_MIN_LOUD_SEGMENTS} in last {TRIGGER_WINDOW_SEGMENTS} s)")
+
+            self.error_label.config(text=self.wakeup_error or "")
 
         except queue.Empty:
             pass
@@ -286,81 +367,36 @@ class IbikiMonitorApp:
     def _redraw_canvas(self):
         """Clears and redraws the entire canvas based on history_data."""
         self.canvas.delete("all") # Clear canvas
-        new_canvas_items = {} # Build the new mapping
-
-        # Clean up old items from the internal mapping first
-        # Get current timestamps from history
-        current_timestamps = {ts for ts, _, _ in self.history_data}
-        # Remove items from canvas_items whose timestamps are no longer in history
-        keys_to_remove = set(self.canvas_items.keys()) - current_timestamps
-        for ts_key in keys_to_remove:
-            del self.canvas_items[ts_key]
-            # Actual canvas item deleted by canvas.delete("all")
 
         # Draw the threshold line
-        threshold_y = CANVAS_HEIGHT - CANVAS_HEIGHT * np.sqrt(min(self.wakeup_volume_threshold, 1.0))
+        threshold_y = volume_to_canvas_y(self.wakeup_volume_threshold)
         self.canvas.create_line(0, threshold_y, CANVAS_WIDTH, threshold_y, fill="blue", dash=(4, 2), tags="threshold_line")
 
-        # Draw bars for current history
-        for i, (ts, vol, audio_data) in enumerate(self.history_data):
+        # Draw bars for current history (no outline: bars are only a few pixels wide)
+        for i, (_, vol, _) in enumerate(self.history_data):
             x0 = i * BAR_WIDTH
             y0 = CANVAS_HEIGHT
             x1 = (i + 1) * BAR_WIDTH
-            # Scale volume (0.0 to 1.0) to canvas height using sqrt
-            bar_height = CANVAS_HEIGHT * np.sqrt(min(vol, 1.0))
-            y1 = CANVAS_HEIGHT - bar_height
+            y1 = volume_to_canvas_y(vol)
+            color = volume_color(vol, self.wakeup_volume_threshold)
+            self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="", tags="volume_bar")
 
-            # Determine color based on volume thresholds
-            if vol < 0.01:
-                color = "green"
-            elif vol < 0.03:
-                color = "cyan"
-            elif vol < 0.05:
-                color = "yellow"
-            elif vol < 0.2:
-                color = "orange"
-            else:
-                color = "red"
-
-            bar_id = self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline="black", tags="volume_bar")
-            # Use lambda with default argument capture for correct data binding
-            # Pass timestamp instead of raw audio data
-            self.canvas.tag_bind(bar_id, "<Button-1>", lambda event, timestamp=ts: self.play_audio(timestamp))
-            new_canvas_items[ts] = (bar_id, audio_data, vol) # Store timestamp, item_id, audio_bytes, volume
-
-        self.canvas_items = new_canvas_items # Update the global mapping
-
-    def play_audio(self, clicked_timestamp):
+    def play_audio(self, clicked_index: int):
         """
-        Finds the audio segment corresponding to the clicked timestamp,
-        its preceding and succeeding segments, concatenates their audio data,
-        and plays it in a separate thread.
+        Plays the clicked bar together with PLAYBACK_CONTEXT_BARS bars before
+        and after it, in a separate thread.
         """
-        # Find the index and data of the clicked segment
-        clicked_index = -1
         segments_to_play_bytes = []
 
-        # Convert deque to list for easier indexing (deque doesn't support direct indexing efficiently)
         # Make a copy to avoid race conditions if history_data is modified while iterating
         history_list = list(self.history_data)
 
-        for i, (ts, _, _) in enumerate(history_list):
-            if ts == clicked_timestamp:
-                clicked_index = i
-                break
+        if not 0 <= clicked_index < len(history_list):
+            return # Clicked on the empty part of the graph
 
-        if clicked_index == -1:
-            print(f"Error: Could not find segment with timestamp {clicked_timestamp}")
-            return
-
-        # Determine indices of segments to play (2 previous, current, 2 next)
-        indices_to_play = []
-        start_index = max(0, clicked_index - 2)
-        end_index = min(len(history_list), clicked_index + 3) # +3 because slice upper bound is exclusive
-
-        for i in range(start_index, end_index):
-             indices_to_play.append(i)
-
+        start_index = max(0, clicked_index - PLAYBACK_CONTEXT_BARS)
+        end_index = min(len(history_list), clicked_index + PLAYBACK_CONTEXT_BARS + 1)
+        indices_to_play = list(range(start_index, end_index))
 
         # Collect audio data bytes for the selected segments
         print(f"Attempting to play segments at indices: {indices_to_play} (target: {clicked_index})")
