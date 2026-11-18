@@ -40,6 +40,15 @@ typeset -U path PATH
 [[ -d "/snap/bin" ]] && path=($path "/snap/bin")
 [[ -d "$HOME/bin" ]] && path=($path "$HOME/bin")
 [[ -d "/opt/homebrew/opt/libpq/bin" ]] && path=($path "/opt/homebrew/opt/libpq/bin")
+[[ -d "$HOME/Library/TinyTeX/bin/universal-darwin" ]] && path=("$HOME/Library/TinyTeX/bin/universal-darwin" $path)
+
+# uutils coreutils (unprefixed names) as a last resort: only fills in commands
+# missing from macOS/Homebrew (timeout, tac, shuf, nproc, ...). Keep it last.
+if [[ "$OSTYPE" = darwin* ]]; then
+	uutils_bin="$HOMEBREW_PREFIX/opt/uutils-coreutils/libexec/uubin"
+	[[ -d "$uutils_bin" ]] && path=($path "$uutils_bin")
+	unset uutils_bin
+fi
 
 # Re-activate mise so its tool paths win over Homebrew (which prepends above).
 # Strip existing mise install paths first, because `typeset -U` would otherwise

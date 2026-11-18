@@ -9,17 +9,40 @@
 #
 #===============================================================================
 
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-	echo "Usage: ${0:t} [--help]"
+# Inside a function zsh sets $0 to the function's name, so keep the script's.
+SCRIPT_NAME="${0:t}"
+
+print_usage(){
+	echo "Usage: $SCRIPT_NAME [--help] [--skip-homebrew]"
 	echo "Run every maintenance routine for this host, in order, timing each one and"
 	echo "reporting what failed in a single summary at the end. A full run takes"
 	echo "hours and needs the NAS at home to be reachable."
 	echo ""
+	echo "  --skip-homebrew  Skip the Homebrew upgrade step, e.g. when"
+	echo "                   formulae.brew.sh is too slow to download from."
+	echo ""
 	echo "The output is also kept in \$XDG_STATE_HOME/maintain/<date>.log, one file"
 	echo "per day, and the routines themselves live in \$DOTFILES/routine. Each of"
 	echo "them can be run on its own and takes --help as well."
-	exit 0
-fi
+}
+
+SKIP_HOMEBREW=false
+for arg in "$@"; do
+	case "$arg" in
+		--help|-h)
+			print_usage
+			exit 0
+			;;
+		--skip-homebrew)
+			SKIP_HOMEBREW=true
+			;;
+		*)
+			echo "maintain.sh: unknown option: $arg" >&2
+			print_usage >&2
+			exit 1
+			;;
+	esac
+done
 
 # Everything here is addressed relative to $DOTFILES, and the helpers below
 # (echo_info, OSNotify, ...) come from it. Bail out before anything else if it
@@ -126,7 +149,11 @@ case $HOST in
 			exit 1
 		fi
 
-		run_step "Homebrew upgrade"  run_routine macos_brew_upgrade.sh
+		if $SKIP_HOMEBREW; then
+			echo_warn "==== Homebrew upgrade skipped (--skip-homebrew) ===="
+		else
+			run_step "Homebrew upgrade"  run_routine macos_brew_upgrade.sh
+		fi
 		run_step "Virus scan"        run_routine generic_clamscan_update_and_scan.sh
 		# Before sending server, find Cargo.toml and execute cargo clean
 		run_step "Rust project clean" run_routine generic_cargo_clean.sh
@@ -149,6 +176,7 @@ esac
 run_step "CLI tools update" run_routine generic_cli_tools_update.sh
 run_step "zjstatus check"   run_routine generic_zjstatus_update.sh
 run_step "R packages"       run_routine generic_r_install_packages.sh
+run_step "TinyTeX update"   run_routine generic_tinytex_update.sh
 
 finish
 
