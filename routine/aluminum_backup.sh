@@ -18,8 +18,8 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Push the directories worth keeping to the NAS over ssh:"
     echo "  ~/prog ~/Documents ~/diskimages ~/Calibre ~/Pictures ~/Zotero"
     echo "  ~/Library/Mail /nosync  ->  kcrt@qnap.local:/share/Backup/<name>"
-    echo "/nosync/Parallels is sent on its own with --inplace, because a single"
-    echo "disk image of ~177G would otherwise be rewritten in full every time."
+    echo "/nosync/Parallels is sent on its own, whole (-W) and --inplace: the delta"
+    echo "search over a single disk image of ~177G is slower than the 1GbE LAN."
     echo "Every transfer uses --delete: what is gone here is deleted there too."
     echo ""
     echo "Requires rsync, aluminum.local, and kcrt@qnap.local reachable over ssh."
@@ -95,6 +95,35 @@ backup_directory_rsync() {
         "$src_dir" "kcrt@qnap.local:/share/Backup/$dest_dir"
 }
 
+# One TSV line per Parallels transfer, to keep an eye on how long the whole-file
+# transfer takes (with -W, literal_bytes is the whole image and matched_bytes 0).
+# Kept apart from the 30-generation maintain logs so that the history stays.
+PARALLELS_STATS_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/maintain/parallels_rsync.tsv"
+
+# rsync_stat_bytes <rsync --stats --no-h output file> <label>
+rsync_stat_bytes() {
+    sed -n "s/^$2: \([0-9,]*\).*/\1/p" "$1" | tr -d ,
+}
+
+# record_parallels_stats <rsync output file> <elapsed seconds>
+record_parallels_stats() {
+    local rsync_output=$1
+    local elapsed_seconds=$2
+    local total_bytes=$(rsync_stat_bytes "$rsync_output" "Total file size")
+    local literal_bytes=$(rsync_stat_bytes "$rsync_output" "Literal data")
+    local matched_bytes=$(rsync_stat_bytes "$rsync_output" "Matched data")
+    local sent_bytes=$(rsync_stat_bytes "$rsync_output" "Total bytes sent")
+    if [[ -z "$total_bytes" ]]; then
+        echo "Parallels rsync printed no --stats; nothing recorded." >&2
+        return 0
+    fi
+    if [[ ! -s "$PARALLELS_STATS_FILE" ]]; then
+        mkdir -p "${PARALLELS_STATS_FILE:h}" || return 0
+        print -r -- $'date\telapsed_s\ttotal_bytes\tliteral_bytes\tmatched_bytes\tsent_bytes' > "$PARALLELS_STATS_FILE"
+    fi
+    print -r -- "$(date '+%Y-%m-%dT%H:%M:%S')"$'\t'"$elapsed_seconds"$'\t'"$total_bytes"$'\t'"$literal_bytes"$'\t'"$matched_bytes"$'\t'"$sent_bytes" >> "$PARALLELS_STATS_FILE"
+}
+
 # Everything below is pushed over ssh to kcrt@qnap.local:/share/Backup, so that
 # is what has to be reachable - not a local mount of the same share. Gating on
 # /Volumes/Backup meant that forgetting to mount it skipped every transfer and
@@ -122,15 +151,26 @@ if ssh -o BatchMode=yes -o ConnectTimeout=10 kcrt@qnap.local '[ -d /share/Backup
     backup_directory_rsync /nosync/ nosync --exclude="Parallels/"
 
     # A single Parallels disk image is ~177G and changes whenever the VM runs.
-    # --inplace rewrites only the changed blocks; without it the NAS would have
-    # to write out the whole image every time. The trade-off is that an
-    # interrupted transfer leaves the destination image in a mixed state, which
-    # --partial lets the next run repair.
+    # It is sent whole (-W): rsync's delta search runs on one core of this Mac,
+    # ~20MB/s where the image changed, and on 2026-11-01 it fell to ~5kB/s at
+    # 53G of 114G (CPU 100%, most likely on runs of identical blocks such as
+    # zeros). The 1GbE LAN takes the whole image in about 20 minutes instead.
+    # An image that has not changed is still skipped by size and mtime.
+    # --inplace avoids a second ~177G temporary copy on the NAS. The trade-off
+    # is that an interrupted transfer leaves the destination image in a mixed
+    # state until the next run rewrites it.
     OSNotify "Parallels -> Qnap"
-    run_rsync -ahv \
+    parallels_rsync_output=$(mktemp)
+    parallels_started=$SECONDS
+    # >&1 >file (zsh multios) shows the output as usual and keeps a copy for
+    # record_parallels_stats. --no-h keeps the --stats numbers in plain bytes.
+    run_rsync -ahvW --no-h --stats \
         --info=progress2 --no-inc-recursive --delete --no-o --no-p --no-g \
-        --inplace --partial --block-size=128K \
-        /nosync/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels"
+        --inplace --partial \
+        /nosync/Parallels/ "kcrt@qnap.local:/share/Backup/Parallels" \
+        >&1 >"$parallels_rsync_output"
+    record_parallels_stats "$parallels_rsync_output" $((SECONDS - parallels_started))
+    rm -f -- "$parallels_rsync_output"
 else
     count_failure "kcrt@qnap.local:/share/Backup is not reachable over ssh. Nothing was backed up."
 fi
