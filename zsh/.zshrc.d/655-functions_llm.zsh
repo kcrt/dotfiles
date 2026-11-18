@@ -5,13 +5,14 @@
 
 LLM_MY_DEFAULT_MODEL='google/gemma-4-12b-qat'
 LLM_MY_HEAVY_MODEL='orcarouter/qwen3.8-27b-uncensored'
-# 4B 級の小型モデルは未ダウンロードのため、当面 DEFAULT と同じものを指す
-LLM_MY_FAST_MODEL='google/gemma-4-12b-qat'
-# gemma-4-12b-qat は mmproj 同梱でそのまま vision が使える
-LLM_MY_VISION_MODEL='google/gemma-4-12b-qat'
+# LFM3-Omni-2B (Q4_K_M + mmproj) は文章と画像の両方を扱える軽量モデル。
+# 画像の説明は gemma-4-12b より正確で速かったが、シェルの質問 (How) や知識を問う解説・
+# 一字一句の OCR は誤りが混ざるので、それぞれ DEFAULT / OCR に任せる
+LLM_MY_FAST_MODEL='lfm3-omni-2b'
+LLM_MY_VISION_MODEL='lfm3-omni-2b'
 LLM_MY_OCR_MODEL='deepseek-ocr-2'
-# 専用の翻訳モデルは未ダウンロードのため、当面 DEFAULT と同じものを指す
-LLM_MY_TRANSLATE_MODEL='google/gemma-4-12b-qat'
+# pfnet/plamo-3-translate-2b-GGUF (Q4_K_M)。翻訳専用で、言語はシステムメッセージの設定ブロックで渡す
+LLM_MY_TRANSLATE_MODEL='plamo-3-translate-2b'
 LMS_BASE_URL='http://localhost:1234/v1'
 
 abbrev-alias llm-heavy-model="lms chat '$LLM_MY_HEAVY_MODEL'"
@@ -41,23 +42,23 @@ function llm-translate() {
 		echo "Error: No input text provided" >&2
 		return 1
 	fi
-	local -A lang_names=(
-		en "English" ja "Japanese" ja-JP "Japanese"
-		es "Spanish" fr "French" de "German"
-		it "Italian" zh "Chinese" zh-TW "Chinese"
-		zh-Hans "Chinese" zh-Hant "Chinese" ko "Korean"
+	# PLaMo の言語コードは小文字・地域なし (ja, en, zh-hans, zh-hant)
+	local -A lang_codes=(
+		ja-jp ja en-us en en-gb en
+		zh zh-hans zh-cn zh-hans zh-tw zh-hant
 	)
-	local source_lang="${lang_names[$source_code]:-$source_code}"
-	local target_lang="${lang_names[$target_code]:-$target_code}"
-	local prompt="You are a professional ${source_lang} (${source_code}) to ${target_lang} (${target_code}) translator. Your goal is to accurately convey the meaning and nuances of the original ${source_lang} text while adhering to ${target_lang} grammar, vocabulary, and cultural sensitivities.
-Produce only the ${target_lang} translation, without any additional explanations or commentary. Please translate the following ${source_lang} text into ${target_lang}:
-
-${text}"
+	source_code="${(L)source_code}"
+	target_code="${(L)target_code}"
+	source_code="${lang_codes[$source_code]:-$source_code}"
+	target_code="${lang_codes[$target_code]:-$target_code}"
+	# チャットテンプレートが読む設定ブロック。target_lang が無いと訳先が ja に固定される
+	local settings="[plamo-translate]
+source_lang=${source_code}
+target_lang=${target_code}
+---"
 	local payload
-	# reasoning_effort=none: gemma-4-*-qat 等の思考モデルは、既定だと reasoning が
-	# コンテキストを食い潰して content が空で返ることがある（翻訳に思考は要らない）
-	payload=$(python3 -c "import json,sys; print(json.dumps({'model': sys.argv[1], 'reasoning_effort': 'none', 'messages': [{'role': 'user', 'content': sys.argv[2]}]}))" \
-		"$LLM_MY_TRANSLATE_MODEL" "$prompt")
+	payload=$(python3 -c "import json,sys; print(json.dumps({'model': sys.argv[1], 'temperature': 0, 'messages': [{'role': 'system', 'content': sys.argv[2]}, {'role': 'user', 'content': sys.argv[3]}]}))" \
+		"$LLM_MY_TRANSLATE_MODEL" "$settings" "$text")
 	curl -s "$LMS_BASE_URL/chat/completions" \
 		-H "Content-Type: application/json" \
 		-d "$payload" | python3 -c "import json,sys; print(json.load(sys.stdin)['choices'][0]['message']['content'])"

@@ -17,6 +17,7 @@ Usage:
 Targets: anthropic | zai[:MODEL] | kimi | deepseek:MODEL | ollama:MODEL | lmstudio:MODEL | openrouter:MODEL
 
 API keys come from with-secret, which asks for Touch ID on every launch.
+ollama and lmstudio start with --strict-mcp-config (no MCP servers) to keep prompts short.
 
 Examples:
   claude-code-to zai                              # Z.ai (default model)
@@ -154,6 +155,16 @@ function _claude-code-export-env() {
 	export ANTHROPIC_DEFAULT_SONNET_MODEL=$model
 	export ANTHROPIC_DEFAULT_HAIKU_MODEL=${haiku_model:-$model}
 	export CLAUDE_CODE_SUBAGENT_MODEL=$model
+
+	# Local models can spend minutes on prompt processing before the first
+	# token, which trips Claude Code's 5-minute stream timeouts. Raise them to
+	# the 30-minute cap unless already set by the caller.
+	if [[ "$provider" == (ollama|lmstudio) ]]; then
+		export API_TIMEOUT_MS=${API_TIMEOUT_MS:-3600000}
+		export CLAUDE_STREAM_FIRST_BYTE_TIMEOUT_MS=${CLAUDE_STREAM_FIRST_BYTE_TIMEOUT_MS:-1800000}
+		export CLAUDE_STREAM_IDLE_TIMEOUT_MS=${CLAUDE_STREAM_IDLE_TIMEOUT_MS:-1800000}
+		export CLAUDE_BYTE_STREAM_IDLE_TIMEOUT_MS=${CLAUDE_BYTE_STREAM_IDLE_TIMEOUT_MS:-1800000}
+	fi
 }
 
 function claude-code-to() {
@@ -172,6 +183,12 @@ function claude-code-to() {
 	if [[ "$provider" == "anthropic" ]]; then
 		command claude "$@"
 		return $?
+	fi
+
+	# Local models process the prompt slowly, and MCP tool definitions add
+	# thousands of tokens to every request. Load no MCP servers for them.
+	if [[ "$provider" == (ollama|lmstudio) ]]; then
+		set -- --strict-mcp-config "$@"
 	fi
 
 	local secret_name=$(_claude-code-secret-name "$provider")
