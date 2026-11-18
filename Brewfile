@@ -54,6 +54,8 @@ brew "afflib"
 brew "afio"
 # Utility for manipulating APFS and ZFS compressed files
 brew "afsctool"
+# Next-gen compiler infrastructure
+brew "llvm"
 # Utility to check whether MAC addresses are already taken on a LAN
 brew "arping"
 # Collection of portable C++ source libraries
@@ -90,10 +92,6 @@ brew "aubio"
 brew "autoconf"
 # Tool for generating GNU Standards-compliant Makefiles
 brew "automake"
-# NaCl networking and cryptography library
-brew "libsodium"
-# Microsoft Azure CLI 2.0
-brew "azure-cli"
 # Terminal bandwidth utilization tool
 brew "bandwhich"
 # C library of Git core methods that is re-entrant and linkable
@@ -128,6 +126,8 @@ brew "bundletool"
 brew "cabextract"
 # Convert CloneCD images to ISO images
 brew "ccd2iso"
+# Record CDs in Disk-At-Once mode
+brew "cdrdao"
 # Suite of Sparse Matrix Software
 brew "suite-sparse"
 # Rich and complete approach to parallelism in C++
@@ -152,8 +152,6 @@ brew "cloudflared"
 brew "cmake"
 # Migemo is a tool that supports Japanese incremental search with Romaji
 brew "cmigemo"
-# Create and run Linux containers using lightweight virtual machines
-brew "container"
 # Apjanke's fork of the classic cowsay project
 brew "cowsay"
 # Securely send things from one computer to another
@@ -190,12 +188,16 @@ brew "direnv"
 brew "docker"
 # Convert text between DOS, UNIX, and Mac formats
 brew "dos2unix"
-# .NET Core
-brew "dotnet"
 # Terminal document viewer for .docx files
 brew "doxx"
+# Use Realtek DVB-T dongles as a cheap SDR
+brew "librtlsdr"
+# FlightAware ADS-B Ground Station System for SDRs
+brew "dump1090-fa"
 # More intuitive version of du in rust
 brew "dust"
+# NaCl networking and cryptography library
+brew "libsodium"
 # Collection of reusable C++ library artifacts developed at Facebook
 brew "folly"
 # C++14 implementation of the TLS-1.3 standard
@@ -203,17 +205,13 @@ brew "fizz"
 # Modular, composable client/server abstractions framework
 brew "wangle"
 # Facebook's branch of Apache Thrift, including a new C++ server
-brew "fbthrift", link: false
+brew "fbthrift"
 # Thrift functions for querying information from a service
 brew "fb303"
 # Shared library for Watchman and Eden projects
 brew "edencommon"
 # Emoji on the command-line :scream:
 brew "emojify"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
-# LLVM bytecode to JavaScript compiler
-brew "emscripten"
 # Convert text to Postscript, HTML, or RTF, with syntax highlighting
 brew "enscript"
 # Speech synthesizer that supports more than hundred languages and accents
@@ -236,6 +234,8 @@ brew "x265"
 brew "ffmpeg"
 # Banner-like program prints strings as ASCII art
 brew "figlet"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
 # Firebase command-line tools
 brew "firebase-cli", link: false
 # Cross-platform library for audio I/O
@@ -248,8 +248,6 @@ brew "libheif"
 brew "libtool"
 # Tools and libraries to manipulate images in select formats
 brew "imagemagick"
-# New file format for still image compression
-brew "jpeg-xl"
 # Generate pixel-perfect macOS folder icons in the native style
 brew "folderify"
 # Command-line outline and bitmap font editor/converter
@@ -260,6 +258,8 @@ brew "fortune"
 brew "fzf"
 # Fast, simple fuzzy text selector with an advanced scoring algorithm
 brew "fzy"
+# New file format for still image compression
+brew "jpeg-xl"
 # Postgres C API library
 brew "libpq"
 # Libraries and data formats for array-oriented scientific data
@@ -320,12 +320,6 @@ brew "gsmartcontrol"
 brew "gtk4"
 # Development framework for multimedia applications
 brew "gstreamer"
-# Blu-Ray disc playback library for media players like VLC
-brew "libbluray"
-# Access DVDs as block devices without the decryption
-brew "libdvdcss"
-# Open-source video transcoder available for Linux, Mac, and Windows
-brew "handbrake"
 # World's fastest and most advanced password recovery utility
 brew "hashcat"
 # Powerful, lightweight programming language
@@ -344,18 +338,12 @@ brew "id3v2"
 brew "jadx"
 # Japanese localization of NetHack
 brew "jnethack"
-# Featureful UNIX password cracker
-brew "john"
 # Enhanced version of john, a UNIX password cracker
-brew "john-jumbo", link: false
-# Library for reading RAW files from digital photo cameras
-brew "libraw"
-# Image processing library
-brew "vips"
-# Note taking and to-do application with synchronization capabilities
-brew "joplin-cli"
+brew "john-jumbo"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# Fast, Dynamic Programming Language
+brew "julia"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
 # Interactive environments for writing and running code
@@ -372,6 +360,10 @@ brew "lha"
 brew "libaacs"
 # Implements the BD+ System Specifications
 brew "libbdplus"
+# Blu-Ray disc playback library for media players like VLC
+brew "libbluray"
+# Access DVDs as block devices without the decryption
+brew "libdvdcss"
 # Library for support of the Expert Witness Compression Format
 brew "libewf"
 # Library to communicate with iOS devices natively
@@ -380,14 +372,10 @@ brew "libimobiledevice"
 brew "libmng"
 # Utilities for the PST file format
 brew "libpst"
-# Use Realtek DVB-T dongles as a cheap SDR
-brew "librtlsdr"
+# Library for reading RAW files from digital photo cameras
+brew "libraw"
 # SIXEL encoder/decoder implementation
 brew "libsixel"
-# Next-gen compiler infrastructure
-brew "llvm"
-# Next-gen compiler infrastructure
-brew "llvm@20"
 # Compression program with a very high compression ratio
 brew "lrzip"
 # List USB devices, just like the Linux lsusb command
@@ -414,8 +402,6 @@ brew "merman-cli"
 brew "midnight-commander"
 # Like sed, awk, cut, join & sort for name-indexed data such as CSV
 brew "miller"
-# Minimalist GNU for Windows and GCC cross-compilers
-brew "mingw-w64"
 # Menu-driven communications program
 brew "minicom"
 # Polyglot runtime manager (asdf rust clone)
@@ -500,10 +486,14 @@ brew "pinentry-mac"
 brew "pipx"
 # Standalone binary that can run anything
 brew "pkgx"
+# Plays music in PC-88/98 PMD chiptune format
+brew "pmdmini"
+# PNG image optimizing utility
+brew "pngquant"
 # Object-relational database system
 brew "postgresql@15"
-# Command-line shell and scripting language
-brew "powershell"
+# Convert bitmaps to vector graphics
+brew "potrace"
 # Coreutils progress viewer
 brew "progress"
 # CLI companion with 200+ commands across 33+ Datadog products
@@ -516,8 +506,6 @@ brew "pwgen"
 brew "qt@5"
 # Python bindings for v5 of Qt
 brew "pyqt@5"
-# Generic machine emulator and virtualizer
-brew "qemu"
 # Tools for and transforming and inspecting PDF files
 brew "qpdf"
 # QR Code generation
@@ -536,6 +524,8 @@ brew "ripgrep-all"
 brew "rrdtool"
 # Utility that provides fast incremental file transfer
 brew "rsync"
+# Program to decode radio transmissions from devices
+brew "rtl_433"
 # Rust toolchain installer
 brew "rustup"
 # File compression tool (like gzip or bzip2)
@@ -574,8 +564,6 @@ brew "supabase"
 brew "swiftlint"
 # Display images in a terminal using block graphic characters
 brew "terminalimageviewer"
-# Enables extra languages support for Tesseract
-brew "tesseract-lang"
 # Powerful free data recovery utility
 brew "testdisk"
 # Code-search similar to ack
@@ -598,8 +586,12 @@ brew "tree"
 brew "trippy"
 # Vulnerability scanner for container images, file systems, and Git repos
 brew "trivy"
+# Markup-based typesetting system
+brew "typst"
 # Unidata unit conversion library
 brew "udunits"
+# Command-line unarchiving tools supporting multiple formats
+brew "unar"
 # Extract files from InstallShield cabinet files
 brew "unshield"
 # Cross-platform Rust rewrite of the GNU coreutils
@@ -612,6 +604,8 @@ brew "uutils-findutils"
 brew "uv"
 # Library for playing streamed audio formats from video games
 brew "vgmstream"
+# Image processing library
+brew "vips"
 # Pager/text based browser
 brew "w3m"
 # Universal WebAssembly Runtime
@@ -670,8 +664,6 @@ cask "adobe-acrobat-pro"
 cask "adobe-digital-editions"
 # Tools for building Android applications
 cask "android-studio"
-# Agent orchestration platform
-cask "antigravity"
 # Application uninstaller
 cask "appcleaner"
 # User-friendly GUI app for Homebrew
@@ -681,18 +673,14 @@ cask "arduino"
 cask "audacity"
 # Japanese input method
 cask "azookey"
-# Audio utility
-cask "background-music"
+# Microsoft Azure CLI 2.0
+cask "azure-cli"
 # Tool to flash OS images to SD cards & USB drives
 cask "balenaetcher"
 # 2-channel browser
 cask "bathyscaphe"
-# Cross platform SQL editor and database management app
-cask "beekeeper-studio"
 # Utility to create and modify archives
 cask "betterzip"
-# Virtual Audio Driver
-cask "blackhole-2ch"
 # 3D creation suite
 cask "blender"
 cask "boxofsnoo-fairmount"
@@ -703,15 +691,14 @@ cask "calibre"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
 # Terminal-based AI coding assistant
-cask "claude-code@latest"
+cask "claude-code"
 # Clipboard extension app
 cask "clipy"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
-# OpenAI's Codex desktop app for managing coding agents
-cask "codex-app"
 # Menu bar usage monitor for Codex and Claude
 cask "steipete/tap/codexbar"
+# Color blindness simulator
 cask "color-oracle"
 cask "cscreen"
 # Server and cloud storage browser
@@ -720,14 +707,12 @@ cask "cyberduck"
 cask "db-browser-for-sqlite"
 # AI-powered translator
 cask "deepl"
+# Plugin-based AI agent desktop application
+cask "deepseek-harness"
 # Emulator to play GameCube and Wii games
 cask "dolphin"
-# Online diagram software
-cask "drawio"
 # Web browser
 cask "firefox"
-# Dreamcast, Naomi and Atomiswave emulator
-cask "flycast"
 cask "font-biz-udgothic"
 cask "font-biz-udpgothic"
 cask "font-fira-code"
@@ -738,11 +723,6 @@ cask "font-mona-sans"
 cask "font-monaspace"
 # Set of tools to manage resources and applications hosted on Google Cloud
 cask "gcloud-cli"
-cask "ghidra"
-# Free and open-source image editor
-cask "gimp"
-# Desktop client for GitHub repositories
-cask "github"
 # Xcode extension for GitHub Copilot
 cask "github-copilot-for-xcode"
 # Web browser
@@ -754,11 +734,6 @@ cask "google-earth-pro"
 cask "gpower"
 # Graphically shows disk usage within a file system
 cask "grandperspective"
-cask "gstreamer-framework"
-# Open Source Multimedia Framework
-cask "gstreamer-runtime"
-# Hackintosh patching tool
-cask "hackintool"
 # Desktop automation application
 cask "hammerspoon"
 # Open-source video transcoder
@@ -787,12 +762,14 @@ cask "jamovi"
 cask "jasp"
 # Note taking and to-do application with synchronisation capabilities
 cask "joplin"
-# Keyboard customiser
-cask "karabiner-elements"
+# Remote desktop app
+cask "jump-desktop-connect"
 # Password manager app
 cask "keepassxc"
 # File archiver
 cask "keka"
+# Electronics design automation suite
+cask "kicad"
 # Comic and manga converter for ebook readers
 cask "kindle-comic-converter"
 # Preview and audit Kindle eBooks
@@ -809,14 +786,8 @@ cask "lyrics-master"
 cask "macfuse"
 # Live, interactive debugging of your running PHP applications
 cask "macgdbp"
-# Full TeX Live distribution with GUI applications
-cask "mactex"
 # Text editor
 cask "macvim-app"
-# Video format converter (transcoder)
-cask "makemkv"
-# Markdown editor
-cask "mark-text"
 # Visual diff and merge tool
 cask "meld"
 # Provides updates to various Microsoft products
@@ -839,35 +810,25 @@ cask "mullvad-vpn"
 cask "musescore"
 # Open-source software for live streaming and screen recording
 cask "obs"
-# AI coding agent desktop client
-cask "opencode-desktop"
-# Retro video game emulation
-cask "openemu"
-# Android file transfer
-cask "openmtp"
-# Administration and development platform for PostgreSQL
-cask "pgadmin4"
 # Network ping monitoring application
 cask "kcrt/kcrt/ping-monitor"
 # Used to access context-specific actions when text is selected
 cask "popclip"
 # Menu bar app to find and kill processes running on open ports
 cask "productdevbook/tap/portkiller"
-# Collaboration platform for API development
-cask "postman"
 cask "powershell"
 # NAS management application
 cask "qfinder-pro"
 # Companion app for Flipper Zero devices
 cask "qflipper"
-# Geographic Information System
-cask "qgis"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Scientific and technical publishing system built on Pandoc
 cask "quarto"
 # Thumbnails, static previews, cover art and metadata for video files
 cask "quicklook-video"
+# Environment for statistical computing and graphics
+cask "r-app"
 # Imaging utility to install operating systems to a microSD card
 cask "raspberry-pi-imager"
 # Frontend for emulators, game engines and media players (Metal graphics API)
@@ -892,8 +853,6 @@ cask "steam"
 cask "stratoshark"
 # Application for inspecting installer packages
 cask "suspicious-package"
-# Remote access and connectivity software focused on security
-cask "teamviewer"
 # Menu bar manager
 cask "thaw"
 # Menu bar app to show Time Machine information
@@ -912,26 +871,16 @@ cask "tripmode"
 cask "ultimaker-cura"
 # Explore and convert Unicode
 cask "unicodechecker"
-# Management tool for Unity
-cask "unity-hub"
 # Virtual machines UI using QEMU
 cask "utm"
 # Open-source code editor
 cask "visual-studio-code"
 # Multimedia player
 cask "vlc"
-# Rust-based terminal
-cask "warp"
 # Menu bar app for USB-C cable diagnostics
 cask "darrylmorley/whatcable/whatcable", trusted: true
-# Compatibility layer to run Windows applications
-cask "wine-stable"
 # Network protocol analyzer
 cask "wireshark-app"
-# All-in-one office suite
-cask "wpsoffice"
-# Lossless audio decoder
-cask "xld"
 # Open-source version of the X.Org X Window System
 cask "xquartz"
 # AI-assisted development environment
@@ -939,15 +888,7 @@ cask "zcode"
 # Video communication and virtual meeting platform
 cask "zoom"
 # OpenJDK distribution from Azul
-cask "zulu@17"
-# OpenJDK distribution from Azul
 cask "zulu@21"
-mas "Affinity Designer", id: 824171161
-mas "Affinity Designer 2", id: 1616831348
-mas "Affinity Photo", id: 824183456
-mas "Affinity Photo 2", id: 1616822987
-mas "Affinity Publisher", id: 881418622
-mas "Affinity Publisher 2", id: 1606941598
 mas "App Language Chooser", id: 451732904
 mas "Apple Configurator", id: 1037126344
 mas "Batch Clipboard", id: 6695729238
@@ -956,8 +897,6 @@ mas "BlueSee", id: 1336679524
 mas "Boom3D Netflix Extension", id: 6445882848
 mas "ByeGraph", id: 6467188044
 mas "CHM Reader - Enjoy", id: 1661528239
-mas "Cinebench", id: 1438772273
-mas "Copilot", id: 6738511300
 mas "CotEditor", id: 1024640650
 mas "Developer", id: 640199958
 mas "Diffusers", id: 1666309574
@@ -970,26 +909,21 @@ mas "Enchanted", id: 6474268307
 mas "EPUB Reader", id: 1506541486
 mas "Final Cut Pro", id: 424389933
 mas "Front Row", id: 6480318506
-mas "GarageBand", id: 682658836
 mas "Goodnotes", id: 1444383602
 mas "Hex Fiend", id: 1342896380
-mas "iMovie", id: 408981434
 mas "isHUD", id: 484757536
 mas "JoyKeyMapper", id: 1511416593
 mas "Keepa - Price Tracker", id: 1533805339
 mas "Key Codes", id: 414568915
-mas "Keynote", id: 409183694
 mas "Keynote", id: 361285480
 mas "Kindle", id: 302584613
 mas "Kindle Classic", id: 405399194
 mas "Klack", id: 6446206067
 mas "LadioCast", id: 411213048
-mas "LibreOffice Vanilla", id: 921923693
 mas "LINE", id: 539883307
 mas "LINE WORKS", id: 6447544433
 mas "Logic Pro", id: 634148309
 mas "Magnet", id: 441258766
-mas "MainStage", id: 634159523
 mas "Microsoft Excel", id: 462058435
 mas "Microsoft PowerPoint", id: 462062816
 mas "Microsoft Word", id: 462054704
@@ -999,19 +933,15 @@ mas "Motion", id: 434290957
 mas "Native SQLite Manager", id: 1416282836
 mas "NetHack", id: 528223360
 mas "Noizio", id: 928871589
-mas "Numbers", id: 409203825
 mas "Numbers", id: 361304891
-mas "Pages", id: 409201541
 mas "Pages", id: 361309726
 mas "PDF Squeezer", id: 504700302
 mas "PDFOutliner", id: 420874236
 mas "Physics 101", id: 435293897
-mas "PrimeVideo", id: 545519333
 mas "QR Journal", id: 483820530
 mas "RemoteDrive", id: 6502180430
 mas "shakepin", id: 6599856142
 mas "Steam Link", id: 1246969117
-mas "Swift Playground", id: 1496833156
 mas "Tailscale", id: 1475387142
 mas "TestFlight", id: 899247664
 mas "The Unarchiver", id: 425424353
@@ -1091,7 +1021,6 @@ vscode "redhat.vscode-yaml"
 vscode "reditorsupport.r"
 vscode "reditorsupport.r-syntax"
 vscode "rust-lang.rust-analyzer"
-vscode "saoudrizwan.claude-dev"
 vscode "sst-dev.opencode-v2"
 vscode "sweetpad.sweetpad"
 vscode "swellaby.vscode-rust-test-adapter"
@@ -1131,10 +1060,10 @@ cargo "tauri-cli"
 cargo "wasm-pack"
 uv "frida-tools"
 uv "it2"
-uv "parakeet-mlx"
 uv "ruff"
 uv "zotero-mcp-server", source: "git+https://github.com/54yyyu/zotero-mcp.git"
 npm "agent-browser"
 npm "corepack"
 npm "docx"
+npm "typescript"
 npm "vercel"
