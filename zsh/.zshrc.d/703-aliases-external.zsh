@@ -47,3 +47,15 @@ fi
 if [[ -x "$HOME/.lmstudio/bin/lms" ]]; then
 	alias lms="$HOME/.lmstudio/bin/lms"
 fi
+
+# ============================================================================
+# dsh (DeepSeek Harness) TUI
+# ============================================================================
+
+# dsh 本体に TUI は同梱されていない。@deepseek-harness-tui/dsh-tui を入れた
+# プロファイル (~/.dsh/profiles/dsh-tui) を作り、それで起動する。
+# 入れる: dsh plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@<version>
+if [[ -x "$HOME/.dsh/profiles/dsh-tui/node_modules/.bin/dsh-tui" ]]; then
+	alias dsh-tui='dsh --profile dsh-tui'
+	alias dst='dsh --profile dsh-tui'
+fi
