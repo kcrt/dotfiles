@@ -79,7 +79,7 @@ have_nerdfont() {
 		return
 	fi
 	case "$(hostname)" in
-		aluminum|aluminum.local) return 0 ;;
+		silicon|silicon.local|aluminum|aluminum.local) return 0 ;;
 		*) return 1 ;;
 	esac
 }

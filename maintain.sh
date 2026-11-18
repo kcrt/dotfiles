@@ -55,6 +55,7 @@ fi
 
 source ${DOTFILES}/script/OSNotify.sh
 source ${DOTFILES}/script/format_duration.sh
+source ${DOTFILES}/script/mainmac.sh
 autoload zmv
 
 # A full run takes hours, and the interesting lines scroll out of the
@@ -140,38 +141,36 @@ finish(){
 	exit 1
 }
 
-case $HOST in
-	aluminum.local)
-		# Almost everything below needs the NAS at home, so its reachability is
-		# what "am I at home?" actually means here.
-		if ! ping -c 1 qnap.local &> /dev/null; then
-			OSError "qnap.local is not reachable. Please execute this script at home."
-			exit 1
-		fi
+if is_main_mac; then
+	# Almost everything below needs the NAS at home, so its reachability is
+	# what "am I at home?" actually means here.
+	if ! ping -c 1 qnap.local &> /dev/null; then
+		OSError "qnap.local is not reachable. Please execute this script at home."
+		exit 1
+	fi
 
-		if $SKIP_HOMEBREW; then
-			echo_warn "==== Homebrew upgrade skipped (--skip-homebrew) ===="
-		else
-			run_step "Homebrew upgrade"  run_routine macos_brew_upgrade.sh
-		fi
-		run_step "Virus scan"        run_routine generic_clamscan_update_and_scan.sh
-		# Before sending server, find Cargo.toml and execute cargo clean
-		run_step "Rust project clean" run_routine generic_cargo_clean.sh
-		run_step "QNAP file list"    run_routine aluminum_qnap_filelist.sh
-		run_step "Backup and sync"   run_routine aluminum_backup.sh
-		run_step "Recording"         run_routine aluminum_recording.sh
-		run_step "KeePass backup"    run_routine macos_keepass_backup.sh
-		run_step "Clean caches"      run_routine macos_clean_caches.sh
+	if $SKIP_HOMEBREW; then
+		echo_warn "==== Homebrew upgrade skipped (--skip-homebrew) ===="
+	else
+		run_step "Homebrew upgrade"  run_routine macos_brew_upgrade.sh
+	fi
+	run_step "Virus scan"        run_routine generic_clamscan_update_and_scan.sh
+	# Before sending server, find Cargo.toml and execute cargo clean
+	run_step "Rust project clean" run_routine generic_cargo_clean.sh
+	run_step "QNAP file list"    run_routine mainmac_qnap_filelist.sh
+	run_step "Backup and sync"   run_routine mainmac_backup.sh
+	run_step "Recording"         run_routine mainmac_recording.sh
+	run_step "KeePass backup"    run_routine macos_keepass_backup.sh
+	run_step "Clean caches"      run_routine macos_clean_caches.sh
 
-		# echo_info "==== joplin ===="
-		# joplin sync
+	# echo_info "==== joplin ===="
+	# joplin sync
 
-		# echo_info "==== listing data on server ===="
+	# echo_info "==== listing data on server ===="
 		# gsutil ls -R gs://backup.kcrt.net/ | tee ~/gs_backup.txt
-		;;
-	*)
-		echo_error "$HOST is unknown host!"
-esac
+else
+	echo_error "$HOST is unknown host!"
+fi
 
 run_step "CLI tools update" run_routine generic_cli_tools_update.sh
 run_step "zjstatus check"   run_routine generic_zjstatus_update.sh

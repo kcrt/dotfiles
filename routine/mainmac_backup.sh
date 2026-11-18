@@ -2,9 +2,9 @@
 
 #===============================================================================
 #
-#          FILE:  aluminum_backup.sh
-#         USAGE:  ./aluminum_backup.sh
-#   DESCRIPTION:  This script is a backup utility for aluminum files.
+#          FILE:  mainmac_backup.sh
+#         USAGE:  ./mainmac_backup.sh
+#   DESCRIPTION:  This script is a backup utility for the main Mac.
 #  REQUIREMENTS:  rsync
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
 #       COMPANY:  Nanoseconds Hunter "http://www.kcrt.net"
@@ -12,6 +12,7 @@
 #===============================================================================
 
 source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/mainmac.sh
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: ${0:t} [--help]"
@@ -22,7 +23,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "search over a single disk image of ~177G is slower than the 1GbE LAN."
     echo "Every transfer uses --delete: what is gone here is deleted there too."
     echo ""
-    echo "Requires rsync, aluminum.local, and kcrt@qnap.local reachable over ssh."
+    echo "Requires rsync, the main Mac ($MAIN_MAC_HOST in script/mainmac.sh), and kcrt@qnap.local reachable over ssh."
     echo "Normally started by maintain.sh."
     exit 0
 fi
@@ -33,9 +34,9 @@ if ! command -v rsync &> /dev/null; then
     exit 1
 fi
 
-# Check if machine is aluminum
-if [[ "$HOST" != "aluminum.local" ]]; then
-    OSNotify "This script is intended to be run on aluminum.local only."
+# Check if machine is the main Mac
+if ! is_main_mac; then
+    OSNotify "This script is intended to be run on $MAIN_MAC_HOST only."
     exit 1
 fi
 

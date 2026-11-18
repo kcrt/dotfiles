@@ -2,8 +2,8 @@
 
 #===============================================================================
 #
-#          FILE:  aluminum_qnap_filelist.sh
-#         USAGE:  ./aluminum_qnap_filelist.sh
+#          FILE:  mainmac_qnap_filelist.sh
+#         USAGE:  ./mainmac_qnap_filelist.sh
 #   DESCRIPTION:  Refresh the local copy of the QNAP file list, dropping the
 #                 macOS/QNAP metadata entries that are not worth keeping.
 #  REQUIREMENTS:  pv, /Volumes/Backup mounted
@@ -13,6 +13,7 @@
 #===============================================================================
 
 source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/mainmac.sh
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: ${0:t} [--help]"
@@ -20,14 +21,14 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "the AppleDouble, .DS_Store and .@__thumb entries and sorted by name."
     echo "The previous list is kept whenever the new one cannot be built."
     echo ""
-    echo "Requires pv, aluminum.local and /Volumes/Backup mounted."
+    echo "Requires pv, the main Mac ($MAIN_MAC_HOST in script/mainmac.sh) and /Volumes/Backup mounted."
     echo "Normally started by maintain.sh."
     exit 0
 fi
 
-# Check if machine is aluminum
-if [[ "$HOST" != "aluminum.local" ]]; then
-    OSNotify "This script is intended to be run on aluminum.local only."
+# Check if machine is the main Mac
+if ! is_main_mac; then
+    OSNotify "This script is intended to be run on $MAIN_MAC_HOST only."
     exit 1
 fi
 

@@ -2,8 +2,8 @@
 
 #===============================================================================
 #
-#          FILE:  aluminum_recording.sh
-#         USAGE:  ./aluminum_recording.sh
+#          FILE:  mainmac_recording.sh
+#         USAGE:  ./mainmac_recording.sh
 #   DESCRIPTION:  This script is a backup utility for recorded files.
 #  REQUIREMENTS:  ffmpeg, ffprobe, jq, uv
 #        AUTHOR:  kcrt <kcrt@kcrt.net>
@@ -12,6 +12,7 @@
 #===============================================================================
 
 source ${DOTFILES}/script/OSNotify.sh
+source ${DOTFILES}/script/mainmac.sh
 source ${DOTFILES}/script/format_duration.sh
 # The recording directories live on an SMB share, where a plain zsh glob hands
 # back names that cannot be opened again. See the file for the details.
@@ -38,7 +39,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "at most \$RECORDER_TRANSCRIPTS_PER_RUN recorder file(s) per run - one of them"
     echo "is a whole morning of audio, so the rest waits for the next run."
     echo ""
-    echo "Requires ffmpeg, ffprobe, jq, uv, aluminum.local, a reachable qnap.local and the"
+    echo "Requires ffmpeg, ffprobe, jq, uv, the main Mac ($MAIN_MAC_HOST in script/mainmac.sh), a reachable qnap.local and the"
     echo "Private share mounted. Normally started by maintain.sh."
     exit 0
 fi
@@ -53,9 +54,9 @@ for required_command in ffmpeg ffprobe jq uv; do
     fi
 done
 
-# Check if machine is aluminum
-if [[ "$HOST" != "aluminum.local" ]]; then
-    OSNotify "This script is intended to be run on aluminum.local only."
+# Check if machine is the main Mac
+if ! is_main_mac; then
+    OSNotify "This script is intended to be run on $MAIN_MAC_HOST only."
     exit 1
 fi
 
