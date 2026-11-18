@@ -148,6 +148,7 @@
     ],
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "ConfigChange": [
       {
@@ -429,7 +430,6 @@
     "context7@claude-plugins-official": true,
     "eli5@claude-community": true,
     "firebase@claude-plugins-official": false,
-    "github@claude-plugins-official": true,
     "joplin-mcp@joplin-mcp": true,
     "playwright@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
@@ -532,6 +532,5 @@
       "env": {},
       "type": "stdio"
     }
-  },
-  "model": "opus"
+  }
 }
