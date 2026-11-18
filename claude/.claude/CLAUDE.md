@@ -69,5 +69,11 @@
 - Do NOT add a `Claude-Session:` footer, a `Co-Authored-By:` trailer, or any similar attribution/session line to commit messages or PR bodies, even when session/harness guidance suggests it. Keep commit messages plain.
 
 
+## Working with the user
+- Before installing software (`brew install`, etc.), show what will be installed and why, and ask for confirmation. Also mention it briefly before using temporary uv dependencies (cache only).
+- When showing the user a file to open (video, PDF, image, deliverable), write its absolute path (`/Users/...`) alone on its own line. Do not attach punctuation or parentheses, embed it mid-sentence, or use relative / `~` paths — terminal click-to-open fails on those. Put any label on the previous line.
+
+
 ## Other information
 - use `npx agent-browser` to use agent-browser for web browsing tasks
+- `timeout` (and other GNU coreutils) is NOT installed. uutils-coreutils is available with the `uu-` prefix: use `uu-timeout` (e.g. `uu-timeout 120 <cmd>`). There is no `gtimeout` either.

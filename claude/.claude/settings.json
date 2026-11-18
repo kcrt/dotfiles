@@ -114,8 +114,10 @@
       "Bash(find *-execdir*)",
       "Bash(find *-delete*)",
       "Bash(find *-ok*)",
-      "Bash(rm:*)",
-      "Bash(rmdir:*)",
+      "Bash(rm -r*)",
+      "Bash(rm -R*)",
+      "Bash(rm -fr*)",
+      "Bash(rm -fR*)",
       "Bash(shred:*)",
       "Bash(wipe:*)",
       "Bash(*force*)",
@@ -146,7 +148,6 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus",
   "hooks": {
     "ConfigChange": [
       {
@@ -434,7 +435,8 @@
     "rust-analyzer-lsp@claude-plugins-official": true,
     "swift-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true
+    "vercel@claude-plugins-official": true,
+    "claude-security@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-community": {
@@ -451,16 +453,17 @@
     }
   },
   "sandbox": {
-    "excludedCommands": [
-      "git commit *",
-      "uv run"
-    ],
     "filesystem": {
       "allowWrite": [
         "~/.local/state/progress_info"
       ]
-    }
+    },
+    "excludedCommands": [
+      "git commit *",
+      "uv run"
+    ]
   },
+  "feedbackDrafts": "notify",
   "effortLevel": "high",
   "modelSettings": {
     "claude-opus-5": {
@@ -468,6 +471,9 @@
     },
     "claude-sonnet-5": {
       "effortLevel": "medium"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "high"
     }
   },
   "advisorModel": "fable",
@@ -476,8 +482,9 @@
     "enabled": true,
     "mode": "hold"
   },
+  "skipWorkflowUsageWarning": true,
   "editorMode": "vim",
-  "verbose": true,
+  "verbose": false,
   "preferredNotifChannel": "iterm2_with_bell",
   "autoCompactEnabled": true,
   "switchModelsOnFlag": false,
@@ -526,5 +533,5 @@
       "type": "stdio"
     }
   },
-  "skipWorkflowUsageWarning": true
+  "model": "opus"
 }
